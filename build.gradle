@@ -1,11 +1,18 @@
 plugins {
     id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
+def versionObj = new Version(major: 0, minor: 1, revision: 0)
+
 group 'com.github.natanbc'
-version '1.0-SNAPSHOT'
+version versionObj.toString()
+
+mainClassName = 'andesite.node.Andesite'
 
 sourceCompatibility = 11
+targetCompatibility = 11
 
 repositories {
     jcenter()
@@ -25,4 +32,85 @@ dependencies {
     compile 'ch.qos.logback:logback-classic:1.2.3'
     
     compile 'com.google.code.findbugs:jsr305:3.0.2'
+}
+
+def lint = [
+        "auxiliaryclass",
+        "cast",
+        "deprecation",
+        "dep-ann",
+        "divzero",
+        "empty",
+        "exports",
+        "fallthrough",
+        "finally",
+        "module",
+        "opens",
+        "options",
+        "overloads",
+        "overrides",
+        "path",
+        "rawtypes",
+        "removal",
+        "serial",
+        "static",
+        "try",
+        "unchecked",
+        "varargs",
+        "preview"
+]
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+task sourcesForRelease(type: Copy) {
+    from ('src/main/java') {
+        include '**/Version.java'
+        filter(ReplaceTokens, tokens: [
+                VERSION_MAJOR:    versionObj.major,
+                VERSION_MINOR:    versionObj.minor,
+                VERSION_REVISION: versionObj.revision,
+                COMMIT:           getCommitHash(),
+        ])
+    }
+    into 'build/filteredSrc'
+
+    includeEmptyDirs = false
+}
+
+task generateJavaSources(type: SourceTask) {
+    def javaSources = sourceSets.main.allJava.filter {
+        it.name != 'Version.java'
+    }
+    source = javaSources + sourcesForRelease.destinationDir
+
+    dependsOn sourcesForRelease
+}
+
+compileJava {
+    source = generateJavaSources.source
+
+    dependsOn generateJavaSources
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.incremental = true
+    options.compilerArgs += ["-Xlint:${lint.join(",")}", "-Werror"]
+}
+
+compileTestJava.enabled = false
+processTestResources.enabled = false
+
+class Version {
+    String major, minor, revision
+
+    String toString() {
+        "$major.$minor.$revision"
+    }
+}
+
+static def getCommitHash() {
+    def p = Runtime.getRuntime().exec("git rev-parse HEAD")
+    p.waitFor()
+    p.getIn().text.trim()
 }
