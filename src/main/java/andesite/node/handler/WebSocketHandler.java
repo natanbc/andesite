@@ -166,6 +166,10 @@ public class WebSocketHandler {
                     sendPlayerUpdate(guild, json == null ? null : json.put("destroyed", true));
                     break;
                 }
+                case "ping": {
+                    ws.writeFinalTextFrame(payload.copy().put("op", "pong").encode());
+                    break;
+                }
             }
         }
 

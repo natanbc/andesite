@@ -119,6 +119,10 @@ public class SingyeongHandler {
                     sendPlayerUpdate(client, event, json == null ? null : json.put("destroyed", true));
                     break;
                 }
+                case "ping": {
+                    sendResponse(client, event, payload.copy().put("op", "pong"));
+                    break;
+                }
             }
         });
 
@@ -127,6 +131,8 @@ public class SingyeongHandler {
                     client.updateMetadata("andesite-region", SingyeongType.STRING, nodeRegion);
                     client.updateMetadata("andesite-id", SingyeongType.STRING, nodeId);
                     client.updateMetadata("andesite-version", SingyeongType.STRING, Version.VERSION);
+                    client.updateMetadata("andesite-version-major", SingyeongType.STRING, Version.VERSION_MAJOR);
+                    client.updateMetadata("andesite-connections", SingyeongType.LIST, new JsonArray());
                     log.info("Singyeong connection established");
                 })
                 .exceptionally(error -> {

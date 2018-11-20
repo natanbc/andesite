@@ -43,6 +43,7 @@ public class RestHandler {
         //setup headers
         router.route().handler(context -> {
             context.response().putHeader("Andesite-Version", Version.VERSION);
+            context.response().putHeader("Andesite-Version-Major", Version.VERSION_MAJOR);
             context.response().putHeader("Andesite-Node-Region", nodeRegion);
             context.response().putHeader("Andesite-Node-Id", nodeId);
             if(context.request().getHeader("upgrade") == null) {
