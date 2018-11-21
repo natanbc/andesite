@@ -122,6 +122,7 @@ public class WebSocketHandler {
                 case "get-stats": {
                     ws.writeFinalTextFrame(new JsonObject()
                             .put("op", "stats")
+                            .put("userId", user)
                             .put("stats", andesite.requestHandler().getNodeStats())
                             .encode()
                     );
@@ -129,7 +130,7 @@ public class WebSocketHandler {
                 }
                 case "get-player": {
                     var json = andesite.requestHandler().player(user, guild);
-                    sendPlayerUpdate(guild, json);
+                    sendPlayerUpdate(user, guild, json);
                     break;
                 }
                 case "play": {
@@ -139,50 +140,51 @@ public class WebSocketHandler {
                         ));
                     }
                     var json = andesite.requestHandler().play(user, guild, payload);
-                    sendPlayerUpdate(guild, json);
+                    sendPlayerUpdate(user, guild, json);
                     break;
                 }
                 case "stop": {
                     var json = andesite.requestHandler().stop(user, guild);
-                    sendPlayerUpdate(guild, json);
+                    sendPlayerUpdate(user, guild, json);
                     break;
                 }
                 case "pause": {
                     var json = andesite.requestHandler().pause(user, guild, payload);
-                    sendPlayerUpdate(guild, json);
+                    sendPlayerUpdate(user, guild, json);
                     break;
                 }
                 case "seek": {
                     var json = andesite.requestHandler().seek(user, guild, payload);
-                    sendPlayerUpdate(guild, json);
+                    sendPlayerUpdate(user, guild, json);
                     break;
                 }
                 case "volume": {
                     var json = andesite.requestHandler().volume(user, guild, payload);
-                    sendPlayerUpdate(guild, json);
+                    sendPlayerUpdate(user, guild, json);
                     break;
                 }
                 case "update": {
                     var json = andesite.requestHandler().update(user, guild, payload);
-                    sendPlayerUpdate(guild, json);
+                    sendPlayerUpdate(user, guild, json);
                     break;
                 }
                 case "destroy": {
                     var json = andesite.requestHandler().destroy(user, guild);
-                    sendPlayerUpdate(guild, json == null ? null : json.put("destroyed", true));
+                    sendPlayerUpdate(user, guild, json == null ? null : json.put("destroyed", true));
                     break;
                 }
                 case "ping": {
-                    ws.writeFinalTextFrame(payload.copy().put("op", "pong").encode());
+                    ws.writeFinalTextFrame(payload.copy().put("userId", user).put("op", "pong").encode());
                     break;
                 }
             }
         }
 
-        private void sendPlayerUpdate(@Nonnull String guildId, @Nullable JsonObject player) {
+        private void sendPlayerUpdate(@Nonnull String userId, @Nonnull String guildId, @Nullable JsonObject player) {
             if(lavalink && player == null) return;
             var payload = new JsonObject()
                     .put("op", lavalink ? "playerUpdate" : "player-update")
+                    .put("userId", userId)
                     .put("guildId", guildId)
                     .put("state", player);
             ws.writeFinalTextFrame(payload.encode());

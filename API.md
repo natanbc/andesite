@@ -56,6 +56,10 @@ All payloads must be valid json objects. If parsing fails, the socket is closed 
 
 All payloads must have `op` and `guildId` keys, which must be strings.
 
+Payloads can override the `User-Id` header by providing an `userId` field. This override is
+valid only for that payload. All responses will have an `userId` field containing either the
+id provided in the override or the id provided in the headers during the websocket handshake.
+
 Valid `op`s are:
 
 | op | description |
@@ -68,6 +72,7 @@ Valid `op`s are:
 | volume | updates the volume on the guild. Payload must also be a valid [volume](#volume) object |
 | update | updates the player. Payload must also be a valid [update](#update) object |
 | destroy | destroys the player. Resulting player update event will have a `destroyed` key with value of `true` |
+| get-player | returns the player state. |
 | get-stats | returns node stats |
 | subscribe | subscribes this connection to receive events from the guild (lavalink connections are automatically subscribed on `play` requests) |
 

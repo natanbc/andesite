@@ -159,13 +159,14 @@ public class SingyeongHandler {
 
     private static void sendResponse(@Nonnull SingyeongClient client, @Nonnull Dispatch dispatch,
                                      @Nullable JsonObject payload) {
+        if(payload == null) return;
         var data = dispatch.data();
         if(data.getBoolean("noreply", false)) return;
         client.send(
                 data.getString("response-app", dispatch.sender()),
                 data.getString("response-nonce", dispatch.nonce()),
                 data.getJsonArray("response-query", new QueryBuilder().build()),
-                payload
+                payload.put("userId", data.getString("userId"))
         );
     }
 }
