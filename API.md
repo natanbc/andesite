@@ -50,7 +50,7 @@ All responses have the following headers:
 
 ## WebSocket
 
-- A lavalink compatible websocket is available by default on the `/lavalink` route.
+- A (mostly*) lavalink compatible websocket is available by default on the `/lavalink` route.
 
 All payloads must be valid json objects. If parsing fails, the socket is closed with code 4001.
 
@@ -71,7 +71,7 @@ Valid `op`s are:
 | get-stats | returns node stats |
 | subscribe | subscribes this connection to receive events from the guild (lavalink connections are automatically subscribed on `play` requests) |
 
-
+\* Currently, the equalizer op isn't supported, and the stats sent always have a null `frameStats` key.
 
 ## Singyeong
 

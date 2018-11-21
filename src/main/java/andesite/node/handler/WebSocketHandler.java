@@ -105,6 +105,7 @@ public class WebSocketHandler {
                 ws.close((short)4001, "Unable to read frame data as json: " + e);
                 return;
             }
+            var user = payload.getString("userId", this.user);
             var guild = payload.getString("guildId");
             switch(payload.getString("op")) {
                 case "voice-server-update":
