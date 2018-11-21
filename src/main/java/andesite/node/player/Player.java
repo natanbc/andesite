@@ -17,15 +17,17 @@ public class Player implements AudioSendHandler {
     private final Andesite andesite;
     private final AudioPlayerManager audioPlayerManager;
     private final String guildId;
+    private final String userId;
     private final AudioPlayer audioPlayer;
     private final AudioSendHandler realSendHandler;
     private final Map<String, EventEmitter> listeners = new HashMap<>();
     private final long timerId;
 
-    public Player(@Nonnull Andesite andesite, @Nonnull String guildId) {
+    public Player(@Nonnull Andesite andesite, @Nonnull String guildId, @Nonnull String userId) {
         this.andesite = andesite;
         this.audioPlayerManager = andesite.audioPlayerManager();
         this.guildId = guildId;
+        this.userId = userId;
         this.audioPlayer = audioPlayerManager.createPlayer();
         this.audioPlayer.addListener(event -> listeners.values().forEach(listener -> listener.onEvent(event)));
         this.realSendHandler = andesite.config().getBoolean("send-system.non-allocating", false) ?
@@ -47,6 +49,12 @@ public class Player implements AudioSendHandler {
     @CheckReturnValue
     public String guildId() {
         return guildId;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public String userId() {
+        return userId;
     }
 
     @Nonnull

@@ -47,6 +47,7 @@ public class EventEmitter extends AudioEventAdapter {
         sendEvent.accept(new JsonObject()
                 .put("op", "playerUpdate")
                 .put("guildId", player.guildId())
+                .put("userId", player.userId())
                 .put("state", player.encodeState())
         );
     }
@@ -60,6 +61,7 @@ public class EventEmitter extends AudioEventAdapter {
                 .put("op", "event")
                 .put("type", type)
                 .put("guildId", player.guildId())
+                .put("userId", player.userId())
                 .put("track", RequestUtils.trackString(player.audioPlayerManager(), track));
     }
 }

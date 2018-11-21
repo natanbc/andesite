@@ -134,7 +134,7 @@ public class Andesite {
     @CheckReturnValue
     public Player getPlayer(@Nonnull String userId, @Nonnull String guildId) {
         return playerMap(userId).computeIfAbsent(guildId, __ -> {
-            var player = new Player(this, guildId);
+            var player = new Player(this, guildId, userId);
             dispatcher.onPlayerCreated(userId, guildId, player);
             return player;
         });

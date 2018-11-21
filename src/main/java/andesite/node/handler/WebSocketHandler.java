@@ -127,6 +127,11 @@ public class WebSocketHandler {
                     );
                     break;
                 }
+                case "get-player": {
+                    var json = andesite.requestHandler().player(user, guild);
+                    sendPlayerUpdate(guild, json);
+                    break;
+                }
                 case "play": {
                     if(lavalink) {
                         emitters.add(andesite.requestHandler().subscribe(user, guild, "lavalink-connection",
