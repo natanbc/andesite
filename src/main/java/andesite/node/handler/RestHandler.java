@@ -80,9 +80,7 @@ public class RestHandler {
         router.route().handler(context -> {
             var id = context.request().getHeader("User-Id");
             try {
-                //noinspection ResultOfMethodCallIgnored
-                Long.parseUnsignedLong(id);
-                context.put("user-id", id);
+                context.put("user-id", Long.toUnsignedString(Long.parseUnsignedLong(id)));
             } catch(Exception e) {
                 error(context, 400, "Missing or invalid User-Id header");
                 return;

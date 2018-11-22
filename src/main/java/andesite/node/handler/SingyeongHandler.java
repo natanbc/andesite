@@ -3,6 +3,7 @@ package andesite.node.handler;
 import andesite.node.Andesite;
 import andesite.node.Version;
 import andesite.node.event.AndesiteEventListener;
+import andesite.node.player.EmitterReference;
 import andesite.node.player.Player;
 import gg.amy.singyeong.Dispatch;
 import gg.amy.singyeong.QueryBuilder;
@@ -33,6 +34,7 @@ public class SingyeongHandler {
                 andesite.vertx(), config.get("transport.singyeong.app-id", "andesite-audio"));
 
         var players = ConcurrentHashMap.<String>newKeySet();
+        var emitters = new ConcurrentHashMap<String, EmitterReference>();
 
         andesite.dispatcher().register(new AndesiteEventListener() {
             @Override
@@ -72,9 +74,17 @@ public class SingyeongHandler {
                 case "subscribe": {
                     var receiver = payload.getString("receiver", event.sender());
                     var query = payload.getJsonArray("query", new QueryBuilder().build());
-                    andesite.requestHandler().subscribe(user, guild, payload.getString("key"),
+                    var key = payload.getString("key");
+                    emitters.put(user + ":" + guild + ":" + key,
+                            andesite.requestHandler().subscribe(user, guild, key,
                             json -> client.send(receiver, query, json)
-                    );
+                    ));
+                    break;
+                }
+                case "unsubscribe": {
+                    var key = payload.getString("key");
+                    var emitter = emitters.remove(user + ":" + guild + ":" + key);
+                    if(emitter != null) emitter.remove();
                     break;
                 }
                 case "get-stats": {

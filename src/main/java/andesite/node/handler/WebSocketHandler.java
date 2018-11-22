@@ -14,7 +14,9 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class WebSocketHandler {
     public static void setup(@Nonnull Andesite andesite, @Nonnull Router router) {
@@ -48,7 +50,7 @@ public class WebSocketHandler {
         private final String user;
         private final ServerWebSocket ws;
         private final boolean lavalink;
-        private final List<EmitterReference> emitters = new ArrayList<>();
+        private final Map<String, EmitterReference> emitters = new HashMap<>();
         private final long timerId;
         private final AndesiteEventListener listener = new AndesiteEventListener() {
             @Override
@@ -87,7 +89,7 @@ public class WebSocketHandler {
         private void handleClose() {
             andesite.vertx().cancelTimer(timerId);
             andesite.dispatcher().unregister(listener);
-            emitters.forEach(EmitterReference::remove);
+            emitters.values().forEach(EmitterReference::remove);
         }
 
         @Override
@@ -114,9 +116,17 @@ public class WebSocketHandler {
                     break;
                 }
                 case "subscribe": {
-                    emitters.add(andesite.requestHandler().subscribe(user, guild, payload.getString("key"),
+                    var key = payload.getString("key");
+                    emitters.put(user + ":" + guild + ":" + key,
+                            andesite.requestHandler().subscribe(user, guild, key,
                             json -> ws.writeFinalTextFrame(json.encode())
                     ));
+                    break;
+                }
+                case "unsubscribe": {
+                    var key = payload.getString("key");
+                    var emitter = emitters.remove(user + ":" + guild + ":" + key);
+                    if(emitter != null) emitter.remove();
                     break;
                 }
                 case "get-stats": {
@@ -135,7 +145,9 @@ public class WebSocketHandler {
                 }
                 case "play": {
                     if(lavalink) {
-                        emitters.add(andesite.requestHandler().subscribe(user, guild, "lavalink-connection",
+                        var key = "lavalink-connection";
+                        emitters.put(user + ":" + guild + ":" + key,
+                                andesite.requestHandler().subscribe(user, guild, key,
                                 json -> ws.writeFinalTextFrame(json.encode())
                         ));
                     }
