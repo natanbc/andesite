@@ -6,6 +6,7 @@ import com.sedmelluq.discord.lavaplayer.tools.io.MessageOutput;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RoutingContext;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -61,15 +62,50 @@ public class RequestUtils {
 
     @Nonnull
     @CheckReturnValue
-    public static JsonObject encodeThrowable(@Nonnull Throwable throwable) {
+    public static JsonObject encodeFailure(@Nonnull RoutingContext context) {
+        return encodeThrowable(context, context.failure());
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public static JsonObject encodeThrowable(@Nonnull RoutingContext context, @Nonnull Throwable throwable) {
+        return  useShortMessage(context) ?
+                RequestUtils.encodeThrowableShort(throwable) :
+                RequestUtils.encodeThrowableDetailed(throwable);
+    }
+
+    private static boolean useShortMessage(@Nonnull RoutingContext context) {
+        return context.request().getHeader("Andesite-Short-Errors") != null ||
+                context.queryParams().contains("shortErrors");
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public static JsonObject encodeThrowableShort(@Nonnull Throwable throwable) {
         var json = new JsonObject()
                 .put("class", throwable.getClass().getName())
                 .put("message", throwable.getMessage())
-                .put("suppressed", encodeArray(throwable.getSuppressed(), RequestUtils::encodeThrowable))
+                .put("suppressed", encodeArray(throwable.getSuppressed(), RequestUtils::encodeThrowableShort));
+        var cause = throwable.getCause();
+        if(cause != null) {
+            json.put("cause", encodeThrowableShort(cause));
+        } else {
+            json.putNull("cause");
+        }
+        return json;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public static JsonObject encodeThrowableDetailed(@Nonnull Throwable throwable) {
+        var json = new JsonObject()
+                .put("class", throwable.getClass().getName())
+                .put("message", throwable.getMessage())
+                .put("suppressed", encodeArray(throwable.getSuppressed(), RequestUtils::encodeThrowableDetailed))
                 .put("stack", encodeArray(throwable.getStackTrace(), RequestUtils::encodeStackFrame));
         var cause = throwable.getCause();
         if(cause != null) {
-            json.put("cause", encodeThrowable(cause));
+            json.put("cause", encodeThrowableDetailed(cause));
         } else {
             json.putNull("cause");
         }

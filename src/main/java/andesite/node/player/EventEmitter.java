@@ -32,7 +32,7 @@ public class EventEmitter extends AudioEventAdapter {
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
         sendEvent.accept(event("TrackExceptionEvent", track)
                 .put("error", exception.getMessage())
-                .put("exception", RequestUtils.encodeThrowable(exception)));
+                .put("exception", RequestUtils.encodeThrowableShort(exception)));
         sendPlayerUpdate();
     }
 
@@ -41,6 +41,10 @@ public class EventEmitter extends AudioEventAdapter {
         sendEvent.accept(event("TrackStuckEvent", track)
                 .put("thresholdMs", thresholdMs));
         sendPlayerUpdate();
+    }
+
+    public Consumer<JsonObject> sink() {
+        return sendEvent;
     }
 
     public void sendPlayerUpdate() {

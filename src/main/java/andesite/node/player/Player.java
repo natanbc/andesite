@@ -11,16 +11,17 @@ import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class Player implements AudioSendHandler {
+    private final Map<Object, EventEmitter> emitters = new ConcurrentHashMap<>();
     private final Andesite andesite;
     private final AudioPlayerManager audioPlayerManager;
     private final String guildId;
     private final String userId;
     private final AudioPlayer audioPlayer;
     private final AudioSendHandler realSendHandler;
-    private final Map<String, EventEmitter> listeners = new HashMap<>();
     private final long timerId;
 
     public Player(@Nonnull Andesite andesite, @Nonnull String guildId, @Nonnull String userId) {
@@ -29,13 +30,13 @@ public class Player implements AudioSendHandler {
         this.guildId = guildId;
         this.userId = userId;
         this.audioPlayer = audioPlayerManager.createPlayer();
-        this.audioPlayer.addListener(event -> listeners.values().forEach(listener -> listener.onEvent(event)));
+        this.audioPlayer.addListener(event -> emitters.values().forEach(e -> e.onEvent(event)));
         this.realSendHandler = andesite.config().getBoolean("send-system.non-allocating", false) ?
                 new NonAllocatingSendHandler(audioPlayer) :
                 new AllocatingSendHandler(audioPlayer);
         this.timerId = andesite.vertx().setPeriodic(5000, __ -> {
             if(audioPlayer.getPlayingTrack() == null) return;
-            listeners.values().forEach(EventEmitter::sendPlayerUpdate);
+            emitters.values().forEach(EventEmitter::sendPlayerUpdate);
         });
     }
 
@@ -65,15 +66,12 @@ public class Player implements AudioSendHandler {
 
     @Nonnull
     @CheckReturnValue
-    public Map<String, EventEmitter> eventListeners() {
-        return listeners;
+    public Map<Object, EventEmitter> eventListeners() {
+        return emitters;
     }
 
-    @Nonnull
-    public EmitterReference setListener(@Nonnull String key, @Nonnull Consumer<JsonObject> sink) {
-        var emitter = new EventEmitter(this, sink);
-        listeners.put(key, emitter);
-        return new EmitterReference(this, key, emitter);
+    public void setListener(@Nonnull Object key, @Nonnull Consumer<JsonObject> sink) {
+        emitters.put(key, new EventEmitter(this, sink));
     }
 
     @CheckReturnValue

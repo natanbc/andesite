@@ -1,7 +1,6 @@
 package andesite.node.handler;
 
 import andesite.node.Andesite;
-import andesite.node.player.EmitterReference;
 import andesite.node.util.RequestUtils;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -89,10 +88,10 @@ public class RequestHandler {
     }
 
     @Nonnull
-    public EmitterReference subscribe(@Nonnull String userId, @Nonnull String guildId,
-                                      @Nonnull String key, @Nonnull Consumer<JsonObject> eventSink) {
-        log.info("Subscribing for events with key {} for user {} in guild {}", key, userId, guildId);
-        return andesite.getPlayer(userId, guildId).setListener(key, eventSink);
+    public void subscribe(@Nonnull String userId, @Nonnull String guildId,
+                          @Nonnull Object key, @Nonnull Consumer<JsonObject> eventSink) {
+        log.info("Subscribing for events for user {} in guild {}", userId, guildId);
+        andesite.getPlayer(userId, guildId).setListener(key, eventSink);
     }
 
     @Nonnull
@@ -210,7 +209,8 @@ public class RequestHandler {
             isUrl = false;
         }
         var isSearch = identifier.startsWith("ytsearch:") || identifier.startsWith("scsearch:");
-        andesite.audioPlayerManager().loadItem(isUrl || isSearch ? identifier : "ytsearch:" + identifier,
+        andesite.audioPlayerManager().loadItem(isUrl || isSearch ? identifier :
+                        identifier.startsWith("raw:") ? identifier.substring(4) : "ytsearch:" + identifier,
                 new AudioLoadResultHandler() {
                     @Override
                     public void trackLoaded(AudioTrack track) {
@@ -243,10 +243,7 @@ public class RequestHandler {
 
                     @Override
                     public void loadFailed(FriendlyException exception) {
-                        future.complete(new JsonObject()
-                                .put("loadType", "LOAD_FAILED")
-                                .put("cause", encodeThrowable(exception))
-                                .put("severity", exception.severity.name()));
+                        future.completeExceptionally(exception);
                     }
                 });
         return future;

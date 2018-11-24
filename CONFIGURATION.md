@@ -56,14 +56,14 @@ Example:
 | transport.singyeong.enabled | boolean | whether or not to enable the singyeong api | false |
 | transport.singyeong.url | string | url of the singyeong server | null |
 | transport.singyeong.app-id | string | application id to register the node with | andesite-audio |
-| source.bandcamp | boolean | whether or not to enable playing and resolving tracks from bandcamp | false |
-| source.beam | boolean | whether or not to enable playing and resolving tracks from beam | false |
-| source.http | boolean | whether or not to enable playing and resolving tracks from http urls | false |
-| source.local | boolean | whether or not to enable playing and resolving tracks from local files | false |
-| source.soundcloud | boolean | whether or not to enable playing and resolving tracks from soundcloud | false |
-| source.twitch | boolean | whether or not to enable playing and resolving tracks from twitch | false |
-| source.vimeo | boolean | whether or not to enable playing and resolving tracks from vimeo | false |
-| source.youtube | boolean | whether or not to enable playing and resolving tracks from youtube | false |
+| source.bandcamp | boolean | whether or not to enable playing and resolving tracks from bandcamp | true |
+| source.beam | boolean | whether or not to enable playing and resolving tracks from beam | true |
+| source.http | boolean | whether or not to enable playing and resolving tracks from http urls | **false** |
+| source.local | boolean | whether or not to enable playing and resolving tracks from local files | **false** |
+| source.soundcloud | boolean | whether or not to enable playing and resolving tracks from soundcloud | true |
+| source.twitch | boolean | whether or not to enable playing and resolving tracks from twitch | true |
+| source.vimeo | boolean | whether or not to enable playing and resolving tracks from vimeo | true |
+| source.youtube | boolean | whether or not to enable playing and resolving tracks from youtube | true |
 
 \* When running on architectures not supported by [jda-nas](https://github.com/sedmelluq/jda-nas), such as
 ARM or Darwin devices, you must use either `jda` or `nio` for the send system. For production, nio is preferred

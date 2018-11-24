@@ -3,7 +3,6 @@ package andesite.node.handler;
 import andesite.node.Andesite;
 import andesite.node.Version;
 import andesite.node.event.AndesiteEventListener;
-import andesite.node.player.EmitterReference;
 import andesite.node.player.Player;
 import gg.amy.singyeong.Dispatch;
 import gg.amy.singyeong.QueryBuilder;
@@ -34,7 +33,6 @@ public class SingyeongHandler {
                 andesite.vertx(), config.get("transport.singyeong.app-id", "andesite-audio"));
 
         var players = ConcurrentHashMap.<String>newKeySet();
-        var emitters = new ConcurrentHashMap<String, EmitterReference>();
 
         andesite.dispatcher().register(new AndesiteEventListener() {
             @Override
@@ -60,6 +58,9 @@ public class SingyeongHandler {
             }
         });
 
+        //used for player event listeners
+        var key = new Object();
+
         client.onEvent(event -> {
             var payload = event.data();
 
@@ -74,17 +75,14 @@ public class SingyeongHandler {
                 case "subscribe": {
                     var receiver = payload.getString("receiver", event.sender());
                     var query = payload.getJsonArray("query", new QueryBuilder().build());
-                    var key = payload.getString("key");
-                    emitters.put(user + ":" + guild + ":" + key,
-                            andesite.requestHandler().subscribe(user, guild, key,
-                            json -> client.send(receiver, query, json)
-                    ));
+                    andesite.requestHandler().subscribe(user, guild, key, json -> client.send(receiver, query, json));
                     break;
                 }
                 case "unsubscribe": {
-                    var key = payload.getString("key");
-                    var emitter = emitters.remove(user + ":" + guild + ":" + key);
-                    if(emitter != null) emitter.remove();
+                    var player = andesite.getExistingPlayer(user, guild);
+                    if(player != null) {
+                        player.eventListeners().remove(key);
+                    }
                     break;
                 }
                 case "get-stats": {
@@ -148,6 +146,8 @@ public class SingyeongHandler {
                     client.updateMetadata("andesite-version", SingyeongType.STRING, Version.VERSION);
                     client.updateMetadata("andesite-version-major", SingyeongType.STRING, Version.VERSION_MAJOR);
                     client.updateMetadata("andesite-connections", SingyeongType.LIST, new JsonArray());
+                    client.updateMetadata("andesite-enabled-sources", SingyeongType.LIST,
+                            andesite.enabledSources().stream().reduce(new JsonArray(), JsonArray::add, JsonArray::addAll));
                     log.info("Singyeong connection established");
                 })
                 .exceptionally(error -> {

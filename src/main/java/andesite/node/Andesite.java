@@ -33,8 +33,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Andesite {
@@ -48,6 +50,7 @@ public class Andesite {
             "vimeo", VimeoAudioSourceManager::new,
             "youtube", YoutubeAudioSourceManager::new
     );
+    private static final Set<String> DISABLED_BY_DEFAULT = Set.of("http", "local");
 
     private final Map<String, Map<String, Player>> players = new ConcurrentHashMap<>();
     private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
@@ -57,18 +60,18 @@ public class Andesite {
     private final IAudioSendFactory factory;
     private final MagmaApi magma;
     private final RequestHandler handler;
+    private final Set<String> enabledSources;
 
     private Andesite(@Nonnull Vertx vertx, @Nonnull Config config) {
         this.vertx = vertx;
         this.config = config;
         this.factory = createFactory(config);
         this.magma = MagmaApi.of(__ -> factory);
-        SOURCE_MANAGERS.forEach((k, v) -> {
-            if(config.getBoolean("source." + k, false)) {
-                playerManager.registerSourceManager(v.get());
-            }
-        });
         this.handler = new RequestHandler(this);
+        this.enabledSources = SOURCE_MANAGERS.keySet().stream()
+                .filter(key -> config.getBoolean("source." + key, !DISABLED_BY_DEFAULT.contains(key)))
+                .peek(key -> playerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
+                .collect(Collectors.toSet());
         var audioConfig = playerManager.getConfiguration();
         audioConfig.setFilterHotSwapEnabled(true);
         if(config.getBoolean("send-system.non-allocating", false)) {
@@ -128,6 +131,12 @@ public class Andesite {
     @CheckReturnValue
     public RequestHandler requestHandler() {
         return handler;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public Set<String> enabledSources() {
+        return enabledSources;
     }
 
     @Nonnull

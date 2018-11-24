@@ -4,6 +4,7 @@ import andesite.node.Andesite;
 import andesite.node.Version;
 import andesite.node.util.MemoryBodyHandler;
 import andesite.node.util.RequestUtils;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -37,7 +38,7 @@ public class RestHandler {
                     .setStatusCode(500)
                     .setStatusMessage("Internal server error")
                     .putHeader("Content-Type", "application/json")
-                    .end(RequestUtils.encodeThrowable(context.failure()).toBuffer())
+                    .end(RequestUtils.encodeFailure(context).toBuffer())
         );
 
         //setup headers
@@ -46,6 +47,7 @@ public class RestHandler {
             context.response().putHeader("Andesite-Version-Major", Version.VERSION_MAJOR);
             context.response().putHeader("Andesite-Node-Region", nodeRegion);
             context.response().putHeader("Andesite-Node-Id", nodeId);
+            context.response().putHeader("Andesite-Enabled-Sources", String.join(",", andesite.enabledSources()));
             if(context.request().getHeader("upgrade") == null) {
                 context.response().putHeader("Content-Type", "application/json");
             }
@@ -189,7 +191,21 @@ public class RestHandler {
             }
             var identifier = identifiers.get(0);
             andesite.requestHandler().resolveTracks(identifier)
-                    .thenAccept(json -> context.response().end(json.toBuffer()));
+                    .thenAccept(json -> context.response().end(json.toBuffer()))
+                    .exceptionally(e -> {
+                        if(e instanceof FriendlyException) {
+                            context.response().end(
+                                    new JsonObject()
+                                            .put("loadType", "LOAD_FAILED")
+                                            .put("cause", RequestUtils.encodeThrowable(context, e))
+                                            .put("severity", ((FriendlyException)e).severity.name())
+                                            .toBuffer()
+                            );
+                        } else {
+                            context.fail(e);
+                        }
+                        return null;
+                    });
         });
 
         router.get("/decodetrack").handler(context -> {

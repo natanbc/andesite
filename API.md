@@ -20,8 +20,14 @@ All responses have the following headers:
 | Andesite-Version | version of the node |
 | Andesite-Node-Region | [node region](CONFIGURATION.md#settings) defined in the config |
 | Andesite-Node-Id | [node ID](CONFIGURATION.md#settings) defined in the config |
+| Andesite-Enabled-Sources | comma separated list of [sources](CONFIGURATION.md#settings) enabled in the config |
 
-\* If the key is missing or null this header may be omitted.
+If an error happens, an [error](#error) object is returned. Since these objects can get quite big, it's possible
+to enable a shorter version, which does not send stack frames, by providing a header named `Andesite-Short-Errors`
+or a query param named `shortErrors`. Their values can be anything, as long as they are present shorter error messages
+are returned. 
+
+\* If the password isn't defined or is null this header may be omitted.
 
 ### Player routes
 
@@ -85,6 +91,7 @@ Andesite adds the following metadata values:
 - andesite-version: version of the node
 - andesite-region: [region](CONFIGURATION.md#settings) defined in the config
 - andesite-id: [id](CONFIGURATION.md#settings) defined in the config
+- andesite-enabled-sources: list of sources [enabled](CONFIGURATION.md#settings) in the config
 - andesite-players: `userid:guildid` list of the players being handled by this node
 
 All payloads sent via singyeong are equal to those sent via [web socket](#websocket), except they also need
