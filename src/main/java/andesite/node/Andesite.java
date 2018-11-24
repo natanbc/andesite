@@ -1,6 +1,7 @@
 package andesite.node;
 
 import andesite.node.config.Config;
+import andesite.node.event.EventBuffer;
 import andesite.node.event.EventDispatcher;
 import andesite.node.handler.RequestHandler;
 import andesite.node.handler.RestHandler;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -53,6 +55,8 @@ public class Andesite {
     );
     private static final Set<String> DISABLED_BY_DEFAULT = Set.of("http", "local");
 
+    private final AtomicLong nextBufferId = new AtomicLong();
+    private final Map<Long, EventBuffer> buffers = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Player>> players = new ConcurrentHashMap<>();
     private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
     private final EventDispatcher dispatcher = new EventDispatcher();
@@ -138,6 +142,24 @@ public class Andesite {
     @CheckReturnValue
     public Set<String> enabledSources() {
         return enabledSources;
+    }
+
+    @CheckReturnValue
+    public long nextConnectionId() {
+        return nextBufferId.incrementAndGet();
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public EventBuffer createEventBuffer(long id) {
+        var buffer = new EventBuffer();
+        buffers.put(id, buffer);
+        return buffer;
+    }
+
+    @Nullable
+    public EventBuffer removeEventBuffer(long id) {
+        return buffers.remove(id);
     }
 
     @Nonnull

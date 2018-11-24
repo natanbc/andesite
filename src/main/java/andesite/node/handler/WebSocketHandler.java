@@ -30,13 +30,25 @@ public class WebSocketHandler {
         return context -> {
             var req = context.request();
             if("websocket".equalsIgnoreCase(req.getHeader("upgrade"))) {
+                var id = andesite.nextConnectionId();
+                context.response().putHeader("Andesite-Connection-Id", String.valueOf(id));
                 var ws = req.upgrade();
                 var userId = context.<String>get("user-id");
                 var llQuery = context.queryParam("lavalink");
                 var lavalinkConnection = lavalinkRoute
                         || "lavalink".equalsIgnoreCase(req.getHeader("Andesite-Compat"))
                         || llQuery != null && !llQuery.isEmpty();
-                ws.frameHandler(new FrameHandler(andesite, userId, ws, lavalinkConnection));
+                var resumeId = context.request().getHeader("Andesite-Resume-Id");
+                if(resumeId != null) {
+                    try {
+                        var buffer = andesite.removeEventBuffer(Long.parseLong(resumeId));
+                        if(buffer != null) {
+                            andesite.allPlayers().forEach(p -> p.eventListeners().remove(buffer));
+                            buffer.empty(json -> ws.writeFinalTextFrame(json.encode()));
+                        }
+                    } catch(Exception ignored) {}
+                }
+                ws.frameHandler(new FrameHandler(andesite, userId, ws, id, lavalinkConnection));
             } else {
                 context.next();
             }
@@ -47,9 +59,10 @@ public class WebSocketHandler {
         private final Andesite andesite;
         private final String user;
         private final ServerWebSocket ws;
+        private final long connectionId;
         private final boolean lavalink;
-        private final Set<Player> subscriptions = ConcurrentHashMap.newKeySet();
         private final long timerId;
+        private final Set<Player> subscriptions = ConcurrentHashMap.newKeySet();
         private final AndesiteEventListener listener = new AndesiteEventListener() {
             @Override
             public void onWebSocketClosed(@Nonnull String userId, @Nonnull String guildId,
@@ -65,12 +78,14 @@ public class WebSocketHandler {
                 ws.writeFinalTextFrame(payload.encode());
             }
         };
+        private long timeout;
 
         FrameHandler(@Nonnull Andesite andesite, @Nonnull String user,
-                     @Nonnull ServerWebSocket ws, boolean lavalink) {
+                     @Nonnull ServerWebSocket ws, long connectionId, boolean lavalink) {
             this.andesite = andesite;
             this.user = user;
             this.ws = ws;
+            this.connectionId = connectionId;
             this.lavalink = lavalink;
             if(lavalink) {
                 this.timerId = andesite.vertx().setPeriodic(30_000, __ -> {
@@ -85,6 +100,14 @@ public class WebSocketHandler {
         }
 
         private void handleClose() {
+            if(timeout != 0) {
+                var buffer = andesite.createEventBuffer(connectionId);
+                subscriptions.forEach(p -> p.setListener(buffer, buffer::offer));
+                andesite.vertx().setTimer(timeout, __ -> {
+                    subscriptions.forEach(p -> p.eventListeners().remove(buffer));
+                    andesite.removeEventBuffer(connectionId);
+                });
+            }
             andesite.vertx().cancelTimer(timerId);
             andesite.dispatcher().unregister(listener);
             subscriptions.forEach(p -> p.eventListeners().remove(this));
@@ -123,6 +146,10 @@ public class WebSocketHandler {
                     if(player != null) {
                         player.eventListeners().remove(this);
                     }
+                    break;
+                }
+                case "event-buffer": {
+                    timeout = payload.getInteger("timeout", 0);
                     break;
                 }
                 case "get-stats": {
@@ -174,6 +201,10 @@ public class WebSocketHandler {
                     break;
                 }
                 case "destroy": {
+                    var player = andesite.getExistingPlayer(user, guild);
+                    if(player != null) {
+                        subscriptions.remove(player);
+                    }
                     var json = andesite.requestHandler().destroy(user, guild);
                     sendPlayerUpdate(user, guild, json == null ? null : json.put("destroyed", true));
                     break;

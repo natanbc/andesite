@@ -82,6 +82,14 @@ Valid `op`s are:
 | get-stats | returns node stats |
 | subscribe | subscribes this connection to receive events from the guild (lavalink connections are automatically subscribed on `play` requests) |
 
+Additionally, WebSockets offer a replay system, so events fired after a connection was closed can be replayed.
+During websocket connection, the server will send a header `Andesite-Connection-Id`. After the websocket connection
+is established, clients can send an [event-buffer](#event-buffer) payload to enable buffering. When a connection is closed,
+events will be buffered for up to the timeout specified in the `event-buffer` payload. After that, all buffered events
+are discarded and buffering will stop. To get the missed events, clients must reconnect with a `Andesite-Resume-Id`
+header containing the value returned by the `Andesite-Connection-Id` received earlier. All IDs are single use and
+reconnects must save the new ID returned. To disable buffering, simply send an `event-buffer` payload with timeout of 0.
+
 \* Currently, the equalizer op isn't supported, and the stats sent always have a null `frameStats` key.
 
 ## Singyeong
@@ -199,6 +207,12 @@ an `userId` key, which is sent on the handshake headers for websocket connection
 | pause | boolean/null | whether or not to pause the player |
 | position | integer/null | timestamp to set the current track to, in milliseconds |
 | volume | integer/null | volume to set on the player |
+
+## Event Buffer
+
+| key | type | description |
+|-----|------|-------------|
+| timeout | integer | timeout for event buffering, in milliseconds |
 
 ## Error
 
