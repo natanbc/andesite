@@ -5,6 +5,8 @@ import andesite.node.Version;
 import andesite.node.util.MemoryBodyHandler;
 import andesite.node.util.RequestUtils;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.exporter.common.TextFormat;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -16,6 +18,9 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 public class RestHandler {
@@ -26,9 +31,12 @@ public class RestHandler {
 
         var enableRest = config.getBoolean("transport.http.rest", true);
         var enableWs = config.getBoolean("transport.http.ws", true);
+        var enablePrometheus = config.getBoolean("prometheus.enabled", false);
 
-        var nodeRegion = config.require("node.region");
-        var nodeId = config.require("node.id");
+        if(!enableRest && !enableWs && !enablePrometheus) return false;
+
+        var nodeRegion = config.get("node.region", "unknown");
+        var nodeId = config.get("node.id", "unknown");
 
         var router = Router.router(andesite.vertx());
 
@@ -53,6 +61,23 @@ public class RestHandler {
             }
             context.next();
         });
+
+        if(enablePrometheus) {
+            router.get(config.get("prometheus.path", "/metrics")).handler(context -> {
+                var writer = new StringWriter();
+                try {
+                    TextFormat.write004(writer, CollectorRegistry.defaultRegistry.filteredMetricFamilySamples(
+                            Set.copyOf(context.queryParam("name[]"))
+                    ));
+                } catch(IOException e) {
+                    context.fail(e);
+                    return;
+                }
+                context.response()
+                        .putHeader("Content-Type", TextFormat.CONTENT_TYPE_004)
+                        .end(writer.toString());
+            });
+        }
 
         //verify authentication
         router.route().handler(context -> {
@@ -94,62 +119,60 @@ public class RestHandler {
             WebSocketHandler.setup(andesite, router);
         }
 
-        if(!enableRest) {
-            return enableWs;
+        if(enableRest) {
+            //read bodies
+            router.route().handler(new MemoryBodyHandler(65536)); /* 64KiB max body size */
+
+            router.post("/player/voice-server-update").handler(context -> {
+                andesite.requestHandler().provideVoiceServerUpdate(context.get("user-id"), context.getBodyAsJson());
+                context.response().setStatusCode(204).setStatusMessage("No content").end();
+            });
+
+            router.get("/player/:guild_id").handler(context -> {
+                var res = andesite.requestHandler().player(context.get("user-id"), context.pathParam("guild_id"));
+                sendResponse(context, res);
+            });
+
+            router.post("/player/:guild_id/play").handler(context -> {
+                var res = andesite.requestHandler().play(context.get("user-id"), context.pathParam("guild_id"),
+                        context.getBodyAsJson());
+                sendResponse(context, res);
+            });
+
+            router.post("/player/:guild_id/stop").handler(context -> {
+                var res = andesite.requestHandler().stop(context.get("user-id"), context.pathParam("guild_id"));
+                sendResponse(context, res);
+            });
+
+            router.patch("/player/:guild_id/pause").handler(context -> {
+                var res = andesite.requestHandler().pause(context.get("user-id"), context.pathParam("guild_id"),
+                        context.getBodyAsJson());
+                sendResponse(context, res);
+            });
+
+            router.patch("/player/:guild_id/seek").handler(context -> {
+                var res = andesite.requestHandler().seek(context.get("user-id"), context.pathParam("guild_id"),
+                        context.getBodyAsJson());
+                sendResponse(context, res);
+            });
+
+            router.patch("/player/:guild_id/volume").handler(context -> {
+                var res = andesite.requestHandler().volume(context.get("user-id"), context.pathParam("guild_id"),
+                        context.getBodyAsJson());
+                sendResponse(context, res);
+            });
+
+            router.patch("/player/:guild_id").handler(context -> {
+                var res = andesite.requestHandler().update(context.get("user-id"), context.pathParam("guild_id"),
+                        context.getBodyAsJson());
+                sendResponse(context, res);
+            });
+
+            router.delete("/player/:guild_id").handler(context -> {
+                var res = andesite.requestHandler().destroy(context.get("user-id"), context.pathParam("guild_id"));
+                sendResponse(context, res);
+            });
         }
-
-        //read bodies
-        router.route().handler(new MemoryBodyHandler(65536)); /* 64KiB max body size */
-
-        router.post("/player/voice-server-update").handler(context -> {
-            andesite.requestHandler().provideVoiceServerUpdate(context.get("user-id"), context.getBodyAsJson());
-            context.response().setStatusCode(204).setStatusMessage("No content").end();
-        });
-
-        router.get("/player/:guild_id").handler(context -> {
-            var res = andesite.requestHandler().player(context.get("user-id"), context.pathParam("guild_id"));
-            sendResponse(context, res);
-        });
-
-        router.post("/player/:guild_id/play").handler(context -> {
-            var res = andesite.requestHandler().play(context.get("user-id"), context.pathParam("guild_id"),
-                    context.getBodyAsJson());
-            sendResponse(context, res);
-        });
-
-        router.post("/player/:guild_id/stop").handler(context -> {
-            var res = andesite.requestHandler().stop(context.get("user-id"), context.pathParam("guild_id"));
-            sendResponse(context, res);
-        });
-
-        router.patch("/player/:guild_id/pause").handler(context -> {
-            var res = andesite.requestHandler().pause(context.get("user-id"), context.pathParam("guild_id"),
-                    context.getBodyAsJson());
-            sendResponse(context, res);
-        });
-
-        router.patch("/player/:guild_id/seek").handler(context -> {
-            var res = andesite.requestHandler().seek(context.get("user-id"), context.pathParam("guild_id"),
-                    context.getBodyAsJson());
-            sendResponse(context, res);
-        });
-
-        router.patch("/player/:guild_id/volume").handler(context -> {
-            var res = andesite.requestHandler().volume(context.get("user-id"), context.pathParam("guild_id"),
-                    context.getBodyAsJson());
-            sendResponse(context, res);
-        });
-
-        router.patch("/player/:guild_id").handler(context -> {
-            var res = andesite.requestHandler().update(context.get("user-id"), context.pathParam("guild_id"),
-                    context.getBodyAsJson());
-            sendResponse(context, res);
-        });
-
-        router.delete("/player/:guild_id").handler(context -> {
-            var res = andesite.requestHandler().destroy(context.get("user-id"), context.pathParam("guild_id"));
-            sendResponse(context, res);
-        });
 
         router.route().handler(context -> error(context, 404, "Not found"));
 

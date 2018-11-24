@@ -43,13 +43,19 @@ Example:
 | key | type | description | default |
 |-----|------|-------------|---------|
 | password | string | password to use for http/websocket access. No filtering is done if null | null |
+| log-level | string | lowest level to log | INFO |
 | lavalink.ws-path | string | route to run the lavalink websocket on. | /lavalink |
 | send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | nas |
 | send-system.async | boolean | whether or not to use jda-async-packet-provider to wrap the send system | false |
 | send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |
 | send-system.non-allocating | boolean | whether or not to use the non allocating frame buffer | false |
-| node.region | string | region of the node | null |
-| node.id | string | id of the node | null |
+| node.region | string | region of the node | "unknown" |
+| node.id | string | id of the node | "unknown" |
+| prometheus.enabled | boolean | whether or not to enable prometheus metrics | false |
+| prometheus.path | string | path to collect prometheus metrics, uses the http port | /metrics |
+| sentry.dsn | string | sentry dsn to report errors | null |
+| sentry.tags | string | comma separated list of `key:value` pairs for sentry tags | null |
+| sentry.log-level | string | lowest level to send to sentry | WARN |
 | transport.http.port | integer | port to run the http/websocket server | 5000 |
 | transport.http.rest | boolean | whether or not to enable the http api | true |
 | transport.http.ws | boolean | whether or not to enable the websocket api | true |

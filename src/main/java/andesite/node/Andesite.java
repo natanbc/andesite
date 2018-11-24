@@ -8,6 +8,7 @@ import andesite.node.handler.SingyeongHandler;
 import andesite.node.player.Player;
 import andesite.node.send.jdaa.JDASendFactory;
 import andesite.node.send.nio.NioSendFactory;
+import andesite.node.util.Init;
 import com.github.shredder121.asyncaudio.jda.AsyncPacketProviderFactory;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -175,7 +176,9 @@ public class Andesite {
     }
 
     public static void main(String[] args) throws IOException {
-        var andesite = new Andesite(Vertx.vertx(), Config.load());
+        var config = Config.load();
+        Init.handleInit(config);
+        var andesite = new Andesite(Vertx.vertx(), config);
         //NOTE: use the bitwise or operator, as it forces evaluation of all elements
         if(!(RestHandler.setup(andesite) | SingyeongHandler.setup(andesite))) {
             LoggerFactory.getLogger(Andesite.class).error("No handlers enabled, aborting");

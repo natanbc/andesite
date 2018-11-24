@@ -30,6 +30,14 @@ dependencies {
     compile 'com.github.singyeong:java-client:5c53983'
 
     compile 'ch.qos.logback:logback-classic:1.2.3'
+
+    compile 'io.sentry:sentry:1.7.15'
+    compile 'io.sentry:sentry-logback:1.7.15'
+
+    compile 'io.prometheus:simpleclient:0.5.0'
+    compile 'io.prometheus:simpleclient_hotspot:0.5.0'
+    compile 'io.prometheus:simpleclient_httpserver:0.5.0'
+    compile 'io.prometheus:simpleclient_logback:0.5.0'
     
     compile 'com.google.code.findbugs:jsr305:3.0.2'
 }
