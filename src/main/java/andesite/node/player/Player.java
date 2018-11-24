@@ -9,7 +9,6 @@ import net.dv8tion.jda.core.audio.AudioSendHandler;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;

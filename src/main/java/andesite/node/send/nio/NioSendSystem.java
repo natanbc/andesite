@@ -17,6 +17,7 @@ public class NioSendSystem implements IAudioSendSystem {
     private final Vertx vertx;
     private final IPacketProvider packetProvider;
     private final DatagramChannel channel;
+    private volatile boolean started = false;
     private boolean stop;
     private long lastFrameSent;
     private boolean sentPacket = true;
@@ -33,7 +34,9 @@ public class NioSendSystem implements IAudioSendSystem {
     }
 
     @Override
-    public void start() {
+    public synchronized void start() {
+        if(started) return;
+        started = true;
         var socket = packetProvider.getUdpSocket();
         var local = socket.getLocalSocketAddress();
         log.debug("Converting magma socket into channel");
