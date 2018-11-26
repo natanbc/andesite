@@ -11,6 +11,7 @@ import andesite.node.send.jdaa.JDASendFactory;
 import andesite.node.send.nio.NioSendFactory;
 import andesite.node.util.Init;
 import com.github.shredder121.asyncaudio.jda.AsyncPacketProviderFactory;
+import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -59,6 +60,7 @@ public class Andesite {
     private final Map<Long, EventBuffer> buffers = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Player>> players = new ConcurrentHashMap<>();
     private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+    private final AudioPlayerManager pcmPlayerManager = new DefaultAudioPlayerManager();
     private final EventDispatcher dispatcher = new EventDispatcher();
     private final Vertx vertx;
     private final Config config;
@@ -76,12 +78,18 @@ public class Andesite {
         this.enabledSources = SOURCE_MANAGERS.keySet().stream()
                 .filter(key -> config.getBoolean("source." + key, !DISABLED_BY_DEFAULT.contains(key)))
                 .peek(key -> playerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
+                .peek(key -> pcmPlayerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
                 .collect(Collectors.toSet());
-        var audioConfig = playerManager.getConfiguration();
-        audioConfig.setFilterHotSwapEnabled(true);
+        //we need to set the cleanup to basically never run so mixer players aren't destroyed without need.
+        playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
+        playerManager.getConfiguration().setFilterHotSwapEnabled(true);
         if(config.getBoolean("send-system.non-allocating", false)) {
-            audioConfig.setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
+            playerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
         }
+        pcmPlayerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
+        pcmPlayerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_PCM_S16_BE);
+        pcmPlayerManager.getConfiguration().setFilterHotSwapEnabled(true);
+        pcmPlayerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
         magma.getEventStream().subscribe(event -> {
             if(event instanceof WebSocketClosed) {
                 var e = (WebSocketClosed)event;
@@ -112,6 +120,12 @@ public class Andesite {
     @CheckReturnValue
     public AudioPlayerManager audioPlayerManager() {
         return playerManager;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public AudioPlayerManager pcmAudioPlayerManager() {
+        return pcmPlayerManager;
     }
 
     @Nonnull

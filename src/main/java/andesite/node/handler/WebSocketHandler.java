@@ -166,6 +166,11 @@ public class WebSocketHandler {
                     sendPlayerUpdate(user, guild, json);
                     break;
                 }
+                case "mixer": {
+                    var json = andesite.requestHandler().mixer(user, guild, payload);
+                    sendPlayerUpdate(user, guild, json);
+                    break;
+                }
                 case "play": {
                     if(lavalink) {
                         andesite.requestHandler().subscribe(user, guild, this,

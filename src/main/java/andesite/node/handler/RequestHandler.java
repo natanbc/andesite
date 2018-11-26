@@ -26,8 +26,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
-import static andesite.node.util.RequestUtils.encodeThrowable;
-
 public class RequestHandler {
     private static final Class<?> INTERNAL_BEAN_CLASS;
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
@@ -87,7 +85,6 @@ public class RequestHandler {
         return player == null ? null : player.encodeState();
     }
 
-    @Nonnull
     public void subscribe(@Nonnull String userId, @Nonnull String guildId,
                           @Nonnull Object key, @Nonnull Consumer<JsonObject> eventSink) {
         log.info("Subscribing for events for user {} in guild {}", userId, guildId);
@@ -118,6 +115,70 @@ public class RequestHandler {
         player.audioPlayer().setPaused(payload.getBoolean("pause", player.audioPlayer().isPaused()));
         player.audioPlayer().setVolume(payload.getInteger("volume", player.audioPlayer().getVolume()));
         player.audioPlayer().startTrack(track, false);
+
+        var m = MagmaMember.builder()
+                .userId(userId)
+                .guildId(guildId)
+                .build();
+        andesite.magma().setSendHandler(m, player);
+
+        return player.encodeState();
+    }
+
+    @Nonnull
+    public JsonObject mixer(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
+        log.info("Configuring mixer for user {} in guild {} and payload {}", userId, guildId, payload);
+        var player = andesite.getPlayer(userId, guildId);
+        var mixer = player.mixer();
+
+        //check if field present
+        if(payload.getValue("enable") != null) {
+            if(payload.getBoolean("enable")) {
+                //switches to mixer as soon as it's ready to send audio
+                player.switchToMixer();
+            } else {
+                //switches back to regular player
+                player.switchToSingle();
+            }
+        }
+
+        var players = payload.getJsonObject("players", new JsonObject());
+        players.fieldNames().forEach(key -> {
+            var config = players.getJsonObject(key);
+            var p = mixer.getPlayer(key);
+            p.setPaused(config.getBoolean("pause", p.isPaused()));
+            p.setVolume(config.getInteger("volume", p.getVolume()));
+            AudioTrack track;
+            if(config.getValue("track") != null) {
+                track = RequestUtils.decodeTrack(andesite.audioPlayerManager(), config.getString("track"));
+                var start = config.getInteger("start", config.getInteger("startTime", 0));
+                if(start != 0) {
+                    track.setPosition(start);
+                }
+            } else {
+                track = p.getPlayingTrack();
+            }
+            var end = config.getInteger("end", config.getInteger("endTime", 0));
+            if(end != 0 && track != null) {
+                track.setMarker(new TrackMarker(end, state -> {
+                    switch(state) {
+                        case REACHED:
+                        case BYPASSED:
+                        case LATE:
+                            player.audioPlayer().stopTrack();
+                    }
+                }));
+            }
+            if(track != p.getPlayingTrack()) {
+                p.startTrack(track, false);
+            } else {
+                if(config.getValue("position") != null) {
+                    if(track != null) {
+                        track.setPosition(config.getLong("position"));
+                    }
+                }
+            }
+        });
 
         var m = MagmaMember.builder()
                 .userId(userId)
@@ -186,15 +247,15 @@ public class RequestHandler {
     public JsonObject destroy(@Nonnull String userId, @Nonnull String guildId) {
         log.info("Destroying player for user {} in guild {} and payload {}", userId, guildId);
         var player = andesite.removePlayer(userId, guildId);
-        if(player != null) {
-            player.destroy();
-        }
         var member = MagmaMember.builder()
                 .userId(userId)
                 .guildId(guildId)
                 .build();
         andesite.magma().removeSendHandler(member);
         andesite.magma().closeConnection(member);
+        if(player != null) {
+            player.destroy();
+        }
         return player == null ? null : player.encodeState();
     }
 

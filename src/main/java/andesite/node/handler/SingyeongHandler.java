@@ -97,6 +97,11 @@ public class SingyeongHandler {
                     sendPlayerUpdate(client, event, json);
                     break;
                 }
+                case "mixer": {
+                    var json = andesite.requestHandler().mixer(user, guild, payload);
+                    sendPlayerUpdate(client, event, json);
+                    break;
+                }
                 case "play": {
                     var json = andesite.requestHandler().play(user, guild, payload);
                     sendPlayerUpdate(client, event, json);

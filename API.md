@@ -37,6 +37,7 @@ are returned.
 | GET /player/:guild_id | returns the state of the player for that guild | x |
 | POST /player/:guild_id/play | plays a track on the guild. Body must be a valid [play](#play) payload | x |
 | POST /player/:guild_id | stops playing audio on the guild. | x |
+| PATCH /player/:guild_id/mixer | configures the mixer for the guild. Body must be a valid [mixer update](#mixer-update) payload | x |
 | PATCH /player/:guild_id/pause | update pause state of the player. Body must be a valid [pause](#pause) payload | x |
 | PATCH /player/:guild_id/seek | update the track position. Body must be a valid [seek](#seek) payload | x |
 | PATCH /player/:guild_id/volume | update volume of the player. Body must be a valid [volume](#volume) payload | x |
@@ -72,6 +73,7 @@ Valid `op`s are:
 |----|-------------|
 | voice-server-update | provides a voice server update. Payload must also be a valid [voice server update](#voice-server-update) object |
 | play | plays a track on the guild. Payload must also be a valid [play](#play) object |
+| mixer | configures the mixer for the guild. Payload must also be a valid [mixer update](#mixer-update) object |
 | stop | stops playing on the guild |
 | pause | updates the pause state on the guild. Payload must also be a valid [pause](#pause) object |
 | seek | updates the track position. Payload must also be a valid [seek](#seek) object |
@@ -207,6 +209,13 @@ an `userId` key, which is sent on the handshake headers for websocket connection
 | pause | boolean/null | whether or not to pause the player |
 | position | integer/null | timestamp to set the current track to, in milliseconds |
 | volume | integer/null | volume to set on the player |
+
+## Mixer Update
+
+| key | type | description |
+|-----|------|-------------|
+| enable | boolean/null | if present, constrols whether or not the mixer should be used |
+| players | object | map of source id to [play](#play)/[update](#update) payloads for each mixer source |
 
 ## Event Buffer
 
