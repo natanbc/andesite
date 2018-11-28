@@ -1,5 +1,6 @@
 package andesite.node.player.filter;
 
+import andesite.node.util.FilterUtil;
 import com.github.natanbc.lavadsp.natives.VibratoNativeLibLoader;
 import com.github.natanbc.lavadsp.vibrato.VibratoPcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;
@@ -44,7 +45,8 @@ public class VibratoConfig implements Config {
 
     @Override
     public boolean configured() {
-        return Config.isSet(frequency, 2f) || Config.isSet(depth, 0.5f);
+        return FilterUtil.VIBRATO_AVAILABLE &&
+                (Config.isSet(frequency, 2f) || Config.isSet(depth, 0.5f));
     }
 
     @Nullable

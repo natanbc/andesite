@@ -1,5 +1,6 @@
 package andesite.node.player.filter;
 
+import andesite.node.util.FilterUtil;
 import com.github.natanbc.lavadsp.karaoke.KaraokePcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter;
@@ -49,8 +50,9 @@ public class KaraokeConfig implements Config {
 
     @Override
     public boolean configured() {
-        return Config.isSet(level, 1f) || Config.isSet(monoLevel, 1f) ||
-                Config.isSet(filterBand, 220f) || Config.isSet(filterWidth, 100f);
+        return FilterUtil.KARAOKE_AVAILABLE &&
+                (Config.isSet(level, 1f) || Config.isSet(monoLevel, 1f) ||
+                Config.isSet(filterBand, 220f) || Config.isSet(filterWidth, 100f));
     }
 
     @Nullable

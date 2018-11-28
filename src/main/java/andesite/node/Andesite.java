@@ -9,6 +9,7 @@ import andesite.node.handler.SingyeongHandler;
 import andesite.node.player.Player;
 import andesite.node.send.jdaa.JDASendFactory;
 import andesite.node.send.nio.NioSendFactory;
+import andesite.node.util.FilterUtil;
 import andesite.node.util.Init;
 import com.github.shredder121.asyncaudio.jda.AsyncPacketProviderFactory;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
@@ -27,6 +28,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
 import io.vertx.core.Vertx;
 import net.dv8tion.jda.core.audio.factory.IAudioSendFactory;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.npstr.magma.MagmaApi;
 import space.npstr.magma.events.api.WebSocketClosed;
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Andesite {
+    private static final Logger log = LoggerFactory.getLogger(Andesite.class);
     private static final Map<String, Supplier<AudioSourceManager>> SOURCE_MANAGERS = Map.of(
             "bandcamp", BandcampAudioSourceManager::new,
             "beam", BeamAudioSourceManager::new,
@@ -80,6 +83,7 @@ public class Andesite {
                 .peek(key -> playerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
                 .peek(key -> pcmPlayerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
                 .collect(Collectors.toSet());
+        log.info("Enabled sources: {}", enabledSources);
         //we need to set the cleanup to basically never run so mixer players aren't destroyed without need.
         playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
         playerManager.getConfiguration().setFilterHotSwapEnabled(true);
@@ -217,9 +221,22 @@ public class Andesite {
         var andesite = new Andesite(Vertx.vertx(), config);
         //NOTE: use the bitwise or operator, as it forces evaluation of all elements
         if(!(RestHandler.setup(andesite) | SingyeongHandler.setup(andesite))) {
-            LoggerFactory.getLogger(Andesite.class).error("No handlers enabled, aborting");
+            log.error("No handlers enabled, aborting");
             System.exit(-1);
         }
+        log.info("Starting andesite version {}", Version.VERSION);
+        log.info("Handlers: REST {}, WebSocket {}, Singyeong {}",
+                config.getBoolean("transport.http.rest", true) ? "enabled" : "disabled",
+                config.getBoolean("transport.http.ws", true) ? "enabled" : "disabled",
+                config.getBoolean("transport.singyeong.enabled", false) ? "enabled" : "disabled"
+        );
+        log.info("Filters: Karaoke {}, Timescale {}, Tremolo {}, Vibrato {}, Volume {}",
+                FilterUtil.KARAOKE_AVAILABLE ? "available" : "unavailable",
+                FilterUtil.TIMESCALE_AVAILABLE ? "available" : "unavailable",
+                FilterUtil.TREMOLO_AVAILABLE ? "available" : "unavailable",
+                FilterUtil.VIBRATO_AVAILABLE ? "available" : "unavailable",
+                FilterUtil.VOLUME_AVAILABLE ? "available" : "unavailable"
+        );
     }
 
     @Nonnull
@@ -239,9 +256,13 @@ public class Andesite {
             default:
                 throw new IllegalArgumentException("No send system with type " + config.get("send-system.type"));
         }
-        if(config.getBoolean("send-system.async", false)) {
+        if(config.getBoolean("send-system.async", true)) {
             factory = AsyncPacketProviderFactory.adapt(factory);
         }
+        log.info("Send system: {}, async provider {}",
+                config.get("send-system.type", "nas"),
+                config.getBoolean("send-system.async", true) ? "enabled" : "disabled"
+        );
         return factory;
     }
 }

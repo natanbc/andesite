@@ -1,5 +1,6 @@
 package andesite.node.player.filter;
 
+import andesite.node.util.FilterUtil;
 import com.github.natanbc.lavadsp.timescale.TimescalePcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter;
@@ -49,7 +50,8 @@ public class TimescaleConfig implements Config {
 
     @Override
     public boolean configured() {
-        return Config.isSet(speed, 1f) || Config.isSet(pitch, 1f) || Config.isSet(rate, 1f);
+        return FilterUtil.TIMESCALE_AVAILABLE &&
+                (Config.isSet(speed, 1f) || Config.isSet(pitch, 1f) || Config.isSet(rate, 1f));
     }
 
     @Nullable
