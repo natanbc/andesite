@@ -25,4 +25,4 @@ deploy:
 
 script:
 - chmod +x gradlew
-- ./gradlew shadowJar
+- ./gradlew buildAll
