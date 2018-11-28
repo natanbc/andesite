@@ -4,7 +4,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
-def versionObj = new Version(major: 0, minor: 6, revision: 1)
+def versionObj = new Version(major: 0, minor: 6, revision: 2)
 
 group 'com.github.natanbc'
 version versionObj.toString()
@@ -72,6 +72,14 @@ def natives = [
 task buildAll {}
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': mainClassName
+        )
+    }
+}
 
 natives.each { arch ->
     def shadowTask = task("shadow-${arch}", type: ShadowJar) {
