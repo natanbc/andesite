@@ -26,8 +26,8 @@ public class SingyeongHandler {
         if(!enabled) {
             return false;
         }
-        var nodeRegion = config.require("node.region");
-        var nodeId = config.require("node.id");
+        var nodeRegion = config.get("node.region", "unknown");
+        var nodeId = config.get("node.id", "unknown");
 
         var client = new SingyeongClient(config.require("transport.singyeong.url"),
                 andesite.vertx(), config.get("transport.singyeong.app-id", "andesite-audio"));
@@ -99,6 +99,11 @@ public class SingyeongHandler {
                 }
                 case "mixer": {
                     var json = andesite.requestHandler().mixer(user, guild, payload);
+                    sendPlayerUpdate(client, event, json);
+                    break;
+                }
+                case "filters": {
+                    var json = andesite.requestHandler().filters(user, guild, payload);
                     sendPlayerUpdate(client, event, json);
                     break;
                 }

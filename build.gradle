@@ -20,31 +20,87 @@ repositories {
 }
 
 dependencies {
+    //REST, WebSocket, etc
     compile 'io.vertx:vertx-web:3.5.4'
     
+    //Raw audio -> udp packet
     compile 'space.npstr:Magma:0.8.1'
+    
+    //Audio player
     compile 'com.sedmelluq:lavaplayer:1.3.10'
+    
+    //Audio filters
+    compile 'com.github.natanbc:lavadsp:0.4'
+    
+    //Native send system
     compile 'com.sedmelluq:jda-nas:1.0.6'
+    
+    //Async packet provider
     compile 'com.github.shredder121:jda-async-packetprovider:1.3'
+    //Required by ^
     compile 'org.apache.commons:commons-lang3:3.8.1'
-
+    
+    //Singyeong connection support
     compile 'com.github.singyeong:java-client:5c53983'
 
+    //Logger implementation
     compile 'ch.qos.logback:logback-classic:1.2.3'
 
+    //Error tracking
     compile 'io.sentry:sentry:1.7.15'
     compile 'io.sentry:sentry-logback:1.7.15'
 
+    //Metrics
     compile 'io.prometheus:simpleclient:0.5.0'
     compile 'io.prometheus:simpleclient_hotspot:0.5.0'
-    compile 'io.prometheus:simpleclient_httpserver:0.5.0'
     compile 'io.prometheus:simpleclient_logback:0.5.0'
     
+    //Code safety
     compile 'com.google.code.findbugs:jsr305:3.0.2'
 }
 
-shadowJar {
-    classifier = null
+def natives = [
+        'all',
+        'darwin',
+        'linux-arm',
+        'linux-x86',
+        'linux-x86-64',
+        'win-x86',
+        'win-x86-64'
+]
+
+task buildAll {}
+
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+natives.each { arch ->
+    def shadowTask = task("shadow-${arch}", type: ShadowJar) {
+        classifier = arch
+
+        from project.sourceSets.main.output
+        configurations = [ project.configurations.runtime ]
+        manifest.inheritFrom project.tasks.jar.manifest
+
+        exclude 'lombok/**'
+        exclude 'vertx-web-js/**'
+        exclude 'vertx-web/**'
+        exclude 'vertx-auth-common-js/**'
+        exclude 'vertx-auth-common/**'
+        exclude 'vertx-bridge-common-js/**'
+        exclude 'vertx-bridge-common/**'
+        exclude 'vertx-core/**'
+        exclude 'Class50/**'
+        exclude 'com/zwitserloot/**'
+        exclude 'secondaryLoading.SCL.lombok/**'
+        if(arch != 'all') {
+            natives.each {
+                if(it != arch) {
+                    exclude "natives/${it}/**"
+                }
+            }
+        }
+    }
+    buildAll.dependsOn shadowTask
 }
 
 def lint = [

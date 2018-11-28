@@ -171,6 +171,17 @@ public class WebSocketHandler {
                     sendPlayerUpdate(user, guild, json);
                     break;
                 }
+                case "filters": {
+                    var json = andesite.requestHandler().filters(user, guild, payload);
+                    sendPlayerUpdate(user, guild, json);
+                    break;
+                }
+                //lavalink compat
+                case "equalizer": {
+                    var json = andesite.requestHandler().equalizer(user, guild, payload);
+                    sendPlayerUpdate(user, guild, json);
+                    break;
+                }
                 case "play": {
                     if(lavalink) {
                         andesite.requestHandler().subscribe(user, guild, this,

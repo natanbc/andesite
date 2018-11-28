@@ -1,6 +1,7 @@
 package andesite.node.player;
 
 import andesite.node.Andesite;
+import andesite.node.player.filter.FilterChainConfiguration;
 import andesite.node.util.LazyInit;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -21,6 +22,7 @@ public class Player implements AudioSendHandler {
     private static final Logger log = LoggerFactory.getLogger(Player.class);
 
     private final Map<Object, EventEmitter> emitters = new ConcurrentHashMap<>();
+    private final FilterChainConfiguration filterConfig = new FilterChainConfiguration();
     private final Andesite andesite;
     private final AudioPlayerManager audioPlayerManager;
     private final LazyInit<TrackMixer> mixer;
@@ -62,6 +64,12 @@ public class Player implements AudioSendHandler {
                 andesite.requestHandler().destroy(userId, guildId);
             }
         });
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public FilterChainConfiguration filterConfig() {
+        return filterConfig;
     }
 
     @Nonnull
@@ -137,6 +145,7 @@ public class Player implements AudioSendHandler {
                     .put("position", audioPlayer.getPlayingTrack() == null ? null : audioPlayer.getPlayingTrack().getPosition())
                     .put("paused", audioPlayer.isPaused())
                     .put("volume", audioPlayer.getVolume())
+                    .put("filters", p.filterConfig().encode())
             );
         }));
         return new JsonObject()
@@ -144,6 +153,7 @@ public class Player implements AudioSendHandler {
                 .put("position", audioPlayer.getPlayingTrack() == null ? null : audioPlayer.getPlayingTrack().getPosition())
                 .put("paused", audioPlayer.isPaused())
                 .put("volume", audioPlayer.getVolume())
+                .put("filters", filterConfig.encode())
                 .put("mixer", mixerStats)
                 .put("mixerEnabled", m.isPresent() && m.get() == realSendHandler);
     }

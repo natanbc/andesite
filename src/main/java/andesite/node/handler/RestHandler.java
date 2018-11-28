@@ -150,6 +150,12 @@ public class RestHandler {
                 sendResponse(context, res);
             });
 
+            router.patch("/player/:guild_id/filters").handler(context -> {
+                var res = andesite.requestHandler().filters(context.get("user-id"), context.pathParam("guild_id"),
+                        context.getBodyAsJson());
+                sendResponse(context, res);
+            });
+
             router.patch("/player/:guild_id/pause").handler(context -> {
                 var res = andesite.requestHandler().pause(context.get("user-id"), context.pathParam("guild_id"),
                         context.getBodyAsJson());

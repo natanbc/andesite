@@ -1,5 +1,6 @@
 package andesite.node.player;
 
+import andesite.node.player.filter.FilterChainConfiguration;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.format.transcoder.OpusChunkEncoder;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -31,8 +32,8 @@ public class TrackMixer implements AudioSendHandler, AutoCloseable {
         return players;
     }
 
-    public AudioPlayer getPlayer(String key) {
-        return players.computeIfAbsent(key, __ -> new Player(playerManager.createPlayer())).player;
+    public Player getPlayer(String key) {
+        return players.computeIfAbsent(key, __ -> new Player(playerManager.createPlayer()));
     }
 
     @Override
@@ -85,6 +86,7 @@ public class TrackMixer implements AudioSendHandler, AutoCloseable {
         private final ByteBuffer buffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_PCM_S16_BE.maximumChunkSize())
                 .order(ByteOrder.BIG_ENDIAN);
         private final MutableAudioFrame frame = new MutableAudioFrame();
+        private final FilterChainConfiguration filterConfig = new FilterChainConfiguration();
         private final AudioPlayer player;
         private boolean provided;
         private int framesWithoutProvide;
@@ -93,6 +95,10 @@ public class TrackMixer implements AudioSendHandler, AutoCloseable {
             this.player = player;
             frame.setBuffer(buffer);
             buffer.limit(frame.getDataLength());
+        }
+
+        public FilterChainConfiguration filterConfig() {
+            return filterConfig;
         }
 
         public AudioPlayer audioPlayer() {

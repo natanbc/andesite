@@ -1,6 +1,7 @@
 package andesite.node.handler;
 
 import andesite.node.Andesite;
+import andesite.node.player.filter.FilterChainConfiguration;
 import andesite.node.util.RequestUtils;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -93,7 +94,7 @@ public class RequestHandler {
 
     @Nonnull
     public JsonObject play(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
-        log.info("Playing track for user {} in guild {} and payload {}", userId, guildId, payload);
+        log.info("Playing track for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
         var track = RequestUtils.decodeTrack(andesite.audioPlayerManager(), payload.getString("track"));
         var start = payload.getInteger("start", payload.getInteger("startTime", 0));
@@ -127,12 +128,12 @@ public class RequestHandler {
 
     @Nonnull
     public JsonObject mixer(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
-        log.info("Configuring mixer for user {} in guild {} and payload {}", userId, guildId, payload);
+        log.info("Configuring mixer for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
         var mixer = player.mixer();
 
         //check if field present
-        if(payload.getValue("enable") != null) {
+        if(payload.containsKey("enable")) {
             if(payload.getBoolean("enable")) {
                 //switches to mixer as soon as it's ready to send audio
                 player.switchToMixer();
@@ -145,11 +146,12 @@ public class RequestHandler {
         var players = payload.getJsonObject("players", new JsonObject());
         players.fieldNames().forEach(key -> {
             var config = players.getJsonObject(key);
-            var p = mixer.getPlayer(key);
+            var mixerPlayer = mixer.getPlayer(key);
+            var p = mixerPlayer.audioPlayer();
             p.setPaused(config.getBoolean("pause", p.isPaused()));
             p.setVolume(config.getInteger("volume", p.getVolume()));
             AudioTrack track;
-            if(config.getValue("track") != null) {
+            if(config.containsKey("track")) {
                 track = RequestUtils.decodeTrack(andesite.audioPlayerManager(), config.getString("track"));
                 var start = config.getInteger("start", config.getInteger("startTime", 0));
                 if(start != 0) {
@@ -169,10 +171,17 @@ public class RequestHandler {
                     }
                 }));
             }
+            if(config.containsKey("filters")) {
+                var cfg = player.filterConfig();
+                updateFilters(cfg, config.getJsonObject("filters"));
+                if(cfg.isEnabled()) {
+                    p.setFilterFactory(cfg.factory());
+                }
+            }
             if(track != p.getPlayingTrack()) {
                 p.startTrack(track, false);
             } else {
-                if(config.getValue("position") != null) {
+                if(config.containsKey("position")) {
                     if(track != null) {
                         track.setPosition(config.getLong("position"));
                     }
@@ -189,7 +198,7 @@ public class RequestHandler {
         return player.encodeState();
     }
 
-    @Nullable
+    @Nonnull
     public JsonObject stop(@Nonnull String userId, @Nonnull String guildId) {
         log.info("Stopping player for user {} in guild {}", userId, guildId);
         var player = andesite.getPlayer(userId, guildId);
@@ -197,17 +206,17 @@ public class RequestHandler {
         return player.encodeState();
     }
 
-    @Nullable
+    @Nonnull
     public JsonObject pause(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
-        log.info("Updating pause state for user {} in guild {} and payload {}", userId, guildId, payload);
+        log.info("Updating pause state for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
         player.audioPlayer().setPaused(payload.getBoolean("pause", false));
         return player.encodeState();
     }
 
-    @Nullable
+    @Nonnull
     public JsonObject seek(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
-        log.info("Seeking for user {} in guild {} and payload {}", userId, guildId, payload);
+        log.info("Seeking for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
         var track = player.audioPlayer().getPlayingTrack();
         if(track != null) {
@@ -216,31 +225,94 @@ public class RequestHandler {
         return player.encodeState();
     }
 
-    @Nullable
+    @Nonnull
     public JsonObject volume(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
-        log.info("Updating volume for user {} in guild {} and payload {}", userId, guildId, payload);
+        log.info("Updating volume for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
         player.audioPlayer().setVolume(payload.getInteger("volume", 100));
         return player.encodeState();
     }
 
-    @Nullable
+    @Nonnull
+    public JsonObject filters(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
+        log.info("Updating filters for user {} in guild {} with payload {}", userId, guildId, payload);
+        var player = andesite.getPlayer(userId, guildId);
+        updateFilters(player.filterConfig(), payload);
+        return player.encodeState();
+    }
+
+    //lavalink compat
+    @Nonnull
+    public JsonObject equalizer(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
+        return filters(userId, guildId, new JsonObject().put("equalizer", payload));
+    }
+
+    @Nonnull
     public JsonObject update(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
         log.info("Updating player for user {} in guild {} and payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
-        if(payload.getValue("pause") != null) {
+        if(payload.containsKey("pause")) {
             player.audioPlayer().setPaused(payload.getBoolean("pause"));
         }
-        if(payload.getValue("position") != null) {
+        if(payload.containsKey("position")) {
             var track = player.audioPlayer().getPlayingTrack();
             if(track != null) {
                 track.setPosition(payload.getLong("position"));
             }
         }
-        if(payload.getValue("volume") != null) {
+        if(payload.containsKey("volume")) {
             player.audioPlayer().setVolume(payload.getInteger("volume"));
         }
+        if(payload.containsKey("filters")) {
+            var config = player.filterConfig();
+            updateFilters(config, payload.getJsonObject("filters"));
+            if(config.isEnabled()) {
+                player.audioPlayer().setFilterFactory(config.factory());
+            }
+        }
         return player.encodeState();
+    }
+    
+    private void updateFilters(@Nonnull FilterChainConfiguration filterConfig, @Nonnull JsonObject config) {
+        if(config.containsKey("equalizer")) {
+            var array = config.getJsonObject("equalizer").getJsonArray("bands");
+            var equalizerConfig = filterConfig.equalizer();
+            for(var i = 0; i < array.size(); i++) {
+                var band = array.getJsonObject(i);
+                equalizerConfig.setBand(band.getInteger("band"), band.getFloat("gain"));
+            }
+        }
+        if(config.containsKey("karaoke")) {
+            var karaoke = config.getJsonObject("karaoke");
+            var karaokeConfig = filterConfig.karaoke();
+            karaokeConfig.setLevel(karaoke.getFloat("level", karaokeConfig.level()));
+            karaokeConfig.setMonoLevel(karaoke.getFloat("monoLevel", karaokeConfig.monoLevel()));
+            karaokeConfig.setFilterBand(karaoke.getFloat("filterBand", karaokeConfig.filterBand()));
+            karaokeConfig.setFilterWidth(karaoke.getFloat("filterWidth", karaokeConfig.filterWidth()));
+        }
+        if(config.containsKey("timescale")) {
+            var timescale = config.getJsonObject("timescale");
+            var timescaleConfig = filterConfig.timescale();
+            timescaleConfig.setSpeed(timescale.getFloat("speed", timescaleConfig.speed()));
+            timescaleConfig.setPitch(timescale.getFloat("pitch", timescaleConfig.pitch()));
+            timescaleConfig.setRate(timescale.getFloat("rate", timescaleConfig.rate()));
+        }
+        if(config.containsKey("tremolo")) {
+            var tremolo = config.getJsonObject("tremolo");
+            var tremoloConfig = filterConfig.tremolo();
+            tremoloConfig.setFrequency(tremolo.getFloat("frequency", tremoloConfig.frequency()));
+            tremoloConfig.setDepth(tremolo.getFloat("depth", tremoloConfig.depth()));
+        }
+        if(config.containsKey("vibrato")) {
+            var vibrato = config.getJsonObject("vibrato");
+            var vibratoConfig = filterConfig.vibrato();
+            vibratoConfig.setFrequency(vibrato.getFloat("frequency", vibratoConfig.frequency()));
+            vibratoConfig.setDepth(vibrato.getFloat("depth", vibratoConfig.depth()));
+        }
+        if(config.containsKey("volume")) {
+            var volumeConfig = filterConfig.volume();
+            volumeConfig.setVolume(config.getJsonObject("volume").getFloat("volume", volumeConfig.volume()));
+        }
     }
 
     @Nullable

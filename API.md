@@ -38,6 +38,7 @@ are returned.
 | POST /player/:guild_id/play | plays a track on the guild. Body must be a valid [play](#play) payload | x |
 | POST /player/:guild_id | stops playing audio on the guild. | x |
 | PATCH /player/:guild_id/mixer | configures the mixer for the guild. Body must be a valid [mixer update](#mixer-update) payload | x |
+| PATCH /player/:guild_id/filters | configures the audio filters for the guild. Body must be a valid [filter update](#filter-update) payload | x |
 | PATCH /player/:guild_id/pause | update pause state of the player. Body must be a valid [pause](#pause) payload | x |
 | PATCH /player/:guild_id/seek | update the track position. Body must be a valid [seek](#seek) payload | x |
 | PATCH /player/:guild_id/volume | update volume of the player. Body must be a valid [volume](#volume) payload | x |
@@ -57,7 +58,8 @@ are returned.
 
 ## WebSocket
 
-- A (mostly*) lavalink compatible websocket is available by default on the `/lavalink` route.
+- The regular websocket is available on the `/websocket` route.
+- A (mostly*) lavalink compatible websocket is available by default on the `/lavalink` route. 
 
 All payloads must be valid json objects. If parsing fails, the socket is closed with code 4001.
 
@@ -78,6 +80,7 @@ Valid `op`s are:
 | pause | updates the pause state on the guild. Payload must also be a valid [pause](#pause) object |
 | seek | updates the track position. Payload must also be a valid [seek](#seek) object |
 | volume | updates the volume on the guild. Payload must also be a valid [volume](#volume) object |
+| filters | updates the player audio filters. Payload must also be a valid [filter update](#filter-update) object |
 | update | updates the player. Payload must also be a valid [update](#update) object |
 | destroy | destroys the player. Resulting player update event will have a `destroyed` key with value of `true` |
 | get-player | returns the player state. |
@@ -92,7 +95,7 @@ are discarded and buffering will stop. To get the missed events, clients must re
 header containing the value returned by the `Andesite-Connection-Id` received earlier. All IDs are single use and
 reconnects must save the new ID returned. To disable buffering, simply send an `event-buffer` payload with timeout of 0.
 
-\* Currently, the equalizer op isn't supported, and the stats sent always have a null `frameStats` key.
+\* Currently the stats sent always have a null `frameStats` key.
 
 ## Singyeong
 
@@ -202,6 +205,17 @@ an `userId` key, which is sent on the handshake headers for websocket connection
 |-----|------|-------------|
 | volume | integer | volume to set on the player |
 
+## Filter update
+
+| key | type | description |
+|-----|------|-------------|
+| equalizer | [equalizer](#equalizer)/null | configures the equalizer |
+| karaoke | [karaoke](#karaoke)/null | configures the karaoke filter |
+| timescale | [timescale](#timescale)/null | configures the timescale filter |
+| tremolo | [tremolo](#tremolo)/null | configures the tremolo filter |
+| vibrato | [vibrato](#vibrato)/null | configures the vibrato filter |
+| volume | [volume](#volume-1)/null | configures the volume filter |
+
 ## Update
 
 | key | type | description |
@@ -209,6 +223,7 @@ an `userId` key, which is sent on the handshake headers for websocket connection
 | pause | boolean/null | whether or not to pause the player |
 | position | integer/null | timestamp to set the current track to, in milliseconds |
 | volume | integer/null | volume to set on the player |
+| filters | [filter update](#filter-update)/null | configuration for the filters |
 
 ## Mixer Update
 
@@ -245,3 +260,55 @@ an `userId` key, which is sent on the handshake headers for websocket connection
 | fileName | string/null | name of the source file |
 | lineNumber | integer/null | line in the source file |
 | pretty | string | pretty printed version of this frame, as it would appear on Throwable#printStackTrace |
+
+# Filters
+
+## Equalizer
+
+| key | type | description |
+|-----|------|-------------|
+| bands | [band](#band)[] | array of bands to configure |
+
+### Band
+
+| key | type | description | default |
+|-----|------|-------------|---------|
+| band | integer (0-14) | band number to configure | - |
+| gain | float ([-0.25, 1.0]) | value to set for the band | 0 |
+
+## Karaoke
+
+| key | type | default |
+|-----|------|---------|
+| level | float | 1 |
+| monoLevel | float | 1 |
+| filterBand | float | 220 |
+| filterWidth | float | 100 |
+
+## Timescale
+
+| key | type | description | default |
+|-----|------|-------------|---------|
+| speed | float (> 0) | speed to play music at | 1 |
+| pitch | float (> 0) | pitch to set | 1 |
+| rate | float (> 0) | rate to set | 1 |
+
+## Tremolo
+
+| key | type | default |
+|-----|------|---------|
+| frequency (> 0) | float | 2 |
+| depth (0 < x <= 1) | float | 0.5 |
+
+## Vibrato
+
+| key | type | default |
+|-----|------|---------|
+| frequency (0 < x <= 14) | float | 2 |
+| depth (0 < x <= 1) | float | 0.5 |
+
+## Volume
+
+| key | type | default |
+|-----|------|---------|
+| volume | float | 1 |
