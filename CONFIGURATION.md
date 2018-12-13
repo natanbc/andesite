@@ -46,7 +46,7 @@ Example:
 | log-level | string | lowest level to log | INFO |
 | lavalink.ws-path | string | route to run the lavalink websocket on. | /lavalink |
 | send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | nas |
-| send-system.async | boolean | whether or not to use jda-async-packet-provider to wrap the send system | false |
+| send-system.async | boolean | whether or not to use jda-async-packet-provider to wrap the send system | true |
 | send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |
 | send-system.non-allocating | boolean | whether or not to use the non allocating frame buffer | false |
 | node.region | string | region of the node | "unknown" |

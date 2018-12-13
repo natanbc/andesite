@@ -216,6 +216,7 @@ public class Andesite {
     }
 
     public static void main(String[] args) throws IOException {
+        log.info("Starting andesite version {}", Version.VERSION);
         var config = Config.load();
         Init.handleInit(config);
         var andesite = new Andesite(Vertx.vertx(), config);
@@ -224,7 +225,6 @@ public class Andesite {
             log.error("No handlers enabled, aborting");
             System.exit(-1);
         }
-        log.info("Starting andesite version {}", Version.VERSION);
         log.info("Handlers: REST {}, WebSocket {}, Singyeong {}",
                 config.getBoolean("transport.http.rest", true) ? "enabled" : "disabled",
                 config.getBoolean("transport.http.ws", true) ? "enabled" : "disabled",

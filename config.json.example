@@ -1,0 +1,48 @@
+{
+    "log-level": "info",
+    "password": "you shall not pass",
+    "lavalink": {
+        "ws-path": "/lavalink"
+    },
+    "send-system": {
+        "type": "nas",
+        "async": true,
+        "nas-buffer": 400,
+        "non-allocating": true
+    },
+    "node": {
+        "region": "br",
+        "id": "1234"
+    },
+    "prometheus": {
+        "enabled": true,
+        "path": "/metrics"
+    },
+    "sentry": {
+        "dsn": null,
+        "tags": null,
+        "log-level": "warn"
+    },
+    "transport": {
+        "http": {
+            "port": 5000,
+            "rest": true,
+            "ws": true
+        },
+        "singyeong": {
+            "enabled": false,
+            "url": "ws://localhost:9876/gateway/websocket",
+            "app-id": "andesite-audio"
+        }
+    },
+    "source": {
+        "bandcamp": true,
+        "beam": true,
+        "http": false,
+        "local": false,
+        "soundcloud": true,
+        "twitch": true,
+        "vimeo": true,
+        "youtube": true
+    }
+}
