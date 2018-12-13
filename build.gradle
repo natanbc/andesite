@@ -4,7 +4,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
-def versionObj = new Version(major: 0, minor: 6, revision: 2)
+def versionObj = new Version(major: 0, minor: 6, revision: 3)
 
 group 'com.github.natanbc'
 version versionObj.toString()
@@ -34,11 +34,6 @@ dependencies {
 
     //Native send system
     compile 'com.sedmelluq:jda-nas:1.0.6'
-
-    //Async packet provider
-    compile 'com.github.shredder121:jda-async-packetprovider:1.3'
-    //Required by ^
-    compile 'org.apache.commons:commons-lang3:3.8.1'
 
     //Singyeong connection support
     compile 'com.github.singyeong:java-client:5c53983'
@@ -129,7 +124,6 @@ def lint = [
         "path",
         "rawtypes",
         "removal",
-        "serial",
         "static",
         "try",
         "unchecked",

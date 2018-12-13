@@ -18,7 +18,7 @@ public class NioSendSystem implements IAudioSendSystem {
     private final IPacketProvider packetProvider;
     private final DatagramChannel channel;
     private volatile boolean started = false;
-    private boolean stop;
+    private volatile boolean stop;
     private long lastFrameSent;
     private boolean sentPacket = true;
 
@@ -42,7 +42,7 @@ public class NioSendSystem implements IAudioSendSystem {
         log.debug("Converting magma socket into channel");
         try {
             socket.close();
-            channel.bind(local);
+            channel.bind(local).connect(packetProvider.getSocketAddress());
         } catch(IOException e) {
             throw new IllegalStateException("Unable to configure UDP channel", e);
         }
@@ -82,7 +82,7 @@ public class NioSendSystem implements IAudioSendSystem {
     private void scheduleNextPacket() {
         var sleepTime = (OPUS_FRAME_TIME_AMOUNT) - (System.currentTimeMillis() - lastFrameSent);
         if(sleepTime > 0) {
-            vertx.setTimer(sleepTime, __ -> sendNextPacket());
+            vertx.setTimer(sleepTime - 1, __ -> sendNextPacket());
         } else {
             sendNextPacket();
         }

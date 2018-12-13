@@ -7,11 +7,11 @@ import andesite.node.handler.RequestHandler;
 import andesite.node.handler.RestHandler;
 import andesite.node.handler.SingyeongHandler;
 import andesite.node.player.Player;
+import andesite.node.provider.AsyncPacketProviderFactory;
 import andesite.node.send.jdaa.JDASendFactory;
 import andesite.node.send.nio.NioSendFactory;
 import andesite.node.util.FilterUtil;
 import andesite.node.util.Init;
-import com.github.shredder121.asyncaudio.jda.AsyncPacketProviderFactory;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -257,7 +257,7 @@ public class Andesite {
                 throw new IllegalArgumentException("No send system with type " + config.get("send-system.type"));
         }
         if(config.getBoolean("send-system.async", true)) {
-            factory = AsyncPacketProviderFactory.adapt(factory);
+            factory = new AsyncPacketProviderFactory(factory);
         }
         log.info("Send system: {}, async provider {}",
                 config.get("send-system.type", "nas"),
