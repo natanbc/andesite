@@ -42,6 +42,7 @@ Example:
 
 | key | type | description | default |
 |-----|------|-------------|---------|
+| extra-plugins | string | comma separated list of paths to load plugins from, besides the default path | null |
 | password | string | password to use for http/websocket access. No filtering is done if null | null |
 | log-level | string | lowest level to log | INFO |
 | lavalink.ws-path | string | route to run the lavalink websocket on. | /lavalink |

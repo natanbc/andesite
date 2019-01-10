@@ -1,0 +1,26 @@
+plugins {
+    id 'java-library'
+}
+
+repositories {
+    jcenter()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    //REST, WebSocket, etc
+    api "io.vertx:vertx-web:$vertxWebVersion"
+
+    //Audio player
+    api "com.sedmelluq:lavaplayer:$lavaplayerVersion"
+
+    //Audio filters
+    api "com.github.natanbc:lavadsp:$lavadspVersion"
+    
+    //Singyeong connection support
+    api "com.github.singyeong:java-client:$singyeongVersion"
+
+    //Code safety
+    api "com.google.code.findbugs:jsr305:$jsr305Version"
+}
+

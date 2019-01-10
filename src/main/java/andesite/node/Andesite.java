@@ -7,6 +7,7 @@ import andesite.node.handler.RequestHandler;
 import andesite.node.handler.RestHandler;
 import andesite.node.handler.SingyeongHandler;
 import andesite.node.player.Player;
+import andesite.node.plugin.PluginManager;
 import andesite.node.provider.AsyncPacketProviderFactory;
 import andesite.node.send.jdaa.JDASendFactory;
 import andesite.node.send.nio.NioSendFactory;
@@ -36,7 +37,9 @@ import space.npstr.magma.events.api.WebSocketClosed;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.File;
 import java.io.IOException;
+import java.lang.ref.Cleaner;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,6 +49,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Andesite {
+    public static final Cleaner CLEANER = Cleaner.create(r -> {
+        var t = new Thread(r, "Andesite-Cleaner");
+        t.setDaemon(true);
+        return t;
+    });
+
     private static final Logger log = LoggerFactory.getLogger(Andesite.class);
     private static final Map<String, Supplier<AudioSourceManager>> SOURCE_MANAGERS = Map.of(
             "bandcamp", BandcampAudioSourceManager::new,
@@ -59,6 +68,7 @@ public class Andesite {
     );
     private static final Set<String> DISABLED_BY_DEFAULT = Set.of("http", "local");
 
+    private final PluginManager pluginManager = new PluginManager();
     private final AtomicLong nextBufferId = new AtomicLong();
     private final Map<Long, EventBuffer> buffers = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Player>> players = new ConcurrentHashMap<>();
@@ -72,18 +82,35 @@ public class Andesite {
     private final RequestHandler handler;
     private final Set<String> enabledSources;
 
-    private Andesite(@Nonnull Vertx vertx, @Nonnull Config config) {
+    private Andesite(@Nonnull Vertx vertx, @Nonnull Config config) throws IOException {
+        var plugins = new File("plugins").listFiles();
+        if(plugins != null) {
+            for(var f : plugins) {
+                log.info("Loading plugins from {}", f);
+                pluginManager.load(f);
+            }
+        }
+        var extraPluginLocations = config.get("extra-plugins");
+        if(extraPluginLocations != null) {
+            for(var f : extraPluginLocations.split(",")) {
+                log.info("Loading plugins from {}", f);
+                pluginManager.load(new File(f));
+            }
+        }
         this.vertx = vertx;
         this.config = config;
         this.factory = createFactory(config);
         this.magma = MagmaApi.of(__ -> factory);
         this.handler = new RequestHandler(this);
+        pluginManager.configurePlayerManager(playerManager);
+        pluginManager.configurePlayerManager(pcmPlayerManager);
+        pluginManager.registerListeners(dispatcher);
         this.enabledSources = SOURCE_MANAGERS.keySet().stream()
                 .filter(key -> config.getBoolean("source." + key, !DISABLED_BY_DEFAULT.contains(key)))
                 .peek(key -> playerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
                 .peek(key -> pcmPlayerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
                 .collect(Collectors.toSet());
-        log.info("Enabled sources: {}", enabledSources);
+        log.info("Enabled default sources: {}", enabledSources);
         //we need to set the cleanup to basically never run so mixer players aren't destroyed without need.
         playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
         playerManager.getConfiguration().setFilterHotSwapEnabled(true);
@@ -106,6 +133,12 @@ public class Andesite {
                 );
             }
         });
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public PluginManager pluginManager() {
+        return pluginManager;
     }
 
     @Nonnull

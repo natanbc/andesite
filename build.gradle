@@ -4,15 +4,32 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
-def versionObj = new Version(major: 0, minor: 6, revision: 3)
+def versionObj = new Version(major: 0, minor: 7, revision: 0)
 
-group 'com.github.natanbc'
-version versionObj.toString()
+allprojects {
+    group 'com.github.natanbc'
+    version versionObj.toString()
+
+    sourceCompatibility = 11
+    targetCompatibility = 11
+}
+
+ext {
+    //@formatter:off
+    vertxWebVersion =   '3.5.4'
+    magmaVersion =      '0.8.1'
+    lavaplayerVersion = '1.3.10'
+    lavadspVersion =    '0.4'
+    jdaNasVersion =     '1.0.6'
+    singyeongVersion =  '5c53983'
+    logbackVersion =    '1.2.3'
+    sentryVersion =     '1.7.15'
+    prometheusVersion = '0.5.0'
+    jsr305Version =     '3.0.2'
+    //@formatter:on
+}
 
 mainClassName = 'andesite.node.Andesite'
-
-sourceCompatibility = 11
-targetCompatibility = 11
 
 repositories {
     jcenter()
@@ -20,38 +37,40 @@ repositories {
 }
 
 dependencies {
+    compile project(':api')
+    
     //REST, WebSocket, etc
-    compile 'io.vertx:vertx-web:3.5.4'
+    compile "io.vertx:vertx-web:$vertxWebVersion"
 
     //Raw audio -> udp packet
-    compile 'space.npstr:Magma:0.8.1'
+    compile "space.npstr:Magma:$magmaVersion"
 
     //Audio player
-    compile 'com.sedmelluq:lavaplayer:1.3.10'
+    compile "com.sedmelluq:lavaplayer:$lavaplayerVersion"
 
     //Audio filters
-    compile 'com.github.natanbc:lavadsp:0.4'
+    compile "com.github.natanbc:lavadsp:$lavadspVersion"
 
     //Native send system
-    compile 'com.sedmelluq:jda-nas:1.0.6'
+    compile "com.sedmelluq:jda-nas:$jdaNasVersion"
 
     //Singyeong connection support
-    compile 'com.github.singyeong:java-client:5c53983'
+    compile "com.github.singyeong:java-client:$singyeongVersion"
 
     //Logger implementation
-    compile 'ch.qos.logback:logback-classic:1.2.3'
+    compile "ch.qos.logback:logback-classic:$logbackVersion"
 
     //Error tracking
-    compile 'io.sentry:sentry:1.7.15'
-    compile 'io.sentry:sentry-logback:1.7.15'
+    compile "io.sentry:sentry:$sentryVersion"
+    compile "io.sentry:sentry-logback:$sentryVersion"
 
     //Metrics
-    compile 'io.prometheus:simpleclient:0.5.0'
-    compile 'io.prometheus:simpleclient_hotspot:0.5.0'
-    compile 'io.prometheus:simpleclient_logback:0.5.0'
+    compile "io.prometheus:simpleclient:$prometheusVersion"
+    compile "io.prometheus:simpleclient_hotspot:$prometheusVersion"
+    compile "io.prometheus:simpleclient_logback:$prometheusVersion"
 
     //Code safety
-    compile 'com.google.code.findbugs:jsr305:3.0.2'
+    compile "com.google.code.findbugs:jsr305:$jsr305Version"
 }
 
 def natives = [

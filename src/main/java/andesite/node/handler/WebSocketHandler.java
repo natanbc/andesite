@@ -13,6 +13,8 @@ import io.vertx.ext.web.RoutingContext;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -55,7 +57,8 @@ public class WebSocketHandler {
         };
     }
 
-    private static class FrameHandler implements Handler<WebSocketFrame> {
+    private static class FrameHandler implements Handler<WebSocketFrame>, WebSocketState {
+        private final Map<Key<?>, Object> userData = new HashMap<>();
         private final Andesite andesite;
         private final String user;
         private final ServerWebSocket ws;
@@ -99,6 +102,41 @@ public class WebSocketHandler {
             ws.closeHandler(__ -> handleClose());
         }
 
+        @Override
+        public String user() {
+            return user;
+        }
+
+        @Override
+        public ServerWebSocket ws() {
+            return ws;
+        }
+
+        @Override
+        public long connectionId() {
+            return connectionId;
+        }
+
+        @Override
+        public boolean lavalink() {
+            return lavalink;
+        }
+
+        @CheckReturnValue
+        @Override
+        @SuppressWarnings("unchecked")
+        public <T> T get(@Nonnull Key<T> key) {
+            return (T) userData.getOrDefault(key, key.defaultValue());
+        }
+
+        @Nullable
+        @CheckReturnValue
+        @Override
+        @SuppressWarnings("unchecked")
+        public <T> T set(@Nonnull Key<T> key, @Nullable T value) {
+            return (T) userData.put(key, value);
+        }
+
         private void handleClose() {
             if(timeout != 0) {
                 var buffer = andesite.createEventBuffer(connectionId);
@@ -126,6 +164,9 @@ public class WebSocketHandler {
                 }
             } catch(Exception e) {
                 ws.close((short)4001, "Unable to read frame data as json: " + e);
+                return;
+            }
+            if(andesite.pluginManager().customHandleWebSocketPayload(this, payload)) {
                 return;
             }
             var user = payload.getString("userId", this.user);

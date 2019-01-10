@@ -3,7 +3,7 @@ package andesite.node.handler;
 import andesite.node.Andesite;
 import andesite.node.Version;
 import andesite.node.event.AndesiteEventListener;
-import andesite.node.player.Player;
+import andesite.node.player.AndesitePlayer;
 import gg.amy.singyeong.Dispatch;
 import gg.amy.singyeong.QueryBuilder;
 import gg.amy.singyeong.SingyeongClient;
@@ -36,13 +36,13 @@ public class SingyeongHandler {
 
         andesite.dispatcher().register(new AndesiteEventListener() {
             @Override
-            public void onPlayerCreated(@Nonnull String userId, @Nonnull String guildId, @Nonnull Player player) {
+            public void onPlayerCreated(@Nonnull String userId, @Nonnull String guildId, @Nonnull AndesitePlayer player) {
                 players.add(userId + ":" + guildId);
                 updateMetadata();
             }
 
             @Override
-            public void onPlayerDestroyed(@Nonnull String userId, @Nonnull String guildId, @Nonnull Player player) {
+            public void onPlayerDestroyed(@Nonnull String userId, @Nonnull String guildId, @Nonnull AndesitePlayer player) {
                 players.remove(userId + ":" + guildId);
                 updateMetadata();
             }
@@ -62,6 +62,10 @@ public class SingyeongHandler {
         var key = new Object();
 
         client.onEvent(event -> {
+            if(andesite.pluginManager().customHandleSingyeongPayload(event)) {
+                return;
+            }
+
             var payload = event.data();
 
             var guild = payload.getString("guildId");

@@ -14,7 +14,7 @@ import java.nio.ShortBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class TrackMixer implements AudioSendHandler, AutoCloseable {
+public class TrackMixer implements AudioSendHandler, AutoCloseable, AndesiteTrackMixer {
     private final Map<String, Player> players = new ConcurrentHashMap<>();
     private final ShortBuffer mixBuffer = ByteBuffer.allocateDirect(StandardAudioDataFormats.DISCORD_PCM_S16_BE.maximumChunkSize())
             .order(ByteOrder.nativeOrder())
@@ -28,12 +28,20 @@ public class TrackMixer implements AudioSendHandler, AutoCloseable {
         this.encoder = new OpusChunkEncoder(playerManager.getConfiguration(), StandardAudioDataFormats.DISCORD_OPUS);
     }
 
-    public Map<String, Player> players() {
-        return players;
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<String, MixerPlayer> players() {
+        return (Map)players;
     }
 
-    public Player getPlayer(String key) {
+    @Override
+    public MixerPlayer getPlayer(String key) {
         return players.computeIfAbsent(key, __ -> new Player(playerManager.createPlayer()));
+    }
+
+    @Override
+    public void destroy() {
+        close();
     }
 
     @Override
@@ -82,7 +90,7 @@ public class TrackMixer implements AudioSendHandler, AutoCloseable {
         encoder.close();
     }
 
-    public static class Player {
+    public static class Player implements MixerPlayer {
         private final ByteBuffer buffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_PCM_S16_BE.maximumChunkSize())
                 .order(ByteOrder.BIG_ENDIAN);
         private final MutableAudioFrame frame = new MutableAudioFrame();

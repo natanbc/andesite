@@ -1,6 +1,6 @@
 package andesite.node.event;
 
-import andesite.node.player.Player;
+import andesite.node.player.AndesitePlayer;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -20,12 +20,12 @@ public class EventDispatcher {
     }
 
     public void onPlayerCreated(@Nonnull String userId, @Nonnull String guildId,
-                                @Nonnull Player player) {
+                                @Nonnull AndesitePlayer player) {
         listeners.forEach(l -> l.onPlayerCreated(userId, guildId, player));
     }
 
     public void onPlayerDestroyed(@Nonnull String userId, @Nonnull String guildId,
-                                @Nonnull Player player) {
+                                @Nonnull AndesitePlayer player) {
         listeners.forEach(l -> l.onPlayerDestroyed(userId, guildId, player));
     }
 

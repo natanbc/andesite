@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public class Player implements AudioSendHandler {
+public class Player implements AudioSendHandler, AndesitePlayer {
     private static final Logger log = LoggerFactory.getLogger(Player.class);
 
     private final Map<Object, EventEmitter> emitters = new ConcurrentHashMap<>();
@@ -66,30 +66,35 @@ public class Player implements AudioSendHandler {
         });
     }
 
+    @Override
     @Nonnull
     @CheckReturnValue
     public FilterChainConfiguration filterConfig() {
         return filterConfig;
     }
 
+    @Override
     @Nonnull
     @CheckReturnValue
     public AudioPlayerManager audioPlayerManager() {
         return audioPlayerManager;
     }
 
+    @Override
     @Nonnull
     @CheckReturnValue
     public String guildId() {
         return guildId;
     }
 
+    @Override
     @Nonnull
     @CheckReturnValue
     public String userId() {
         return userId;
     }
 
+    @Override
     @Nonnull
     @CheckReturnValue
     public AudioPlayer audioPlayer() {
@@ -111,19 +116,23 @@ public class Player implements AudioSendHandler {
         return audioPlayer.getPlayingTrack() != null && !audioPlayer.isPaused();
     }
 
+    @Override
     @Nonnull
     public TrackMixer mixer() {
         return mixer.get();
     }
 
+    @Override
     public void switchToMixer() {
         switchWhenReady = mixer.get();
     }
 
+    @Override
     public void switchToSingle() {
         switchWhenReady = fastSendHandler;
     }
 
+    @Override
     public void destroy() {
         realSendHandler = fastSendHandler; //ensures we won't call the opus encoder in track mixer after releasing
         mixer.getIfPresent()
@@ -133,6 +142,7 @@ public class Player implements AudioSendHandler {
         andesite.vertx().cancelTimer(cleanupTimerId);
     }
 
+    @Override
     @Nonnull
     @CheckReturnValue
     public JsonObject encodeState() {

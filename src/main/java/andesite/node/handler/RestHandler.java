@@ -62,6 +62,15 @@ public class RestHandler {
             context.next();
         });
 
+        router.route().handler(r -> {
+            if(andesite.pluginManager().customHandleHttpRequest(r)) {
+                return;
+            }
+            r.next();
+        });
+
+        andesite.pluginManager().configureRouter(router);
+
         if(enablePrometheus) {
             router.get(config.get("prometheus.path", "/metrics")).handler(context -> {
                 var writer = new StringWriter();
