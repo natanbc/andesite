@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'com.github.johnrengelman.shadow' version '2.0.4'
+	id 'com.palantir.docker' version '0.21.0'
 }
 
 def versionObj = new Version(major: 0, minor: 7, revision: 0)
@@ -73,6 +74,14 @@ dependencies {
     compile "com.google.code.findbugs:jsr305:$jsr305Version"
 }
 
+docker {
+    name "natanbc/andesite:${versionObj}"
+    files "build/libs/andesite-node-${versionObj}-all.jar"
+    buildArgs([
+        version: versionObj.toString()
+    ])
+}
+
 def natives = [
         'all',
         'darwin',
@@ -84,6 +93,8 @@ def natives = [
 ]
 
 task buildAll {}
+
+tasks.docker.dependsOn buildAll
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
