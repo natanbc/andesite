@@ -1,6 +1,7 @@
 package andesite.node.handler;
 
 import andesite.node.Andesite;
+import andesite.node.NodeState;
 import andesite.node.Version;
 import andesite.node.event.AndesiteEventListener;
 import andesite.node.player.AndesitePlayer;
@@ -29,20 +30,21 @@ public class SingyeongHandler {
         var nodeRegion = config.get("node.region", "unknown");
         var nodeId = config.get("node.id", "unknown");
 
-        var client = new SingyeongClient(config.require("transport.singyeong.url"),
-                andesite.vertx(), config.get("transport.singyeong.app-id", "andesite-audio"));
+        var client = SingyeongClient.create(andesite.vertx(), config.require("transport.singyeong.dsn"));
 
         var players = ConcurrentHashMap.<String>newKeySet();
 
         andesite.dispatcher().register(new AndesiteEventListener() {
             @Override
-            public void onPlayerCreated(@Nonnull String userId, @Nonnull String guildId, @Nonnull AndesitePlayer player) {
+            public void onPlayerCreated(@Nonnull NodeState state, @Nonnull String userId,
+                                        @Nonnull String guildId, @Nonnull AndesitePlayer player) {
                 players.add(userId + ":" + guildId);
                 updateMetadata();
             }
 
             @Override
-            public void onPlayerDestroyed(@Nonnull String userId, @Nonnull String guildId, @Nonnull AndesitePlayer player) {
+            public void onPlayerDestroyed(@Nonnull NodeState state, @Nonnull String userId,
+                                          @Nonnull String guildId, @Nonnull AndesitePlayer player) {
                 players.remove(userId + ":" + guildId);
                 updateMetadata();
             }

@@ -16,7 +16,7 @@ import java.nio.file.Path;
  * All values in this file must be primitives, strings or json objects. Arrays
  * are silently ignored.
  */
-public class JsonConfig extends Config {
+class JsonConfig extends Config {
     private JsonObject json;
 
     public JsonConfig(Path configPath) throws IOException {

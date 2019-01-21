@@ -1,6 +1,7 @@
 package andesite.node.handler;
 
 import andesite.node.Andesite;
+import andesite.node.NodeState;
 import andesite.node.event.AndesiteEventListener;
 import andesite.node.player.Player;
 import io.vertx.core.Handler;
@@ -68,8 +69,9 @@ public class WebSocketHandler {
         private final Set<Player> subscriptions = ConcurrentHashMap.newKeySet();
         private final AndesiteEventListener listener = new AndesiteEventListener() {
             @Override
-            public void onWebSocketClosed(@Nonnull String userId, @Nonnull String guildId,
-                                          int closeCode, @Nullable String reason, boolean byRemote) {
+            public void onWebSocketClosed(@Nonnull NodeState state, @Nonnull String userId,
+                                          @Nonnull String guildId, int closeCode,
+                                          @Nullable String reason, boolean byRemote) {
                 var payload = new JsonObject()
                         .put("op", "event")
                         .put("type", "WebSocketClosedEvent")

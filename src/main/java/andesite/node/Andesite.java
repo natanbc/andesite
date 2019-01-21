@@ -3,6 +3,7 @@ package andesite.node;
 import andesite.node.config.Config;
 import andesite.node.event.EventBuffer;
 import andesite.node.event.EventDispatcher;
+import andesite.node.event.EventDispatcherImpl;
 import andesite.node.handler.RequestHandler;
 import andesite.node.handler.RestHandler;
 import andesite.node.handler.SingyeongHandler;
@@ -48,7 +49,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Andesite {
+public class Andesite implements NodeState {
     public static final Cleaner CLEANER = Cleaner.create(r -> {
         var t = new Thread(r, "Andesite-Cleaner");
         t.setDaemon(true);
@@ -68,13 +69,13 @@ public class Andesite {
     );
     private static final Set<String> DISABLED_BY_DEFAULT = Set.of("http", "local");
 
-    private final PluginManager pluginManager = new PluginManager();
+    private final PluginManager pluginManager = new PluginManager(this);
     private final AtomicLong nextBufferId = new AtomicLong();
     private final Map<Long, EventBuffer> buffers = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Player>> players = new ConcurrentHashMap<>();
     private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
     private final AudioPlayerManager pcmPlayerManager = new DefaultAudioPlayerManager();
-    private final EventDispatcher dispatcher = new EventDispatcher();
+    private final EventDispatcherImpl dispatcher = new EventDispatcherImpl(this);
     private final Vertx vertx;
     private final Config config;
     private final IAudioSendFactory factory;
@@ -143,44 +144,8 @@ public class Andesite {
 
     @Nonnull
     @CheckReturnValue
-    public Vertx vertx() {
-        return vertx;
-    }
-
-    @Nonnull
-    @CheckReturnValue
-    public Config config() {
-        return config;
-    }
-
-    @Nonnull
-    @CheckReturnValue
-    public AudioPlayerManager audioPlayerManager() {
-        return playerManager;
-    }
-
-    @Nonnull
-    @CheckReturnValue
-    public AudioPlayerManager pcmAudioPlayerManager() {
-        return pcmPlayerManager;
-    }
-
-    @Nonnull
-    @CheckReturnValue
-    public EventDispatcher dispatcher() {
-        return dispatcher;
-    }
-
-    @Nonnull
-    @CheckReturnValue
     public MagmaApi magma() {
         return magma;
-    }
-
-    @Nonnull
-    @CheckReturnValue
-    public Map<String, Player> playerMap(String userId) {
-        return players.computeIfAbsent(userId, __ -> new ConcurrentHashMap<>());
     }
 
     @Nonnull
@@ -215,6 +180,49 @@ public class Andesite {
 
     @Nonnull
     @CheckReturnValue
+    @Override
+    public Config config() {
+        return config;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public Vertx vertx() {
+        return vertx;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public AudioPlayerManager audioPlayerManager() {
+        return playerManager;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public AudioPlayerManager pcmAudioPlayerManager() {
+        return pcmPlayerManager;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public EventDispatcher dispatcher() {
+        return dispatcher;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public Map<String, Player> playerMap(@Nonnull String userId) {
+        return players.computeIfAbsent(userId, __ -> new ConcurrentHashMap<>());
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
     public Player getPlayer(@Nonnull String userId, @Nonnull String guildId) {
         return playerMap(userId).computeIfAbsent(guildId, __ -> {
             var player = new Player(this, guildId, userId);
@@ -225,12 +233,14 @@ public class Andesite {
 
     @Nullable
     @CheckReturnValue
+    @Override
     public Player getExistingPlayer(@Nonnull String userId, @Nonnull String guildId) {
         var map = players.get(userId);
         return map == null ? null : map.get(guildId);
     }
 
     @Nullable
+    @Override
     public Player removePlayer(@Nonnull String userId, @Nonnull String guildId) {
         var map = players.get(userId);
         if(map == null) return null;
@@ -244,12 +254,15 @@ public class Andesite {
         return player;
     }
 
+    @Nonnull
+    @CheckReturnValue
+    @Override
     public Stream<Player> allPlayers() {
         return players.values().stream().flatMap(m -> m.values().stream());
     }
 
     public static void main(String[] args) throws IOException {
-        log.info("Starting andesite version {}", Version.VERSION);
+        log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
         var config = Config.load();
         Init.handleInit(config);
         var andesite = new Andesite(Vertx.vertx(), config);

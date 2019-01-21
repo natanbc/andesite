@@ -11,6 +11,6 @@ public class Version {
 
     static {
         VERSION = VERSION_MAJOR.startsWith("@") ? "dev" : VERSION_MAJOR + "." +
-                VERSION_MINOR + "." + VERSION_REVISION + "-" + COMMIT;
+                VERSION_MINOR + "." + VERSION_REVISION;
     }
 }

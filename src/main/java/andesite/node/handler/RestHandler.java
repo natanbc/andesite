@@ -2,6 +2,7 @@ package andesite.node.handler;
 
 import andesite.node.Andesite;
 import andesite.node.Version;
+import andesite.node.util.JFRState;
 import andesite.node.util.MemoryBodyHandler;
 import andesite.node.util.RequestUtils;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -11,6 +12,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import jdk.jfr.FlightRecorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +22,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
@@ -32,8 +36,9 @@ public class RestHandler {
         var enableRest = config.getBoolean("transport.http.rest", true);
         var enableWs = config.getBoolean("transport.http.ws", true);
         var enablePrometheus = config.getBoolean("prometheus.enabled", false);
+        var enableJfr = config.getBoolean("jfr.enabled", true);
 
-        if(!enableRest && !enableWs && !enablePrometheus) return false;
+        if(!enableRest && !enableWs && !enablePrometheus && !enableJfr) return false;
 
         var nodeRegion = config.get("node.region", "unknown");
         var nodeId = config.get("node.id", "unknown");
@@ -53,9 +58,13 @@ public class RestHandler {
         router.route().handler(context -> {
             context.response().putHeader("Andesite-Version", Version.VERSION);
             context.response().putHeader("Andesite-Version-Major", Version.VERSION_MAJOR);
+            context.response().putHeader("Andesite-Version-Minor", Version.VERSION_MINOR);
+            context.response().putHeader("Andesite-Version-Revision", Version.VERSION_REVISION);
+            context.response().putHeader("Andesite-Version-Commit", Version.COMMIT);
             context.response().putHeader("Andesite-Node-Region", nodeRegion);
             context.response().putHeader("Andesite-Node-Id", nodeId);
             context.response().putHeader("Andesite-Enabled-Sources", String.join(",", andesite.enabledSources()));
+            context.response().putHeader("Andesite-Loaded-Plugins", String.join(",", andesite.pluginManager().loadedPlugins()));
             if(context.request().getHeader("upgrade") == null) {
                 context.response().putHeader("Content-Type", "application/json");
             }
@@ -86,6 +95,10 @@ public class RestHandler {
                         .putHeader("Content-Type", TextFormat.CONTENT_TYPE_004)
                         .end(writer.toString());
             });
+        }
+
+        if(enableJfr) {
+            jfrRoutes(andesite, router);
         }
 
         //verify authentication
@@ -224,6 +237,127 @@ public class RestHandler {
             return;
         }
         context.response().end(response.toBuffer());
+    }
+
+    private static void jfrRoutes(@Nonnull Andesite andesite, @Nonnull Router router) {
+        var r = Router.router(andesite.vertx());
+
+        r.route().handler(c -> {
+            var config = andesite.config();
+            var password = config.get("debug-password");
+            if(password == null) {
+                password = config.get("password");
+            }
+            if(password != null && !password.equals(c.request().getHeader("Authorization"))) {
+                error(c, 401, "Unauthorized");
+                return;
+            }
+            c.next();
+        });
+
+        r.get("/state").handler(c -> {
+            var recording = JFRState.current();
+            var response = new JsonObject().put("recording", recording != null);
+            if(recording != null) {
+                var dest = recording.getDestination();
+                var settings = new JsonObject();
+                recording.getSettings().forEach(settings::put);
+                response.put("maxSize", recording.getMaxSize())
+                        .put("size", recording.getSize())
+                        .put("id", recording.getId())
+                        .put("duration", Instant.now()
+                                .minusMillis(recording.getStartTime().toEpochMilli()).toEpochMilli())
+                        .put("name", recording.getName())
+                        .put("settings", settings)
+                        .put("destination", dest == null ? null : dest.toAbsolutePath().toString());
+            }
+            c.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(response.toBuffer());
+        });
+
+        r.get("/events").handler(c -> {
+            var array = new JsonArray();
+            for(var event : FlightRecorder.getFlightRecorder().getEventTypes()) {
+                array.add(new JsonObject()
+                        .put("name", event.getName())
+                        .put("label", event.getLabel())
+                        .put("description", event.getDescription())
+                        .put("id", event.getId()));
+            }
+            c.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(array.toBuffer());
+        });
+
+        r.post("/start").handler(c -> {
+            var events = c.queryParams().get("events");
+            if(events == null) {
+                error(c, 400, "Missing events");
+                return;
+            }
+            var recording = JFRState.createNew();
+            if(recording == null) {
+                error(c, 400, "Recording already started");
+                return;
+            }
+            if(events.equalsIgnoreCase("all")) {
+                for(var t : FlightRecorder.getFlightRecorder().getEventTypes()) {
+                    recording.enable(t.getName());
+                }
+            } else {
+                for(var t : events.split(",")) {
+                    recording.enable(t.strip());
+                }
+            }
+            var dest = c.queryParams().get("destination");
+            if(dest != null) {
+                try {
+                    recording.setDestination(Path.of(dest));
+                    recording.setToDisk(true);
+                    var maxSize = c.queryParams().get("maxSize");
+                    if(maxSize != null) {
+                        recording.setMaxSize(Long.parseLong(maxSize));
+                    }
+                } catch(Exception e) {
+                    recording.close();
+                    c.response()
+                            .setStatusCode(500)
+                            .setStatusMessage("Error configuring recorder")
+                            .putHeader("Content-Type", "application/json")
+                            .end(RequestUtils.encodeThrowable(c, e).toBuffer());
+                    return;
+                }
+            }
+            recording.start();
+            c.response().setStatusCode(204).end();
+        });
+
+        r.post("/stop").handler(c -> {
+            var recording = JFRState.stop();
+            if(recording == null) {
+                error(c, 400, "Recording not started");
+                return;
+            }
+            var path = c.queryParams().get("path");
+            if(path == null || recording.getSize() == 0) {
+                recording.close();
+                c.response().setStatusCode(204).end();
+            } else {
+                try {
+                    recording.dump(Path.of(path));
+                    c.response().setStatusCode(204).end();
+                } catch(IOException e) {
+                    c.response()
+                            .setStatusCode(500)
+                            .setStatusMessage("Error writing response")
+                            .putHeader("Content-Type", "application/json")
+                            .end(RequestUtils.encodeThrowable(c, e).toBuffer());
+                }
+            }
+        });
+
+        router.mountSubRouter("/jfr", r);
     }
 
     private static void trackRoutes(@Nonnull Andesite andesite, @Nonnull Router router) {

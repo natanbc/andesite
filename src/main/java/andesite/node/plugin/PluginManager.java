@@ -1,5 +1,6 @@
 package andesite.node.plugin;
 
+import andesite.node.NodeState;
 import andesite.node.Plugin;
 import andesite.node.event.EventDispatcher;
 import andesite.node.handler.WebSocketState;
@@ -9,6 +10,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
@@ -17,46 +19,62 @@ import java.util.List;
 
 public class PluginManager {
     private final List<Plugin> plugins = new ArrayList<>();
+    private final List<String> loadedPlugins = new ArrayList<>();
+    private final NodeState state;
 
-    public void load(File path) throws IOException {
-        plugins.addAll(PluginLoader.create(path).loadPlugins());
+    public PluginManager(@Nonnull NodeState state) {
+        this.state = state;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public List<String> loadedPlugins() {
+        return loadedPlugins;
+    }
+
+    public void load(@Nonnull File path) throws IOException {
+        var p = PluginLoader.create(path).loadPlugins();
+        plugins.addAll(p);
+        for(var plugin : p) {
+            loadedPlugins.add(plugin.getClass().getName());
+        }
     }
 
     public void configureRouter(@Nonnull Router router) {
         for(var p : plugins) {
-            p.configureRouter(router);
+            p.configureRouter(state, router);
         }
     }
 
     public void configurePlayerManager(@Nonnull AudioPlayerManager manager) {
         for(var p : plugins) {
-            p.configurePlayerManager(manager);
+            p.configurePlayerManager(state, manager);
         }
     }
 
     public void registerListeners(@Nonnull EventDispatcher dispatcher) {
         for(var p : plugins) {
-            p.registerListeners(dispatcher);
+            p.registerListeners(state, dispatcher);
         }
     }
 
     public boolean customHandleHttpRequest(@Nonnull RoutingContext context) {
         for(var p : plugins) {
-            if(p.onRawHttpRequest(context) == Plugin.HookResult.ABORT) return true;
+            if(p.onRawHttpRequest(state, context) == Plugin.HookResult.ABORT) return true;
         }
         return false;
     }
 
     public boolean customHandleWebSocketPayload(@Nonnull WebSocketState state, @Nonnull JsonObject payload) {
         for(var p : plugins) {
-            if(p.onRawWebSocketPayload(state, payload) == Plugin.HookResult.ABORT) return true;
+            if(p.onRawWebSocketPayload(this.state, state, payload) == Plugin.HookResult.ABORT) return true;
         }
         return false;
     }
 
     public boolean customHandleSingyeongPayload(@Nonnull Dispatch dispatch) {
         for(var p : plugins) {
-            if(p.onRawSingyeongPayload(dispatch) == Plugin.HookResult.ABORT) return true;
+            if(p.onRawSingyeongPayload(state, dispatch) == Plugin.HookResult.ABORT) return true;
         }
         return false;
     }

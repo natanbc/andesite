@@ -1,6 +1,7 @@
 package andesite.node.player;
 
 import andesite.node.Andesite;
+import andesite.node.NodeState;
 import andesite.node.player.filter.FilterChainConfiguration;
 import andesite.node.util.LazyInit;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -67,17 +68,15 @@ public class Player implements AudioSendHandler, AndesitePlayer {
     }
 
     @Override
-    @Nonnull
-    @CheckReturnValue
-    public FilterChainConfiguration filterConfig() {
-        return filterConfig;
+    public NodeState node() {
+        return andesite;
     }
 
     @Override
     @Nonnull
     @CheckReturnValue
-    public AudioPlayerManager audioPlayerManager() {
-        return audioPlayerManager;
+    public FilterChainConfiguration filterConfig() {
+        return filterConfig;
     }
 
     @Override
@@ -99,6 +98,12 @@ public class Player implements AudioSendHandler, AndesitePlayer {
     @CheckReturnValue
     public AudioPlayer audioPlayer() {
         return audioPlayer;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public AudioPlayerManager audioPlayerManager() {
+        return audioPlayerManager;
     }
 
     @Nonnull

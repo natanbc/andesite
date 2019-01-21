@@ -206,7 +206,7 @@ public class Config {
     /**
      * Source used for loading config values.
      */
-    public enum Source {
+    private enum Source {
         /**
          * Config instance specific.
          */

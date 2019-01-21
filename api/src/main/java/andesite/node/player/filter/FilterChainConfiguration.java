@@ -11,7 +11,13 @@ import io.vertx.core.json.JsonObject;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 public class FilterChainConfiguration {
     private final EqualizerConfig equalizer = new EqualizerConfig();
@@ -20,7 +26,35 @@ public class FilterChainConfiguration {
     private final TremoloConfig tremolo = new TremoloConfig();
     private final VibratoConfig vibrato = new VibratoConfig();
     private final VolumeConfig volume = new VolumeConfig();
-    private final Config[] filters = {equalizer, karaoke, timescale, tremolo, vibrato, volume};
+    private final List<Config> filters = new ArrayList<>(6);
+    private final Map<Class<? extends Config>, Config> custom = new HashMap<>();
+
+    public FilterChainConfiguration() {
+        Collections.addAll(filters, equalizer, karaoke, timescale, tremolo, vibrato, volume);
+    }
+
+    public boolean hasCustomConfig(Class<? extends Config> clazz) {
+        return custom.containsKey(clazz);
+    }
+
+    @SuppressWarnings("unchecked")
+    @CheckReturnValue
+    public <T extends Config> T customConfig(@Nonnull Class<T> clazz) {
+        return (T)custom.get(clazz);
+    }
+
+    @SuppressWarnings("unchecked")
+    @CheckReturnValue
+    public <T extends Config> T customConfig(@Nonnull Class<T> clazz, @Nonnull Supplier<T> supplier) {
+        return (T)custom.computeIfAbsent(clazz, __ -> {
+            var config = Objects.requireNonNull(supplier.get(), "Provided configuration may not be null");
+            if(!clazz.isInstance(config)) {
+                throw new IllegalArgumentException("Config not instance of provided class");
+            }
+            filters.add(config);
+            return config;
+        });
+    }
 
     @CheckReturnValue
     public boolean isEnabled() {
@@ -39,6 +73,10 @@ public class FilterChainConfiguration {
     @Nonnull
     @CheckReturnValue
     public JsonObject encode() {
+        var obj = new JsonObject();
+        custom.forEach((k, v) -> {
+            obj.put(k.getName(), v.encode().put("enabled", v.configured()));
+        });
         return new JsonObject()
                 .put("enabled", isEnabled())
                 .put("equalizer", equalizer.encode().put("enabled", equalizer.configured()))
@@ -46,7 +84,8 @@ public class FilterChainConfiguration {
                 .put("timescale", timescale.encode().put("enabled", timescale.configured()))
                 .put("tremolo", tremolo.encode().put("enabled", tremolo.configured()))
                 .put("vibrato", vibrato.encode().put("enabled", vibrato.configured()))
-                .put("volume", volume.encode().put("enabled", volume.configured()));
+                .put("volume", volume.encode().put("enabled", volume.configured()))
+                .put("custom", obj);
     }
 
     @Nonnull

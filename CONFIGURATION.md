@@ -44,12 +44,14 @@ Example:
 |-----|------|-------------|---------|
 | extra-plugins | string | comma separated list of paths to load plugins from, besides the default path | null |
 | password | string | password to use for http/websocket access. No filtering is done if null | null |
+| debug-password | string | password to use for debug routes. If missing or null, the regular password is used instead. | null |
 | log-level | string | lowest level to log | INFO |
 | lavalink.ws-path | string | route to run the lavalink websocket on. | /lavalink |
 | send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | nas |
 | send-system.async | boolean | whether or not to use jda-async-packet-provider to wrap the send system | true |
 | send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |
 | send-system.non-allocating | boolean | whether or not to use the non allocating frame buffer | false |
+| jfr.enabled | boolean | whether or not to enable [JFR debug routes](DEBUGGING.md) | true |
 | node.region | string | region of the node | "unknown" |
 | node.id | string | id of the node | "unknown" |
 | prometheus.enabled | boolean | whether or not to enable prometheus metrics | false |
@@ -61,8 +63,7 @@ Example:
 | transport.http.rest | boolean | whether or not to enable the http api | true |
 | transport.http.ws | boolean | whether or not to enable the websocket api | true |
 | transport.singyeong.enabled | boolean | whether or not to enable the singyeong api | false |
-| transport.singyeong.url | string | url of the singyeong server | null |
-| transport.singyeong.app-id | string | application id to register the node with | andesite-audio |
+| transport.singyeong.dsn | string | singyeong [dsn](#singyeong-dsn-format) for connecting | null |
 | source.bandcamp | boolean | whether or not to enable playing and resolving tracks from bandcamp | true |
 | source.beam | boolean | whether or not to enable playing and resolving tracks from beam | true |
 | source.http | boolean | whether or not to enable playing and resolving tracks from http urls | **false** |
@@ -75,3 +76,25 @@ Example:
 \* When running on architectures not supported by [jda-nas](https://github.com/sedmelluq/jda-nas), such as
 ARM or Darwin devices, you must use either `jda` or `nio` for the send system. For production, nio is preferred
 as it doesn't spawn a thread per voice connection.
+
+### Singyeong DSN Format
+
+A singyeong DNS is an URI with the format
+
+```
+<protocol>://<app id>[:<password>]@host[:port]
+```
+
+| key | description |
+|-----|-------------|
+| protocol | `singyeong` or `ssingyeong` (`ws` vs `wss`) |
+| app id | app id to use |
+| password | password to use, optional |
+| host | host to connect |
+| port | port to connect, defaults to 80 or 443, depending on the protocol |
+
+- `singyeong://andesite@localhost` - valid, connects to port 80 on the current machine
+- `ssingyeong://andesite@localhost` - valid, connects to port 443 on the current machine
+- `wss://andesite@localhost` - invalid, protocol must be `singyeong` or `ssingyeong`
+- `singyeong://andesite:youshallnotpass@localhost:1234` - valid, connects with password `youshallnotpass` to port
+`1234` of the current machine

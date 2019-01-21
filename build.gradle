@@ -5,7 +5,7 @@ plugins {
 	id 'com.palantir.docker' version '0.21.0'
 }
 
-def versionObj = new Version(major: 0, minor: 7, revision: 0)
+def versionObj = new Version(major: 0, minor: 8, revision: 0)
 
 allprojects {
     group 'com.github.natanbc'
@@ -18,15 +18,17 @@ allprojects {
 ext {
     //@formatter:off
     vertxWebVersion =   '3.5.4'
-    magmaVersion =      '0.8.1'
+    magmaVersion =      '0.8.3'
     lavaplayerVersion = '1.3.10'
     lavadspVersion =    '0.4'
     jdaNasVersion =     '1.0.6'
-    singyeongVersion =  '5c53983'
+    singyeongVersion =  '829d574'
     logbackVersion =    '1.2.3'
     sentryVersion =     '1.7.15'
     prometheusVersion = '0.5.0'
     jsr305Version =     '3.0.2'
+    
+    jattachVersion =    'v1.5'
     //@formatter:on
 }
 
@@ -39,6 +41,8 @@ repositories {
 
 dependencies {
     compile project(':api')
+
+
     
     //REST, WebSocket, etc
     compile "io.vertx:vertx-web:$vertxWebVersion"
@@ -76,9 +80,11 @@ dependencies {
 
 docker {
     name "natanbc/andesite:${versionObj}"
-    files "build/libs/andesite-node-${versionObj}-all.jar"
+    files "build/libs/andesite-node-${versionObj}-all.jar",
+            project(':jattach-debug-plugin').getTasksByName('jar', false).outputs
     buildArgs([
-        version: versionObj.toString()
+        version: versionObj.toString(),
+        jattachVersion: jattachVersion
     ])
 }
 
@@ -95,6 +101,8 @@ def natives = [
 task buildAll {}
 
 tasks.docker.dependsOn buildAll
+tasks.docker.dependsOn ':jattach-debug-plugin:jar'
+buildAll.dependsOn ':jattach-debug-plugin:jar'
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 

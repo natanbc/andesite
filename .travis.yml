@@ -21,7 +21,9 @@ deploy:
     api_key:
       secure: "ouciZU/x4GMjcsYIS1HwvElKEgD3EDrio155x8ad7d4Kpq9Rgda148DzIwt0CHvksZ/JeMTKE79wVr5JTJXkEvie+WnPNGv5Hlvj3NZjmqfCMqmPGIsEUVQNRsYzfMaMMDOkO+b7g476WZHj/Ht63gnkHCsnvv3u7O8YaD1h/AgIpUXWskmXa0akNWPCduLzHx1ot4J7vklGMSzjxf8+FaHbEvEeSSla/QFNEocs+5+Czr1Rd8jv0pWMAL5VxsuHRpNHRU41hVZlW684u4IZFFxhA7zbx5trKTmEAlO+c4UhABb0OschlQ7TwJ0dyq1IfP0sHoFv8W227XKtIjOuleUZUa5x0Sb3gldT9xmGO9vkDSyCEovoWx03h93jgTXp/8VDy1YjKQzX8mNtqO8dPp3+7IpzRemfV+SHOCWSJivbHODcFe5OdbRPiZOiysRix5bMXxIGvbQHg8x9+ZWaacfRaCb6tCUeOCAbLEOtD0xwX/uinGAKB/39cpajYfX12MrZ6FU9Koj1qqH8H1aEVW+Px5boejQ3U914NglBLWKthhq2n7c7cVwOMcwmVPdwzzU74WlVLkiUl8irwN+jGghqGLb9AINvUtXuMp+q5kPfD0h63+iRrv6B/uLBqObGCDGkX+IFgFPTCrnrDzpbxR03T5Uzn7DcG4Wmxj6DL/k="
     file_glob: true
-    file: build/libs/*
+    file:
+      - build/libs/*
+      - jattach-debug-plugin/build/libs/*
     skip_cleanup: true
     on:
       tags: true
