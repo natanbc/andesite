@@ -31,8 +31,7 @@
         },
         "singyeong": {
             "enabled": false,
-            "url": "ws://localhost:9876/gateway/websocket",
-            "app-id": "andesite-audio"
+            "dsn": "singyeong://andesite@localhost:9876"
         }
     },
     "source": {

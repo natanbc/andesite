@@ -95,6 +95,16 @@ are discarded and buffering will stop. To get the missed events, clients must re
 header containing the value returned by the `Andesite-Connection-Id` received earlier. All IDs are single use and
 reconnects must save the new ID returned. To disable buffering, simply send an `event-buffer` payload with timeout of 0.
 
+Upon connecting, andesite will send an object containing the connection id. This can be used
+to read it when the response headers are not exposed (eg vert.x websocket client).
+
+```json
+{
+    "op": "connection-id",
+    "id": "the id goes here"
+}
+```
+
 \* Currently the stats sent always have a null `frameStats` key.
 
 ## Singyeong

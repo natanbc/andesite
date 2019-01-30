@@ -51,6 +51,14 @@ public class WebSocketHandler {
                         }
                     } catch(Exception ignored) {}
                 }
+                ws.writeTextMessage(new JsonObject()
+                        .put("op", "connection-id")
+                        //making it a string allows a future change of the
+                        //id format without breaking clients - the actual
+                        //format is opaque to them.
+                        .put("id", String.valueOf(id))
+                        .encode()
+                );
                 ws.frameHandler(new FrameHandler(andesite, userId, ws, id, lavalinkConnection));
             } else {
                 context.next();
