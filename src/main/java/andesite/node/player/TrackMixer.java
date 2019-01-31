@@ -81,11 +81,6 @@ public class TrackMixer implements AudioProvider, AutoCloseable, AndesiteTrackMi
     }
 
     @Override
-    public boolean isOpus() {
-        return true;
-    }
-
-    @Override
     public void close() {
         players.values().forEach(p -> p.player.destroy());
         encoder.close();

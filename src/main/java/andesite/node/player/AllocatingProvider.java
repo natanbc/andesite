@@ -37,9 +37,4 @@ class AllocatingProvider implements AudioProvider {
         }
         return buffer.position(0).limit(lastFrame.getDataLength());
     }
-
-    @Override
-    public boolean isOpus() {
-        return true;
-    }
 }

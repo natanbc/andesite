@@ -191,9 +191,4 @@ public class Player implements AudioProvider, AndesitePlayer {
     public ByteBuffer provide() {
         return realProvider.provide();
     }
-
-    @Override
-    public boolean isOpus() {
-        return true;
-    }
 }

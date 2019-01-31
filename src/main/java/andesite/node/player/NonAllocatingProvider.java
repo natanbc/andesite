@@ -50,9 +50,4 @@ class NonAllocatingProvider implements AudioProvider {
         }
         return buffer.position(0).limit(frame.getDataLength());
     }
-
-    @Override
-    public boolean isOpus() {
-        return true;
-    }
 }
