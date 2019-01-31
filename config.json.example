@@ -1,6 +1,7 @@
 {
     "log-level": "info",
     "password": "you shall not pass",
+    "audio-handler": "magma",
     "lavalink": {
         "ws-path": "/lavalink"
     },
