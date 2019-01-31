@@ -3,6 +3,7 @@ package andesite.node;
 import andesite.node.config.Config;
 import andesite.node.event.EventDispatcher;
 import andesite.node.player.AndesitePlayer;
+import andesite.node.send.AudioHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import io.vertx.core.Vertx;
 
@@ -32,6 +33,10 @@ public interface NodeState {
     @Nonnull
     @CheckReturnValue
     EventDispatcher dispatcher();
+
+    @Nonnull
+    @CheckReturnValue
+    AudioHandler audioHandler();
 
     @Nonnull
     @CheckReturnValue

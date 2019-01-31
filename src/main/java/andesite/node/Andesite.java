@@ -129,12 +129,6 @@ public class Andesite implements NodeState {
 
     @Nonnull
     @CheckReturnValue
-    public AudioHandler audioHandler() {
-        return audioHandler;
-    }
-
-    @Nonnull
-    @CheckReturnValue
     public RequestHandler requestHandler() {
         return handler;
     }
@@ -196,6 +190,13 @@ public class Andesite implements NodeState {
     @Override
     public EventDispatcherImpl dispatcher() {
         return dispatcher;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public AudioHandler audioHandler() {
+        return audioHandler;
     }
 
     @Nonnull
