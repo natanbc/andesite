@@ -18,9 +18,14 @@ All responses have the following headers:
 | name | value |
 |------|-------|
 | Andesite-Version | version of the node |
+| Andesite-Version-Major | major version of the node |
+| Andesite-Version-Minor | minor version of the node |
+| Andesite-Version-Revision | revision version of the node |
+| Andesite-Version-Commit | commit hash of the node |
 | Andesite-Node-Region | [node region](CONFIGURATION.md#settings) defined in the config |
 | Andesite-Node-Id | [node ID](CONFIGURATION.md#settings) defined in the config |
 | Andesite-Enabled-Sources | comma separated list of [sources](CONFIGURATION.md#settings) enabled in the config |
+| Andesite-Loaded-Plugins | comma separated list of [plugins](PLUGINS.md) loaded |
 
 If an error happens, an [error](#error) object is returned. Since these objects can get quite big, it's possible
 to enable a shorter version, which does not send stack frames, by providing a header named `Andesite-Short-Errors`
