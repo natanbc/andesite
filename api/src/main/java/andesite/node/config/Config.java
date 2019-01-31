@@ -156,6 +156,7 @@ public class Config {
         var filename = getGlobalConfig("config-file");
         var path = Paths.get(filename == null ? "config.json" : filename);
         if(Files.isReadable(path)) {
+            log.info("Loading config from {}", path.toAbsolutePath());
             return new JsonConfig(path);
         }
         return new Config();

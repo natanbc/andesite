@@ -12,8 +12,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import space.npstr.magma.MagmaMember;
-import space.npstr.magma.MagmaServerUpdate;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -39,6 +37,7 @@ public class RequestHandler {
             c = Class.forName("com.sun.management.OperatingSystemMXBean");
         } catch(Exception e) {
             c = null;
+            log.error("Unable to load internal OperatingSystemMXBean class. CPU usage info unavailable");
         }
         INTERNAL_BEAN_CLASS = c;
     }
@@ -67,16 +66,8 @@ public class RequestHandler {
             return;
         }
 
-        var member = MagmaMember.builder()
-                .userId(userId)
-                .guildId(guildId)
-                .build();
-        var serverUpdate = MagmaServerUpdate.builder()
-                .sessionId(sessionId)
-                .endpoint(endpoint)
-                .token(token)
-                .build();
-        andesite.magma().provideVoiceServerUpdate(member, serverUpdate);
+        andesite.audioHandler()
+                .handleVoiceUpdate(userId, guildId, sessionId, endpoint, token);
     }
 
     @Nullable
@@ -117,11 +108,7 @@ public class RequestHandler {
         player.audioPlayer().setVolume(payload.getInteger("volume", player.audioPlayer().getVolume()));
         player.audioPlayer().startTrack(track, false);
 
-        var m = MagmaMember.builder()
-                .userId(userId)
-                .guildId(guildId)
-                .build();
-        andesite.magma().setSendHandler(m, player);
+        andesite.audioHandler().setProvider(userId, guildId, player);
 
         return player.encodeState();
     }
@@ -189,11 +176,7 @@ public class RequestHandler {
             }
         });
 
-        var m = MagmaMember.builder()
-                .userId(userId)
-                .guildId(guildId)
-                .build();
-        andesite.magma().setSendHandler(m, player);
+        andesite.audioHandler().setProvider(userId, guildId, player);
 
         return player.encodeState();
     }
@@ -319,12 +302,7 @@ public class RequestHandler {
     public JsonObject destroy(@Nonnull String userId, @Nonnull String guildId) {
         log.info("Destroying player for user {} in guild {} and payload {}", userId, guildId);
         var player = andesite.removePlayer(userId, guildId);
-        var member = MagmaMember.builder()
-                .userId(userId)
-                .guildId(guildId)
-                .build();
-        andesite.magma().removeSendHandler(member);
-        andesite.magma().closeConnection(member);
+        andesite.audioHandler().closeConnection(userId, guildId);
         if(player != null) {
             player.destroy();
         }

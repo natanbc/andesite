@@ -2,7 +2,6 @@ package andesite.node;
 
 import andesite.node.config.Config;
 import andesite.node.event.EventBuffer;
-import andesite.node.event.EventDispatcher;
 import andesite.node.event.EventDispatcherImpl;
 import andesite.node.handler.RequestHandler;
 import andesite.node.handler.RestHandler;
@@ -10,6 +9,8 @@ import andesite.node.handler.SingyeongHandler;
 import andesite.node.player.Player;
 import andesite.node.plugin.PluginManager;
 import andesite.node.provider.AsyncPacketProviderFactory;
+import andesite.node.send.AudioHandler;
+import andesite.node.send.MagmaHandler;
 import andesite.node.send.jdaa.JDASendFactory;
 import andesite.node.send.nio.NioSendFactory;
 import andesite.node.util.FilterUtil;
@@ -32,8 +33,6 @@ import io.vertx.core.Vertx;
 import net.dv8tion.jda.core.audio.factory.IAudioSendFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import space.npstr.magma.MagmaApi;
-import space.npstr.magma.events.api.WebSocketClosed;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -78,8 +77,7 @@ public class Andesite implements NodeState {
     private final EventDispatcherImpl dispatcher = new EventDispatcherImpl(this);
     private final Vertx vertx;
     private final Config config;
-    private final IAudioSendFactory factory;
-    private final MagmaApi magma;
+    private final AudioHandler audioHandler;
     private final RequestHandler handler;
     private final Set<String> enabledSources;
 
@@ -100,8 +98,7 @@ public class Andesite implements NodeState {
         }
         this.vertx = vertx;
         this.config = config;
-        this.factory = createFactory(config);
-        this.magma = MagmaApi.of(__ -> factory);
+        this.audioHandler = createAudioHandler(config);
         this.handler = new RequestHandler(this);
         pluginManager.configurePlayerManager(playerManager);
         pluginManager.configurePlayerManager(pcmPlayerManager);
@@ -122,18 +119,6 @@ public class Andesite implements NodeState {
         pcmPlayerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_PCM_S16_BE);
         pcmPlayerManager.getConfiguration().setFilterHotSwapEnabled(true);
         pcmPlayerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
-        magma.getEventStream().subscribe(event -> {
-            if(event instanceof WebSocketClosed) {
-                var e = (WebSocketClosed)event;
-                dispatcher.onWebSocketClosed(
-                        e.getMember().getUserId(),
-                        e.getMember().getGuildId(),
-                        e.getCloseCode(),
-                        e.getReason(),
-                        e.isByRemote()
-                );
-            }
-        });
     }
 
     @Nonnull
@@ -144,8 +129,8 @@ public class Andesite implements NodeState {
 
     @Nonnull
     @CheckReturnValue
-    public MagmaApi magma() {
-        return magma;
+    public AudioHandler audioHandler() {
+        return audioHandler;
     }
 
     @Nonnull
@@ -209,7 +194,7 @@ public class Andesite implements NodeState {
     @Nonnull
     @CheckReturnValue
     @Override
-    public EventDispatcher dispatcher() {
+    public EventDispatcherImpl dispatcher() {
         return dispatcher;
     }
 
@@ -287,28 +272,34 @@ public class Andesite implements NodeState {
 
     @Nonnull
     @CheckReturnValue
-    private IAudioSendFactory createFactory(@Nonnull Config config) {
-        IAudioSendFactory factory;
-        switch(config.get("send-system.type", "nas")) {
-            case "nas":
-                factory = new NativeAudioSendFactory(config.getInt("send-system.nas-buffer", 400));
-                break;
-            case "jda":
-                factory = new JDASendFactory();
-                break;
-            case "nio":
-                factory = new NioSendFactory(vertx);
-                break;
+    private AudioHandler createAudioHandler(@Nonnull Config config) {
+        switch(config.get("audio-handler", "magma")) {
+            case "magma": {
+                IAudioSendFactory factory;
+                switch(config.get("send-system.type", "nas")) {
+                    case "nas":
+                        factory = new NativeAudioSendFactory(config.getInt("send-system.nas-buffer", 400));
+                        break;
+                    case "jda":
+                        factory = new JDASendFactory();
+                        break;
+                    case "nio":
+                        factory = new NioSendFactory(vertx);
+                        break;
+                    default:
+                        throw new IllegalArgumentException("No send system with type " + config.get("send-system.type"));
+                }
+                if(config.getBoolean("send-system.async", true)) {
+                    factory = new AsyncPacketProviderFactory(factory);
+                }
+                log.info("Send system: {}, async provider {}",
+                        config.get("send-system.type", "nas"),
+                        config.getBoolean("send-system.async", true) ? "enabled" : "disabled"
+                );
+                return new MagmaHandler(this, factory);
+            }
             default:
-                throw new IllegalArgumentException("No send system with type " + config.get("send-system.type"));
+                throw new IllegalArgumentException("No audio handler with type " + config.get("audio-handler"));
         }
-        if(config.getBoolean("send-system.async", true)) {
-            factory = new AsyncPacketProviderFactory(factory);
-        }
-        log.info("Send system: {}, async provider {}",
-                config.get("send-system.type", "nas"),
-                config.getBoolean("send-system.async", true) ? "enabled" : "disabled"
-        );
-        return factory;
     }
 }

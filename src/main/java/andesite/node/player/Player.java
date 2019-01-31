@@ -3,23 +3,24 @@ package andesite.node.player;
 import andesite.node.Andesite;
 import andesite.node.NodeState;
 import andesite.node.player.filter.FilterChainConfiguration;
+import andesite.node.send.AudioProvider;
 import andesite.node.util.LazyInit;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import io.vertx.core.json.JsonObject;
-import net.dv8tion.jda.core.audio.AudioSendHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public class Player implements AudioSendHandler, AndesitePlayer {
+public class Player implements AudioProvider, AndesitePlayer {
     private static final Logger log = LoggerFactory.getLogger(Player.class);
 
     private final Map<Object, EventEmitter> emitters = new ConcurrentHashMap<>();
@@ -37,9 +38,9 @@ public class Player implements AudioSendHandler, AndesitePlayer {
      * This is called fast because it avoids reencoding audio when the source is opus,
      * unlike TrackMixer.
      */
-    private final AudioSendHandler fastSendHandler;
-    private volatile AudioSendHandler realSendHandler;
-    private volatile AudioSendHandler switchWhenReady;
+    private final AudioProvider fastProvider;
+    private volatile AudioProvider realProvider;
+    private volatile AudioProvider switchWhenReady;
 
     private long lastUse;
 
@@ -51,10 +52,10 @@ public class Player implements AudioSendHandler, AndesitePlayer {
         this.userId = userId;
         this.audioPlayer = audioPlayerManager.createPlayer();
         this.audioPlayer.addListener(event -> emitters.values().forEach(e -> e.onEvent(event)));
-        this.fastSendHandler = andesite.config().getBoolean("send-system.non-allocating", false) ?
-                new NonAllocatingSendHandler(audioPlayer) :
-                new AllocatingSendHandler(audioPlayer);
-        this.realSendHandler = fastSendHandler;
+        this.fastProvider = andesite.config().getBoolean("send-system.non-allocating", false) ?
+                new NonAllocatingProvider(audioPlayer) :
+                new AllocatingProvider(audioPlayer);
+        this.realProvider = fastProvider;
         this.updateTimerId = andesite.vertx().setPeriodic(5000, __ -> {
             if(audioPlayer.getPlayingTrack() == null) return;
             emitters.values().forEach(EventEmitter::sendPlayerUpdate);
@@ -134,12 +135,12 @@ public class Player implements AudioSendHandler, AndesitePlayer {
 
     @Override
     public void switchToSingle() {
-        switchWhenReady = fastSendHandler;
+        switchWhenReady = fastProvider;
     }
 
     @Override
     public void destroy() {
-        realSendHandler = fastSendHandler; //ensures we won't call the opus encoder in track mixer after releasing
+        realProvider = fastProvider; //ensures we won't call the opus encoder in track mixer after releasing
         mixer.getIfPresent()
             .ifPresent(TrackMixer::close);
         audioPlayer.destroy();
@@ -170,25 +171,25 @@ public class Player implements AudioSendHandler, AndesitePlayer {
                 .put("volume", audioPlayer.getVolume())
                 .put("filters", filterConfig.encode())
                 .put("mixer", mixerStats)
-                .put("mixerEnabled", m.isPresent() && m.get() == realSendHandler);
+                .put("mixerEnabled", m.isPresent() && m.get() == realProvider);
     }
 
     @Override
     public boolean canProvide() {
         lastUse = System.nanoTime();
         if(switchWhenReady != null && switchWhenReady.canProvide()) {
-            log.info("Switching send handler from {} to {} for {}@{}", realSendHandler, switchWhenReady, userId, guildId);
-            realSendHandler = switchWhenReady;
+            log.info("Switching send handler from {} to {} for {}@{}", realProvider, switchWhenReady, userId, guildId);
+            realProvider = switchWhenReady;
             switchWhenReady = null;
             emitters.values().forEach(EventEmitter::sendPlayerUpdate);
             return true;
         }
-        return realSendHandler.canProvide();
+        return realProvider.canProvide();
     }
 
     @Override
-    public byte[] provide20MsAudio() {
-        return realSendHandler.provide20MsAudio();
+    public ByteBuffer provide() {
+        return realProvider.provide();
     }
 
     @Override

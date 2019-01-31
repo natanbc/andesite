@@ -56,6 +56,11 @@ public class RestHandler {
 
         //setup headers
         router.route().handler(context -> {
+            log.debug("Received request {} {} from {}",
+                    context.request().method(),
+                    context.normalisedPath(),
+                    context.request().remoteAddress()
+            );
             context.response().putHeader("Andesite-Version", Version.VERSION);
             context.response().putHeader("Andesite-Version-Major", Version.VERSION_MAJOR);
             context.response().putHeader("Andesite-Version-Minor", Version.VERSION_MINOR);
@@ -210,10 +215,14 @@ public class RestHandler {
 
         router.route().handler(context -> error(context, 404, "Not found"));
 
+        var port = andesite.config().getInt("transport.http.port", 5000);
+
+        log.info("Starting HTTP server on port {}", port);
+
         var latch = new CountDownLatch(1);
         andesite.vertx().createHttpServer()
                 .requestHandler(router::accept)
-                .listen(andesite.config().getInt("transport.http.port", 5000), result -> {
+                .listen(port, result -> {
                     if(result.failed()) {
                         log.error("Error starting HTTP server", result.cause());
                         System.exit(-1);
@@ -301,6 +310,7 @@ public class RestHandler {
                 error(c, 400, "Recording already started");
                 return;
             }
+            log.info("Starting JFR recording");
             if(events.equalsIgnoreCase("all")) {
                 for(var t : FlightRecorder.getFlightRecorder().getEventTypes()) {
                     recording.enable(t.getName());
@@ -339,13 +349,16 @@ public class RestHandler {
                 error(c, 400, "Recording not started");
                 return;
             }
+            log.info("Stopping JFR recording");
             var path = c.queryParams().get("path");
             if(path == null || recording.getSize() == 0) {
                 recording.close();
                 c.response().setStatusCode(204).end();
             } else {
+                var p = Path.of(path).toAbsolutePath();
+                log.info("Dumping recording to {}", p);
                 try {
-                    recording.dump(Path.of(path));
+                    recording.dump(p);
                     c.response().setStatusCode(204).end();
                 } catch(IOException e) {
                     c.response()
@@ -368,6 +381,7 @@ public class RestHandler {
                 return;
             }
             var identifier = identifiers.get(0);
+            log.debug("Resolving tracks for {}", identifier);
             andesite.requestHandler().resolveTracks(identifier)
                     .thenAccept(json -> context.response().end(json.toBuffer()))
                     .exceptionally(e -> {

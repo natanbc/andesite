@@ -30,7 +30,11 @@ public class SingyeongHandler {
         var nodeRegion = config.get("node.region", "unknown");
         var nodeId = config.get("node.id", "unknown");
 
-        var client = SingyeongClient.create(andesite.vertx(), config.require("transport.singyeong.dsn"));
+        var dsn = config.require("transport.singyeong.dsn");
+
+        log.info("Connecting to singyeong with dsn {}", dsn);
+
+        var client = SingyeongClient.create(andesite.vertx(), dsn);
 
         var players = ConcurrentHashMap.<String>newKeySet();
 

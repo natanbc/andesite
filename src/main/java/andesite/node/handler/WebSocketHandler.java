@@ -10,6 +10,8 @@ import io.vertx.core.http.WebSocketFrame;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -20,6 +22,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WebSocketHandler {
+    private static final Logger log = LoggerFactory.getLogger(WebSocketHandler.class);
+
     public static void setup(@Nonnull Andesite andesite, @Nonnull Router router) {
         router.get("/websocket").handler(handler(andesite, false));
         router.get(
@@ -176,6 +180,7 @@ public class WebSocketHandler {
                 ws.close((short)4001, "Unable to read frame data as json: " + e);
                 return;
             }
+            log.debug("Received payload {}", payload);
             if(andesite.pluginManager().customHandleWebSocketPayload(this, payload)) {
                 return;
             }

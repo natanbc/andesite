@@ -1,12 +1,12 @@
 package andesite.node.player;
 
 import andesite.node.player.filter.FilterChainConfiguration;
+import andesite.node.send.AudioProvider;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.format.transcoder.OpusChunkEncoder;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
-import net.dv8tion.jda.core.audio.AudioSendHandler;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -14,11 +14,12 @@ import java.nio.ShortBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class TrackMixer implements AudioSendHandler, AutoCloseable, AndesiteTrackMixer {
+public class TrackMixer implements AudioProvider, AutoCloseable, AndesiteTrackMixer {
     private final Map<String, Player> players = new ConcurrentHashMap<>();
     private final ShortBuffer mixBuffer = ByteBuffer.allocateDirect(StandardAudioDataFormats.DISCORD_PCM_S16_BE.maximumChunkSize())
             .order(ByteOrder.nativeOrder())
             .asShortBuffer();
+    private final ByteBuffer outputBuffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize());
 
     private final AudioPlayerManager playerManager;
     private final OpusChunkEncoder encoder;
@@ -61,7 +62,7 @@ public class TrackMixer implements AudioSendHandler, AutoCloseable, AndesiteTrac
     }
 
     @Override
-    public byte[] provide20MsAudio() {
+    public ByteBuffer provide() {
         mixBuffer.clear().position(0);
         for(var p : players.values()) {
             if(p.provided) {
@@ -74,9 +75,9 @@ public class TrackMixer implements AudioSendHandler, AutoCloseable, AndesiteTrac
         }
         mixBuffer.flip();
 
-        var v = encoder.encode(mixBuffer);
+        encoder.encode(mixBuffer, outputBuffer.position(0).limit(outputBuffer.capacity()));
         mixBuffer.flip();
-        return v;
+        return outputBuffer;
     }
 
     @Override

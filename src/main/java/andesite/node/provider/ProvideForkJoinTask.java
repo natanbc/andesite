@@ -54,7 +54,7 @@ public class ProvideForkJoinTask extends ForkJoinTask<ByteBuffer> {
             final int position = packet.position();
             return ByteBuffer.allocate(position - offset).put(data, offset, position - offset);
         }
-        return packet;
+        return null;
     }
 
     @Override
