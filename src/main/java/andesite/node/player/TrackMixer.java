@@ -63,20 +63,30 @@ public class TrackMixer implements AudioProvider, AutoCloseable, AndesiteTrackMi
 
     @Override
     public ByteBuffer provide() {
-        mixBuffer.clear().position(0);
+        var buffer = mixBuffer; //avoid getfield opcode
+        buffer.clear().position(0);
         for(var p : players.values()) {
             if(p.provided) {
                 var s = p.buffer.position(0).asShortBuffer();
 
+                //http://atastypixel.com/blog/how-to-mix-audio-samples-properly-on-ios/
                 for (int i = 0; i < s.capacity(); i++) {
-                    mixBuffer.put(i, (short)((mixBuffer.get(i) + s.get(i))/2));
+                    var a = buffer.get(i);
+                    var b = s.get(i);
+                    if(a < 0 && b < 0) {
+                        buffer.put(i, (short)((a + b) - ((a * b) / Short.MIN_VALUE)));
+                    } else if(a > 0 && b > 0) {
+                        buffer.put(i, (short)((a + b) - ((a * b) / Short.MAX_VALUE)));
+                    } else {
+                        buffer.put(i, (short)(a + b));
+                    }
                 }
             }
         }
-        mixBuffer.flip();
+        buffer.flip();
 
-        encoder.encode(mixBuffer, outputBuffer.position(0).limit(outputBuffer.capacity()));
-        mixBuffer.flip();
+        encoder.encode(buffer, outputBuffer.position(0).limit(outputBuffer.capacity()));
+        buffer.flip();
         return outputBuffer;
     }
 
