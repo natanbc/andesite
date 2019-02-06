@@ -192,18 +192,6 @@ public class WebSocketHandler {
                     andesite.requestHandler().provideVoiceServerUpdate(user, payload);
                     break;
                 }
-                case "subscribe": {
-                    andesite.requestHandler().subscribe(user, guild, this,
-                            json -> ws.writeFinalTextFrame(json.encode()));
-                    break;
-                }
-                case "unsubscribe": {
-                    var player = andesite.getExistingPlayer(user, guild);
-                    if(player != null) {
-                        player.eventListeners().remove(this);
-                    }
-                    break;
-                }
                 case "event-buffer": {
                     timeout = payload.getInteger("timeout", 0);
                     break;
@@ -239,10 +227,9 @@ public class WebSocketHandler {
                     break;
                 }
                 case "play": {
-                    if(lavalink) {
-                        andesite.requestHandler().subscribe(user, guild, this,
-                                json -> ws.writeFinalTextFrame(json.encode()));
-                    }
+                    andesite.requestHandler().subscribe(user, guild, this,
+                            json -> ws.writeFinalTextFrame(json.encode()));
+                    subscriptions.add(andesite.getPlayer(user, guild));
                     var json = andesite.requestHandler().play(user, guild, payload);
                     sendPlayerUpdate(user, guild, json);
                     break;

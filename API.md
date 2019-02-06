@@ -88,9 +88,9 @@ Valid `op`s are:
 | filters | updates the player audio filters. Payload must also be a valid [filter update](#filter-update) object |
 | update | updates the player. Payload must also be a valid [update](#update) object |
 | destroy | destroys the player. Resulting player update event will have a `destroyed` key with value of `true` |
-| get-player | returns the player state. |
+| get-player | returns the player state |
 | get-stats | returns node stats |
-| subscribe | subscribes this connection to receive events from the guild (lavalink connections are automatically subscribed on `play` requests) |
+| ping | used to calculate the ping and/or get the user id used in the handshake header. sends the received payload back |
 
 Additionally, WebSockets offer a replay system, so events fired after a connection was closed can be replayed.
 During websocket connection, the server will send a header `Andesite-Connection-Id`. After the websocket connection
@@ -110,6 +110,9 @@ to read it when the response headers are not exposed (eg vert.x websocket client
 }
 ```
 
+All commands that directly interact with players (updating it, changing it's state, etc) send a player update
+as a response.
+
 \* Currently the stats sent always have a null `frameStats` key.
 
 ## Singyeong
@@ -117,13 +120,26 @@ to read it when the response headers are not exposed (eg vert.x websocket client
 Andesite adds the following metadata values:
 
 - andesite-version: version of the node
+- andesite-version-major: major version of the node
+- andesite-version-minor: minor version of the node
+- andesite-version-revision: revision version of the node
+- andesite-version-commit: commit hash of the node
 - andesite-region: [region](CONFIGURATION.md#settings) defined in the config
 - andesite-id: [id](CONFIGURATION.md#settings) defined in the config
 - andesite-enabled-sources: list of sources [enabled](CONFIGURATION.md#settings) in the config
+- andesite-loaded-plugins: list of [plugins](PLUGINS.md) loaded
 - andesite-players: `userid:guildid` list of the players being handled by this node
 
-All payloads sent via singyeong are equal to those sent via [web socket](#websocket), except they also need
-an `userId` key, which is sent on the handshake headers for websocket connections.
+All payloads sent via singyeong are equal to those sent via [web socket](#websocket), except they also require
+an `userId` key.
+
+Responses to commands are sent based on the `response-app`, `response-nonce` and `response-query`
+fields. The defaults are the sender's app id, the command nonce and an empty query, respectively.
+
+When sending a `play` op, you can set the `receiver` and `query` fields to route the events sent by the player.
+They default to the application id sending the event and an empty query, respectively.
+
+Setting the `noreply` field to `true` will prevent a response from being sent (events are still sent).
 
 # Entities
 

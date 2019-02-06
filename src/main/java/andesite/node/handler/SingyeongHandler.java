@@ -82,19 +82,6 @@ public class SingyeongHandler {
                     andesite.requestHandler().provideVoiceServerUpdate(user, payload);
                     break;
                 }
-                case "subscribe": {
-                    var receiver = payload.getString("receiver", event.sender());
-                    var query = payload.getJsonArray("query", new QueryBuilder().build());
-                    andesite.requestHandler().subscribe(user, guild, key, json -> client.send(receiver, query, json));
-                    break;
-                }
-                case "unsubscribe": {
-                    var player = andesite.getExistingPlayer(user, guild);
-                    if(player != null) {
-                        player.eventListeners().remove(key);
-                    }
-                    break;
-                }
                 case "get-stats": {
                     sendResponse(client, event, new JsonObject()
                             .put("op", "stats")
@@ -118,6 +105,9 @@ public class SingyeongHandler {
                     break;
                 }
                 case "play": {
+                    var receiver = payload.getString("receiver", event.sender());
+                    var query = payload.getJsonArray("query", new QueryBuilder().build());
+                    andesite.requestHandler().subscribe(user, guild, key, json -> client.send(receiver, query, json));
                     var json = andesite.requestHandler().play(user, guild, payload);
                     sendPlayerUpdate(client, event, json);
                     break;
@@ -159,15 +149,22 @@ public class SingyeongHandler {
             }
         });
 
+
         client.connect()
                 .thenRun(() -> {
-                    client.updateMetadata("andesite-region", SingyeongType.STRING, nodeRegion);
-                    client.updateMetadata("andesite-id", SingyeongType.STRING, nodeId);
                     client.updateMetadata("andesite-version", SingyeongType.STRING, Version.VERSION);
                     client.updateMetadata("andesite-version-major", SingyeongType.STRING, Version.VERSION_MAJOR);
-                    client.updateMetadata("andesite-connections", SingyeongType.LIST, new JsonArray());
+                    client.updateMetadata("andesite-version-minor", SingyeongType.STRING, Version.VERSION_MINOR);
+                    client.updateMetadata("andesite-version-revision", SingyeongType.STRING, Version.VERSION_REVISION);
+                    client.updateMetadata("andesite-version-commit", SingyeongType.STRING, Version.COMMIT);
+                    client.updateMetadata("andesite-region", SingyeongType.STRING, nodeRegion);
+                    client.updateMetadata("andesite-id", SingyeongType.STRING, nodeId);
                     client.updateMetadata("andesite-enabled-sources", SingyeongType.LIST,
                             andesite.enabledSources().stream().reduce(new JsonArray(), JsonArray::add, JsonArray::addAll));
+                    client.updateMetadata("andesite-loaded-plugins", SingyeongType.LIST,
+                            andesite.pluginManager().loadedPlugins().stream()
+                                    .reduce(new JsonArray(), JsonArray::add, JsonArray::addAll));
+                    client.updateMetadata("andesite-connections", SingyeongType.LIST, new JsonArray());
                     log.info("Singyeong connection established");
                 })
                 .exceptionally(error -> {
