@@ -47,6 +47,11 @@ class NonAllocatingProvider implements AudioProvider {
     public ByteBuffer provide() {
         if(INTERNAL_BUFFER_GETTER.apply(frame) != buffer) {
             frame.getData(buffer.array(), frame.getDataLength());
+            //hopefully this copy won't be needed for the next frame
+            //and data will be directly written to the provider's buffer.
+            //this call is pretty much free, and might help preventing
+            //more copies for future frames.
+            frame.setBuffer(buffer.limit(buffer.capacity()));
         }
         return buffer.position(0).limit(frame.getDataLength());
     }
