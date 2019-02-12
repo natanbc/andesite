@@ -8,15 +8,11 @@ import andesite.node.handler.RestHandler;
 import andesite.node.handler.SingyeongHandler;
 import andesite.node.player.Player;
 import andesite.node.plugin.PluginManager;
-import andesite.node.provider.AsyncPacketProviderFactory;
 import andesite.node.send.AudioHandler;
 import andesite.node.send.MagmaHandler;
-import andesite.node.send.jdaa.JDASendFactory;
-import andesite.node.send.nio.NioSendFactory;
 import andesite.node.util.FilterUtil;
 import andesite.node.util.Init;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
-import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
@@ -30,7 +26,6 @@ import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
 import io.vertx.core.Vertx;
-import net.dv8tion.jda.core.audio.factory.IAudioSendFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -275,30 +270,7 @@ public class Andesite implements NodeState {
     @CheckReturnValue
     private AudioHandler createAudioHandler(@Nonnull Config config) {
         switch(config.get("audio-handler", "magma")) {
-            case "magma": {
-                IAudioSendFactory factory;
-                switch(config.get("send-system.type", "nas")) {
-                    case "nas":
-                        factory = new NativeAudioSendFactory(config.getInt("send-system.nas-buffer", 400));
-                        break;
-                    case "jda":
-                        factory = new JDASendFactory();
-                        break;
-                    case "nio":
-                        factory = new NioSendFactory(vertx);
-                        break;
-                    default:
-                        throw new IllegalArgumentException("No send system with type " + config.get("send-system.type"));
-                }
-                if(config.getBoolean("send-system.async", true)) {
-                    factory = new AsyncPacketProviderFactory(factory);
-                }
-                log.info("Send system: {}, async provider {}",
-                        config.get("send-system.type", "nas"),
-                        config.getBoolean("send-system.async", true) ? "enabled" : "disabled"
-                );
-                return new MagmaHandler(this, factory);
-            }
+            case "magma": return new MagmaHandler(this);
             default:
                 throw new IllegalArgumentException("No audio handler with type " + config.get("audio-handler"));
         }

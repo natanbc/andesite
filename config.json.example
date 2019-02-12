@@ -2,6 +2,10 @@
     "log-level": "info",
     "password": "you shall not pass",
     "audio-handler": "magma",
+    "magma": {
+        "array-provider": "create-new",
+        "__comment__": "change this at your own risk. DON'T COMPLAIN IF IT CRASHES"
+    },
     "lavalink": {
         "ws-path": "/lavalink"
     },

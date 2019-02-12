@@ -47,6 +47,7 @@ Example:
 | debug-password | string | password to use for debug routes. If missing or null, the regular password is used instead. | null |
 | log-level | string | lowest level to log | INFO |
 | audio-handler | string | audio handler implementation to use. currently only `magma` is supported | magma |
+| magma.array-provider | string | either `create-new` or `reuse-existing`. reuse-existing is more efficient, but only works with specific JVMs. Don't complain if it crashes. If it doesn't crash, it's most likely safe to use | create-new |
 | lavalink.ws-path | string | route to run the lavalink websocket on. | /lavalink |
 | send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | nas |
 | send-system.async | boolean | whether or not to use jda-async-packet-provider to wrap the send system | true |
