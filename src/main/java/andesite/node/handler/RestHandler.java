@@ -221,7 +221,7 @@ public class RestHandler {
 
         var latch = new CountDownLatch(1);
         andesite.vertx().createHttpServer()
-                .requestHandler(router::accept)
+                .requestHandler(router)
                 .listen(port, result -> {
                     if(result.failed()) {
                         log.error("Error starting HTTP server", result.cause());
