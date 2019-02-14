@@ -9,8 +9,8 @@ on the #andesite channel.
 
 - [lavadsp](https://github.com/natanbc/lavadsp) filter support
 - ARM and Darwin (Mac) support
-- [Plugin](PLUGINS.md) support
-- [Debug](DEBUGGING.md) tooling
+- [Plugin](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md) support
+- [Debug](https://github.com/natanbc/andesite-node/blob/master/DEBUGGING.md) tooling
 - Available over REST, WebSocket or [singyeong](https://github.com/queer/singyeong)
 - [Prometheus](https://prometheus.io) metrics
 - [Sentry](https://sentry.io) error reporting
@@ -27,14 +27,14 @@ Andesite requires a JVM with Java 11 support.
 
 # Configuration
 
-See [CONFIGURATION.md](CONFIGURATION.md)
+See [CONFIGURATION.md](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md)
 
 # Clients
 
 Currently there are no Andesite specific clients, but most lavalink 3.x
 clients should work, although missing support for andesite specific features.
 
-- [Create your own](API.md)
+- [Create your own](https://github.com/natanbc/andesite-node/blob/master/API.md)
 
 # Lavalink Compatibility
 

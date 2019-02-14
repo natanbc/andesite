@@ -53,7 +53,7 @@ Example:
 | send-system.async | boolean | whether or not to use jda-async-packet-provider to wrap the send system | true |
 | send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |
 | send-system.non-allocating | boolean | whether or not to use the non allocating frame buffer | false |
-| jfr.enabled | boolean | whether or not to enable [JFR debug routes](DEBUGGING.md) | true |
+| jfr.enabled | boolean | whether or not to enable [JFR debug routes](https://github.com/natanbc/andesite-node/blob/master/DEBUGGING.md) | true |
 | node.region | string | region of the node | "unknown" |
 | node.id | string | id of the node | "unknown" |
 | prometheus.enabled | boolean | whether or not to enable prometheus metrics | false |

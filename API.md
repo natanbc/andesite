@@ -22,10 +22,10 @@ All responses have the following headers:
 | Andesite-Version-Minor | minor version of the node |
 | Andesite-Version-Revision | revision version of the node |
 | Andesite-Version-Commit | commit hash of the node |
-| Andesite-Node-Region | [node region](CONFIGURATION.md#settings) defined in the config |
-| Andesite-Node-Id | [node ID](CONFIGURATION.md#settings) defined in the config |
-| Andesite-Enabled-Sources | comma separated list of [sources](CONFIGURATION.md#settings) enabled in the config |
-| Andesite-Loaded-Plugins | comma separated list of [plugins](PLUGINS.md) loaded |
+| Andesite-Node-Region | [node region](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) defined in the config |
+| Andesite-Node-Id | [node ID](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) defined in the config |
+| Andesite-Enabled-Sources | comma separated list of [sources](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) enabled in the config |
+| Andesite-Loaded-Plugins | comma separated list of [plugins](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md) loaded |
 
 If an error happens, an [error](#error) object is returned. Since these objects can get quite big, it's possible
 to enable a shorter version, which does not send stack frames, by providing a header named `Andesite-Short-Errors`
@@ -124,10 +124,10 @@ Andesite adds the following metadata values:
 - andesite-version-minor: minor version of the node
 - andesite-version-revision: revision version of the node
 - andesite-version-commit: commit hash of the node
-- andesite-region: [region](CONFIGURATION.md#settings) defined in the config
-- andesite-id: [id](CONFIGURATION.md#settings) defined in the config
-- andesite-enabled-sources: list of sources [enabled](CONFIGURATION.md#settings) in the config
-- andesite-loaded-plugins: list of [plugins](PLUGINS.md) loaded
+- andesite-region: [region](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) defined in the config
+- andesite-id: [id](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) defined in the config
+- andesite-enabled-sources: list of sources [enabled](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) in the config
+- andesite-loaded-plugins: list of [plugins](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md) loaded
 - andesite-players: `userid:guildid` list of the players being handled by this node
 
 All payloads sent via singyeong are equal to those sent via [web socket](#websocket), except they also require
@@ -189,7 +189,6 @@ Setting the `noreply` field to `true` will prevent a response from being sent (e
 | isSeekable | boolean | whether or not the track supports seeking |
 | position | integer | current position of the track |
 
-
 ## Player 
 
 | key | type | description |
@@ -198,7 +197,19 @@ Setting the `noreply` field to `true` will prevent a response from being sent (e
 | position | integer/null | position of the current playing track, or null if nothing is playing |
 | paused | boolean | whether or not the player is paused |
 | volume | integer | the volume of the player |
+| filters | object | map of filter name -> filter settings for each filter present |
+| mixer | object | map of mixer player id -> [mixer player](#mixer-player) |
+| mixerEnabled | boolean | whether or not the mixer is the current source of audio |
 
+## Mixer Player
+
+| key | type | description |
+|-----|------|-------------|
+| time | integer | current unix timestamp on the node |
+| position | integer/null | position of the current playing track, or null if nothing is playing |
+| paused | boolean | whether or not the player is paused |
+| volume | integer | the volume of the player |
+| filters | object | map of filter name -> filter settings for each filter present |
 
 ## Voice Server Update
 
@@ -245,7 +256,7 @@ Setting the `noreply` field to `true` will prevent a response from being sent (e
 | timescale | [timescale](#timescale)/null | configures the timescale filter |
 | tremolo | [tremolo](#tremolo)/null | configures the tremolo filter |
 | vibrato | [vibrato](#vibrato)/null | configures the vibrato filter |
-| volume | [volume](#volume-1)/null | configures the volume filter |
+| volume | [volume](#volume-update)/null | configures the volume filter |
 
 ## Update
 
@@ -260,8 +271,8 @@ Setting the `noreply` field to `true` will prevent a response from being sent (e
 
 | key | type | description |
 |-----|------|-------------|
-| enable | boolean/null | if present, constrols whether or not the mixer should be used |
-| players | object | map of source id to [play](#play)/[update](#update) payloads for each mixer source |
+| enable | boolean/null | if present, controls whether or not the mixer should be used |
+| players | object | map of player id to [play](#play)/[update](#update) payloads for each mixer source |
 
 ## Event Buffer
 
@@ -338,7 +349,7 @@ Setting the `noreply` field to `true` will prevent a response from being sent (e
 | frequency (0 < x <= 14) | float | 2 |
 | depth (0 < x <= 1) | float | 0.5 |
 
-## Volume
+## Volume {#update}
 
 | key | type | default |
 |-----|------|---------|

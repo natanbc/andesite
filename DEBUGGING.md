@@ -5,10 +5,10 @@ Andesite has built-in [Java Flight Recorder](https://openjdk.java.net/jeps/328) 
 The flight recorder can be controlled with the REST API, which requires the HTTP transport
 to be configured. Enabling JFR will start an HTTP server automatically.
 
-There is also a [plugin](jattach-debug-plugin), which calls [jattach](https://github.com/apangin/jattach)
-to expose information about the JVM andesite is running. The plugin requires jattach to be
-added to the path manually. This plugin is included by default on the docker images. You may
-also download prebuilt jars in the releases page
+There is also a [plugin](https://github.com/natanbc/andesite-node/tree/master/jattach-debug-plugin),
+which calls [jattach](https://github.com/apangin/jattach) to expose information about the JVM andesite
+is running. The plugin requires jattach to be added to the path manually. This plugin is included by
+default on the docker images. You may also download prebuilt jars in the releases page.
 
 ## JFR
 

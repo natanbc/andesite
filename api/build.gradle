@@ -2,6 +2,8 @@ plugins {
     id 'java-library'
 }
 
+archivesBaseName = 'andesite-api'
+
 repositories {
     jcenter()
     maven { url 'https://jitpack.io' }
