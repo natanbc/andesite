@@ -302,10 +302,8 @@ public class RequestHandler {
     public JsonObject destroy(@Nonnull String userId, @Nonnull String guildId) {
         log.info("Destroying player for user {} in guild {} and payload {}", userId, guildId);
         var player = andesite.removePlayer(userId, guildId);
+        //will call close()
         andesite.audioHandler().closeConnection(userId, guildId);
-        if(player != null) {
-            player.destroy();
-        }
         return player == null ? null : player.encodeState();
     }
 

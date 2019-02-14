@@ -11,31 +11,119 @@ import io.vertx.ext.web.RoutingContext;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 
+/**
+ * Entry point for a plugin. Defines the callbacks used to modify the node state
+ * or intercept commands.
+ */
 public interface Plugin {
+    /**
+     * Called to allow configuration of an audio player manager. May be called more than once with
+     * different player managers.
+     *
+     * <br><b>Plugins should not change the output format of the manager.</b>
+     *
+     * <br><br>Blocking in this method is not a problem, but will delay node initialization.
+     *
+     * @param state State of the node.
+     * @param manager Player manager to configure.
+     *
+     * @see NodeState
+     * @see AudioPlayerManager
+     */
     default void configurePlayerManager(@Nonnull NodeState state, @Nonnull AudioPlayerManager manager) {}
 
+    /**
+     * Called to allow injecting custom routes on the provided router.
+     * Only called if the HTTP server is enabled (http/websocket transports,
+     * jfr or prometheus being enabled).
+     *
+     * <br><br>Blocking in this method is not a problem, but will delay node initialization.
+     *
+     * @param state State of the node.
+     * @param router Root router used by the node.
+     *
+     * @see NodeState
+     * @see Router
+     */
     default void configureRouter(@Nonnull NodeState state, @Nonnull Router router) {}
 
+    /**
+     * Called to allow registration of listeners. The event dispatcher provided is the same as
+     * {@link NodeState#dispatcher()}. This method is guaranteed to run exactly once and before
+     * all other callbacks.
+     *
+     * <br>If you need to do any setup when the plugin loads, do it in this method.
+     *
+     * <br><br>Blocking in this method is not a problem, but will delay node initialization.
+     *
+     * @param state State of the node.
+     * @param dispatcher Event dispatcher, shortcut for {@link NodeState#dispatcher()}.
+     *
+     * @see NodeState
+     * @see EventDispatcher
+     */
     default void registerListeners(@Nonnull NodeState state, @Nonnull EventDispatcher dispatcher) {}
 
+    /**
+     * Called when a REST request is received. Runs on the event loop, so <b>blocking should be avoided.</b>
+     *
+     * @param state State of the node.
+     * @param context Context for the request.
+     *
+     * @return Whether or not other handlers should be called.
+     *
+     * @see NodeState
+     * @see RoutingContext
+     * @see HookResult
+     */
     @Nonnull
     @CheckReturnValue
     default HookResult onRawHttpRequest(@Nonnull NodeState state, @Nonnull RoutingContext context) {
         return HookResult.CALL_NEXT;
     }
 
+    /**
+     * Called when a websocket payload is received. Runs on the event loop, so <b>blocking should be avoided.</b>
+     *
+     * @param nodeState State of the node.
+     * @param wsState State of the websocket connection.
+     * @param payload Payload received.
+     *
+     * @return Whether or not other handlers should be called.
+     *
+     * @see NodeState
+     * @see WebSocketState
+     * @see HookResult
+     */
     @Nonnull
     @CheckReturnValue
     default HookResult onRawWebSocketPayload(@Nonnull NodeState nodeState, @Nonnull WebSocketState wsState, @Nonnull JsonObject payload) {
         return HookResult.CALL_NEXT;
     }
 
+    /**
+     * Called when a singyeong payload is received. Runs on the event loop, so <b>blocking should be avoided.</b>
+     *
+     * @param state State of the node.
+     * @param payload Payload received plus metadata.
+     *
+     * @return Whether or not other handlers should be called.
+     *
+     * @see NodeState
+     * @see Dispatch
+     * @see HookResult
+     */
     @Nonnull
     @CheckReturnValue
     default HookResult onRawSingyeongPayload(@Nonnull NodeState state, @Nonnull Dispatch payload) {
         return HookResult.CALL_NEXT;
     }
 
+    /**
+     * Used to signal whether or not a payload should be dropped.
+     *
+     * Dropping a payload allows overriding other handlers or blocking a client.
+     */
     enum HookResult {
         /**
          * Call next plugin, or the default andesite code if no more

@@ -127,8 +127,8 @@ public class WebSocketHandler {
         }
 
         @Override
-        public long connectionId() {
-            return connectionId;
+        public String connectionId() {
+            return String.valueOf(connectionId);
         }
 
         @Override

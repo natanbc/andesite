@@ -48,8 +48,14 @@ public class KaraokeConfig implements Config {
         this.filterWidth = filterWidth;
     }
 
+    @Nonnull
     @Override
-    public boolean configured() {
+    public String name() {
+        return "karaoke";
+    }
+
+    @Override
+    public boolean enabled() {
         return FilterUtil.KARAOKE_AVAILABLE &&
                 (Config.isSet(level, 1f) || Config.isSet(monoLevel, 1f) ||
                 Config.isSet(filterBand, 220f) || Config.isSet(filterWidth, 100f));

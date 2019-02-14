@@ -1,6 +1,6 @@
 package andesite.node.plugin;
 
-import andesite.node.Andesite;
+import andesite.node.NodeState;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -16,10 +16,10 @@ public class JarPluginLoader extends PluginLoader {
     private final JarFile file;
     private final URL base;
 
-    public JarPluginLoader(File file) throws IOException {
+    public JarPluginLoader(NodeState state, File file) throws IOException {
         this.file = new JarFile(file);
         this.base = new URL("jar:file://" + file.toURI().getPath() + "!/");
-        Andesite.CLEANER.register(this, cleanerCode(this.file));
+        state.cleaner().register(this, cleanerCode(this.file));
     }
 
     @Nullable

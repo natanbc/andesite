@@ -130,22 +130,16 @@ public class Player implements AudioProvider, AndesitePlayer {
 
     @Override
     public void switchToMixer() {
-        switchWhenReady = mixer.get();
+        if(realProvider != mixer.get()) {
+            switchWhenReady = mixer.get();
+        }
     }
 
     @Override
     public void switchToSingle() {
-        switchWhenReady = fastProvider;
-    }
-
-    @Override
-    public void destroy() {
-        realProvider = fastProvider; //ensures we won't call the opus encoder in track mixer after releasing
-        mixer.getIfPresent()
-            .ifPresent(TrackMixer::close);
-        audioPlayer.destroy();
-        andesite.vertx().cancelTimer(updateTimerId);
-        andesite.vertx().cancelTimer(cleanupTimerId);
+        if(realProvider != fastProvider) {
+            switchWhenReady = fastProvider;
+        }
     }
 
     @Override
@@ -190,5 +184,15 @@ public class Player implements AudioProvider, AndesitePlayer {
     @Override
     public ByteBuffer provide() {
         return realProvider.provide();
+    }
+
+    @Override
+    public void close() {
+        realProvider = fastProvider; //ensures we won't call the opus encoder in track mixer after releasing
+        mixer.getIfPresent()
+                .ifPresent(TrackMixer::close);
+        audioPlayer.destroy();
+        andesite.vertx().cancelTimer(updateTimerId);
+        andesite.vertx().cancelTimer(cleanupTimerId);
     }
 }

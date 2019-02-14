@@ -1,20 +1,21 @@
 package andesite.node.player;
 
 import andesite.node.player.filter.FilterChainConfiguration;
-import andesite.node.send.AudioProvider;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.format.transcoder.OpusChunkEncoder;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class TrackMixer implements AudioProvider, AutoCloseable, AndesiteTrackMixer {
+public class TrackMixer implements AndesiteTrackMixer {
     private final Map<String, Player> players = new ConcurrentHashMap<>();
     private final ShortBuffer mixBuffer = ByteBuffer.allocateDirect(StandardAudioDataFormats.DISCORD_PCM_S16_BE.maximumChunkSize())
             .order(ByteOrder.nativeOrder())
@@ -30,19 +31,31 @@ public class TrackMixer implements AudioProvider, AutoCloseable, AndesiteTrackMi
     }
 
     @SuppressWarnings("unchecked")
+    @Nonnull
+    @CheckReturnValue
     @Override
     public Map<String, MixerPlayer> players() {
         return (Map)players;
     }
 
+    @Nonnull
+    @CheckReturnValue
     @Override
-    public MixerPlayer getPlayer(String key) {
+    public MixerPlayer getPlayer(@Nonnull String key) {
         return players.computeIfAbsent(key, __ -> new Player(playerManager.createPlayer()));
     }
 
     @Override
-    public void destroy() {
-        close();
+    public MixerPlayer getExistingPlayer(@Nonnull String key) {
+        return players.get(key);
+    }
+
+    @Override
+    public void removePlayer(@Nonnull String key) {
+        var p = players.remove(key);
+        if(p != null) {
+            p.player.destroy();
+        }
     }
 
     @Override
@@ -111,10 +124,16 @@ public class TrackMixer implements AudioProvider, AutoCloseable, AndesiteTrackMi
             buffer.limit(frame.getDataLength());
         }
 
+        @Nonnull
+        @CheckReturnValue
+        @Override
         public FilterChainConfiguration filterConfig() {
             return filterConfig;
         }
 
+        @Nonnull
+        @CheckReturnValue
+        @Override
         public AudioPlayer audioPlayer() {
             return player;
         }

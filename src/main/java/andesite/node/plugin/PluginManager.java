@@ -33,7 +33,7 @@ public class PluginManager {
     }
 
     public void load(@Nonnull File path) throws IOException {
-        var p = PluginLoader.create(path).loadPlugins();
+        var p = PluginLoader.create(state, path).loadPlugins();
         plugins.addAll(p);
         for(var plugin : p) {
             loadedPlugins.add(plugin.getClass().getName());

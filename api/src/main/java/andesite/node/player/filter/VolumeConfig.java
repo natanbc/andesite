@@ -27,8 +27,14 @@ public class VolumeConfig implements Config {
         this.volume = volume;
     }
 
+    @Nonnull
     @Override
-    public boolean configured() {
+    public String name() {
+        return "volume";
+    }
+
+    @Override
+    public boolean enabled() {
         return FilterUtil.VOLUME_AVAILABLE && Config.isSet(volume, 1f);
     }
 

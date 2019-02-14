@@ -48,8 +48,14 @@ public class TimescaleConfig implements Config {
         this.rate = rate;
     }
 
+    @Nonnull
     @Override
-    public boolean configured() {
+    public String name() {
+        return "timescale";
+    }
+
+    @Override
+    public boolean enabled() {
         return FilterUtil.TIMESCALE_AVAILABLE &&
                 (Config.isSet(speed, 1f) || Config.isSet(pitch, 1f) || Config.isSet(rate, 1f));
     }

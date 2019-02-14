@@ -17,6 +17,14 @@ import java.util.Base64;
 import java.util.function.Function;
 
 public class RequestUtils {
+    /**
+     * Decodes an audio track from it's base64 representation.
+     *
+     * @param playerManager Player manager used for decoding (must have the source manager enabled).
+     * @param base64 Base64 encoded track.
+     *
+     * @return The decoded track.
+     */
     @Nonnull
     @CheckReturnValue
     public static AudioTrack decodeTrack(@Nonnull AudioPlayerManager playerManager, @Nonnull String base64) {
@@ -29,6 +37,14 @@ public class RequestUtils {
         }
     }
 
+    /**
+     * Encodes the provided track to base64.
+     *
+     * @param playerManager Player manager used for encoding (must have the source manager enabled).
+     * @param track Track to encode.
+     *
+     * @return Base64 encoded track.
+     */
     @Nonnull
     @CheckReturnValue
     public static String trackString(@Nonnull AudioPlayerManager playerManager, @Nonnull AudioTrack track) {
@@ -41,6 +57,14 @@ public class RequestUtils {
         return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 
+    /**
+     * Encodes a track into a json object, useful for sending to clients.
+     *
+     * @param playerManager Player manager used to encode the track.
+     * @param track Track to encode.
+     *
+     * @return A json object containing information about the track.
+     */
     @Nonnull
     @CheckReturnValue
     public static JsonObject encodeTrack(@Nonnull AudioPlayerManager playerManager, @Nonnull AudioTrack track) {
@@ -60,12 +84,31 @@ public class RequestUtils {
                 );
     }
 
+    /**
+     * Encodes the {@link RoutingContext#failure() failure} of the context.
+     * Equivalent to {@code encodeThrowable(context, context.failure())}
+     *
+     * @param context Context of the request.
+     *
+     * @return An encoded version of the exception.
+     *
+     * @see #encodeThrowable(RoutingContext, Throwable)
+     */
     @Nonnull
     @CheckReturnValue
     public static JsonObject encodeFailure(@Nonnull RoutingContext context) {
         return encodeThrowable(context, context.failure());
     }
 
+    /**
+     * Encodes the provided throwable, based on the context for deciding whether
+     * or not to use a shorter version with less details (omit stacktraces).
+     *
+     * @param context Context for the request.
+     * @param throwable Error to encode.
+     *
+     * @return An encoded version of the exception.
+     */
     @Nonnull
     @CheckReturnValue
     public static JsonObject encodeThrowable(@Nonnull RoutingContext context, @Nonnull Throwable throwable) {
@@ -79,6 +122,13 @@ public class RequestUtils {
                 context.queryParams().contains("shortErrors");
     }
 
+    /**
+     * Encodes a throwable with minimal details (omits stacktraces).
+     *
+     * @param throwable Error to encode.
+     *
+     * @return An encoded version of the exception.
+     */
     @Nonnull
     @CheckReturnValue
     public static JsonObject encodeThrowableShort(@Nonnull Throwable throwable) {
@@ -95,6 +145,14 @@ public class RequestUtils {
         return json;
     }
 
+    /**
+     * Encodes a throwable with as many details as possible. The resulting object may
+     * be very large.
+     *
+     * @param throwable Error to encode.
+     *
+     * @return An encoded version of the exception.
+     */
     @Nonnull
     @CheckReturnValue
     public static JsonObject encodeThrowableDetailed(@Nonnull Throwable throwable) {

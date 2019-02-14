@@ -6,6 +6,10 @@ import com.github.natanbc.lavadsp.natives.TremoloNativeLibLoader;
 import com.github.natanbc.lavadsp.natives.VibratoNativeLibLoader;
 import com.github.natanbc.lavadsp.natives.VolumeNativeLibLoader;
 
+/**
+ * Utility class listing what filters are available. Unavailable filters may still be enabled,
+ * but won't be applied.
+ */
 public class FilterUtil {
     public static final boolean KARAOKE_AVAILABLE = tryLoad(KaraokeNativeLibLoader::loadKaraokeLibrary);
     public static final boolean TIMESCALE_AVAILABLE = tryLoad(TimescaleNativeLibLoader::loadTimescaleLibrary);

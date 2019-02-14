@@ -19,10 +19,13 @@ import space.npstr.magma.events.api.WebSocketClosed;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MagmaHandler implements AudioHandler {
     private static final Logger log = LoggerFactory.getLogger(MagmaHandler.class);
 
+    private final Map<String, Map<String, AudioProvider>> providers = new ConcurrentHashMap<>();
     private final MagmaApi magma;
     private final ByteArrayProvider byteArrayProvider;
 
@@ -46,6 +49,7 @@ public class MagmaHandler implements AudioHandler {
 
     @Override
     public void setProvider(@Nonnull String userId, @Nonnull String guildId, @Nullable AudioProvider provider) {
+        var old = providers.computeIfAbsent(userId, __ -> new ConcurrentHashMap<>()).put(guildId, provider);
         magma.setSendHandler(
                 MagmaMember.builder()
                         .userId(userId)
@@ -53,6 +57,9 @@ public class MagmaHandler implements AudioHandler {
                         .build(),
                 provider == null ? null : new MagmaSendHandler(provider, byteArrayProvider)
         );
+        if(old != null) {
+            old.close();
+        }
     }
 
     @Override
@@ -75,6 +82,13 @@ public class MagmaHandler implements AudioHandler {
     @Override
     public void closeConnection(@Nonnull String userId, @Nonnull String guildId) {
         var m = MagmaMember.builder().userId(userId).guildId(guildId).build();
+        var map = providers.get(userId);
+        if(map != null) {
+            var provider = map.remove(guildId);
+            if(provider != null) {
+                provider.close();
+            }
+        }
         magma.removeSendHandler(m);
         magma.closeConnection(m);
     }

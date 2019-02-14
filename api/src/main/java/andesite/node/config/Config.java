@@ -7,9 +7,6 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -139,27 +136,6 @@ public class Config {
     @CheckReturnValue
     protected String loadValue(@Nonnull String key) {
         return null;
-    }
-
-    /**
-     * Loads the current config file.
-     * <br>First, the {@link #getGlobalConfig(String) global config} {@code config-file}
-     * is read, defaulting to {@code config.json}. If a file with the given name exists,
-     * it's loaded as a {@link JsonConfig json config}.
-     *
-     * @return A config object, possibly loading from a file.
-     *
-     * @throws IOException If a config file exists and it cannot be read.
-     */
-    @Nonnull
-    public static Config load() throws IOException {
-        var filename = getGlobalConfig("config-file");
-        var path = Paths.get(filename == null ? "config.json" : filename);
-        if(Files.isReadable(path)) {
-            log.info("Loading config from {}", path.toAbsolutePath());
-            return new JsonConfig(path);
-        }
-        return new Config();
     }
 
     /**

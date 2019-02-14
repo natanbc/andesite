@@ -10,8 +10,10 @@ import andesite.node.player.Player;
 import andesite.node.plugin.PluginManager;
 import andesite.node.send.AudioHandler;
 import andesite.node.send.MagmaHandler;
+import andesite.node.util.ConfigUtil;
 import andesite.node.util.FilterUtil;
 import andesite.node.util.Init;
+import andesite.node.util.LazyInit;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -44,13 +46,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Andesite implements NodeState {
-    public static final Cleaner CLEANER = Cleaner.create(r -> {
+    private static final Logger log = LoggerFactory.getLogger(Andesite.class);
+    private static final LazyInit<Cleaner> CLEANER = new LazyInit<>(() -> Cleaner.create(r -> {
         var t = new Thread(r, "Andesite-Cleaner");
         t.setDaemon(true);
         return t;
-    });
-
-    private static final Logger log = LoggerFactory.getLogger(Andesite.class);
+    }));
     private static final Map<String, Supplier<AudioSourceManager>> SOURCE_MANAGERS = Map.of(
             "bandcamp", BandcampAudioSourceManager::new,
             "beam", BeamAudioSourceManager::new,
@@ -95,9 +96,9 @@ public class Andesite implements NodeState {
         this.config = config;
         this.audioHandler = createAudioHandler(config);
         this.handler = new RequestHandler(this);
+        pluginManager.registerListeners(dispatcher);
         pluginManager.configurePlayerManager(playerManager);
         pluginManager.configurePlayerManager(pcmPlayerManager);
-        pluginManager.registerListeners(dispatcher);
         this.enabledSources = SOURCE_MANAGERS.keySet().stream()
                 .filter(key -> config.getBoolean("source." + key, !DISABLED_BY_DEFAULT.contains(key)))
                 .peek(key -> playerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
@@ -229,9 +230,6 @@ public class Andesite implements NodeState {
         if(player != null) {
             dispatcher.onPlayerDestroyed(userId, guildId, player);
         }
-        if(map.isEmpty()) {
-            players.remove(userId, map);
-        }
         return player;
     }
 
@@ -242,9 +240,16 @@ public class Andesite implements NodeState {
         return players.values().stream().flatMap(m -> m.values().stream());
     }
 
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public Cleaner cleaner() {
+        return CLEANER.get();
+    }
+
     public static void main(String[] args) throws IOException {
         log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
-        var config = Config.load();
+        var config = ConfigUtil.load();
         Init.handleInit(config);
         var andesite = new Andesite(Vertx.vertx(), config);
         //NOTE: use the bitwise or operator, as it forces evaluation of all elements

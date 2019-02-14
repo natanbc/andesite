@@ -21,8 +21,14 @@ public class EqualizerConfig implements Config {
         equalizerBands[band] = gain;
     }
 
+    @Nonnull
     @Override
-    public boolean configured() {
+    public String name() {
+        return "equalizer";
+    }
+
+    @Override
+    public boolean enabled() {
         for(var band : equalizerBands) {
             if(Config.isSet(band, 0f)) {
                 return true;

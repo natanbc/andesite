@@ -55,4 +55,9 @@ class NonAllocatingProvider implements AudioProvider {
         }
         return buffer.position(0).limit(frame.getDataLength());
     }
+
+    @Override
+    public void close() {
+        //noop
+    }
 }

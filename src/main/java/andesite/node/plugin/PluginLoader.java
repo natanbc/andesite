@@ -1,5 +1,6 @@
 package andesite.node.plugin;
 
+import andesite.node.NodeState;
 import andesite.node.Plugin;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
@@ -101,12 +102,12 @@ public abstract class PluginLoader extends ClassLoader {
 
     @Nonnull
     @CheckReturnValue
-    public static PluginLoader create(File file) throws IOException {
+    public static PluginLoader create(NodeState state, File file) throws IOException {
         if(file.isDirectory()) {
             return new DirectoryPluginLoader(file);
         }
         if(file.isFile() && file.canRead() && file.getName().endsWith(".jar")) {
-            return new JarPluginLoader(file);
+            return new JarPluginLoader(state, file);
         }
         throw new IllegalArgumentException("Unable to load " + file + ": no suitable loader found");
     }

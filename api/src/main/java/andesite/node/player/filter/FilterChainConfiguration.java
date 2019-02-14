@@ -11,8 +11,6 @@ import io.vertx.core.json.JsonObject;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,66 +24,113 @@ public class FilterChainConfiguration {
     private final TremoloConfig tremolo = new TremoloConfig();
     private final VibratoConfig vibrato = new VibratoConfig();
     private final VolumeConfig volume = new VolumeConfig();
-    private final List<Config> filters = new ArrayList<>(6);
-    private final Map<Class<? extends Config>, Config> custom = new HashMap<>();
+    private final Map<Class<? extends Config>, Config> filters = new HashMap<>();
 
     public FilterChainConfiguration() {
-        Collections.addAll(filters, equalizer, karaoke, timescale, tremolo, vibrato, volume);
+        filters.put(equalizer.getClass(), equalizer);
+        filters.put(karaoke.getClass(), karaoke);
+        filters.put(timescale.getClass(), timescale);
+        filters.put(tremolo.getClass(), tremolo);
+        filters.put(vibrato.getClass(), vibrato);
+        filters.put(volume.getClass(), volume);
     }
 
-    public boolean hasCustomConfig(Class<? extends Config> clazz) {
-        return custom.containsKey(clazz);
+    /**
+     * Returns true if a configuration of the provided class is present.
+     *
+     * @param clazz Class of the configuration.
+     *
+     * @return True if a configuration of the provided class is present.
+     */
+    public boolean hasConfig(Class<? extends Config> clazz) {
+        return filters.containsKey(clazz);
     }
 
+    /**
+     * Returns a configuration of the provided class, if it exists. May return null.
+     *
+     * @param clazz Class of the configuration.
+     * @param <T> Type of the configuration.
+     *
+     * @return The existing instance, or null if there is none.
+     */
     @SuppressWarnings("unchecked")
     @CheckReturnValue
-    public <T extends Config> T customConfig(@Nonnull Class<T> clazz) {
-        return (T)custom.get(clazz);
+    public <T extends Config> T config(@Nonnull Class<T> clazz) {
+        return (T) filters.get(clazz);
     }
 
+    /**
+     * Returns a configuration of the provided class if it exists, or creates
+     * a new instance of it with the provided supplier.
+     *
+     * @param clazz Class of the configuration.
+     * @param supplier Supplier for creating a new instance of the configuration.
+     * @param <T> Type of the configuration.
+     *
+     * @return An instance of the provided class stored. If none is stored, a new
+     * one is created and stored.
+     */
     @SuppressWarnings("unchecked")
     @CheckReturnValue
-    public <T extends Config> T customConfig(@Nonnull Class<T> clazz, @Nonnull Supplier<T> supplier) {
-        return (T)custom.computeIfAbsent(clazz, __ -> {
+    public <T extends Config> T config(@Nonnull Class<T> clazz, @Nonnull Supplier<T> supplier) {
+        return (T) filters.computeIfAbsent(clazz, __ -> {
             var config = Objects.requireNonNull(supplier.get(), "Provided configuration may not be null");
             if(!clazz.isInstance(config)) {
                 throw new IllegalArgumentException("Config not instance of provided class");
             }
-            filters.add(config);
+            for(var c : filters.values()) {
+                if(c.name().equals(config.name())) {
+                    throw new IllegalArgumentException("Duplicate configuration name " + c.name());
+                }
+            }
             return config;
         });
     }
 
+    /**
+     * Returns whether or not this configuration has filters enabled.
+     *
+     * <br>This method returns true if any of the configurations reports
+     * it's enabled.
+     *
+     * @return True if this configuration is enabled.
+     */
     @CheckReturnValue
     public boolean isEnabled() {
-        for(var config : filters) {
-            if(config.configured()) return true;
+        for(var config : filters.values()) {
+            if(config.enabled()) return true;
         }
         return false;
     }
 
+    /**
+     * Returns a filter factory with the currently enabled filters.
+     *
+     * <br>If no configuration is enabled, this method returns null.
+     *
+     * @return A filter factory for the currently enabled filters,
+     * or null if none are enabled.
+     */
     @Nullable
     @CheckReturnValue
     public PcmFilterFactory factory() {
         return isEnabled() ? new Factory(this) : null;
     }
 
+    /**
+     * Encodes the state of this configuration and all filters in it.
+     *
+     * @return The encoded state.
+     */
     @Nonnull
     @CheckReturnValue
     public JsonObject encode() {
         var obj = new JsonObject();
-        custom.forEach((k, v) -> {
-            obj.put(k.getName(), v.encode().put("enabled", v.configured()));
-        });
-        return new JsonObject()
-                .put("enabled", isEnabled())
-                .put("equalizer", equalizer.encode().put("enabled", equalizer.configured()))
-                .put("karaoke", karaoke.encode().put("enabled", karaoke.configured()))
-                .put("timescale", timescale.encode().put("enabled", timescale.configured()))
-                .put("tremolo", tremolo.encode().put("enabled", tremolo.configured()))
-                .put("vibrato", vibrato.encode().put("enabled", vibrato.configured()))
-                .put("volume", volume.encode().put("enabled", volume.configured()))
-                .put("custom", obj);
+        for(Config config : filters.values()) {
+            obj.put(config.name(), config.encode().put("enabled", config.enabled()));
+        }
+        return obj;
     }
 
     @Nonnull
@@ -135,8 +180,8 @@ public class FilterChainConfiguration {
         public List<AudioFilter> buildChain(AudioTrack track, AudioDataFormat format, UniversalPcmAudioFilter output) {
             var builder = new FilterChainBuilder();
             builder.addFirst(output);
-            for(var config : configuration.filters) {
-                var filter = config.configured() ?
+            for(var config : configuration.filters.values()) {
+                var filter = config.enabled() ?
                         config.create(format, builder.makeFirstFloat(format.channelCount)) //may return null
                         : null;
                 if(filter != null) {

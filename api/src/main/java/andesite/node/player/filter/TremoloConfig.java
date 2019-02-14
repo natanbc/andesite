@@ -39,8 +39,14 @@ public class TremoloConfig implements Config {
         this.depth = depth;
     }
 
+    @Nonnull
     @Override
-    public boolean configured() {
+    public String name() {
+        return "tremolo";
+    }
+
+    @Override
+    public boolean enabled() {
         return FilterUtil.TREMOLO_AVAILABLE &&
                 (Config.isSet(frequency, 2f) || Config.isSet(depth, 0.5f));
     }

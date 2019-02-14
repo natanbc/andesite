@@ -43,8 +43,14 @@ public class VibratoConfig implements Config {
         this.depth = depth;
     }
 
+    @Nonnull
     @Override
-    public boolean configured() {
+    public String name() {
+        return "vibrato";
+    }
+
+    @Override
+    public boolean enabled() {
         return FilterUtil.VIBRATO_AVAILABLE &&
                 (Config.isSet(frequency, 2f) || Config.isSet(depth, 0.5f));
     }
