@@ -106,7 +106,7 @@ public class WebSocketHandler {
             this.lavalink = lavalink;
             if(lavalink) {
                 this.timerId = andesite.vertx().setPeriodic(30_000, __ -> {
-                    var stats = andesite.requestHandler().getNodeStatsForLavalink(false);
+                    var stats = andesite.requestHandler().nodeStatsForLavalink();
                     ws.writeFinalTextFrame(stats.encode());
                 });
             } else {
@@ -200,7 +200,7 @@ public class WebSocketHandler {
                     ws.writeFinalTextFrame(new JsonObject()
                             .put("op", "stats")
                             .put("userId", user)
-                            .put("stats", andesite.requestHandler().getNodeStats())
+                            .put("stats", andesite.requestHandler().nodeStats())
                             .encode()
                     );
                     break;

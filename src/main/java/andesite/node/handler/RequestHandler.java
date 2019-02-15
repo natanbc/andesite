@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
-public class RequestHandler {
+public class RequestHandler implements AndesiteRequestHandler {
     private static final Class<?> INTERNAL_BEAN_CLASS;
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
 
@@ -46,6 +46,7 @@ public class RequestHandler {
         this.andesite = andesite;
     }
 
+    @Override
     public void provideVoiceServerUpdate(@Nonnull String userId, @Nonnull JsonObject json) {
         log.info("Handling voice server update for user {} and payload {}", userId, json);
 
@@ -71,12 +72,14 @@ public class RequestHandler {
     }
 
     @Nullable
+    @Override
     public JsonObject player(@Nonnull String userId, @Nonnull String guildId) {
         log.info("Fetching player info for user {} in guild {}", userId, guildId);
         var player = andesite.getExistingPlayer(userId, guildId);
         return player == null ? null : player.encodeState();
     }
 
+    @Override
     public void subscribe(@Nonnull String userId, @Nonnull String guildId,
                           @Nonnull Object key, @Nonnull Consumer<JsonObject> eventSink) {
         log.info("Subscribing for events for user {} in guild {}", userId, guildId);
@@ -84,9 +87,13 @@ public class RequestHandler {
     }
 
     @Nonnull
+    @Override
     public JsonObject play(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
         log.info("Playing track for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
+        if(payload.getBoolean("noReplace", false) && player.audioPlayer().getPlayingTrack() != null) {
+            return player.encodeState();
+        }
         var track = RequestUtils.decodeTrack(andesite.audioPlayerManager(), payload.getString("track"));
         var start = payload.getInteger("start", payload.getInteger("startTime", 0));
         if(start != 0) {
@@ -114,6 +121,7 @@ public class RequestHandler {
     }
 
     @Nonnull
+    @Override
     public JsonObject mixer(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
         log.info("Configuring mixer for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
@@ -182,6 +190,7 @@ public class RequestHandler {
     }
 
     @Nonnull
+    @Override
     public JsonObject stop(@Nonnull String userId, @Nonnull String guildId) {
         log.info("Stopping player for user {} in guild {}", userId, guildId);
         var player = andesite.getPlayer(userId, guildId);
@@ -190,6 +199,7 @@ public class RequestHandler {
     }
 
     @Nonnull
+    @Override
     public JsonObject pause(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
         log.info("Updating pause state for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
@@ -198,6 +208,7 @@ public class RequestHandler {
     }
 
     @Nonnull
+    @Override
     public JsonObject seek(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
         log.info("Seeking for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
@@ -209,6 +220,7 @@ public class RequestHandler {
     }
 
     @Nonnull
+    @Override
     public JsonObject volume(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
         log.info("Updating volume for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
@@ -217,6 +229,7 @@ public class RequestHandler {
     }
 
     @Nonnull
+    @Override
     public JsonObject filters(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
         log.info("Updating filters for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
@@ -231,6 +244,7 @@ public class RequestHandler {
     }
 
     @Nonnull
+    @Override
     public JsonObject update(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
         log.info("Updating player for user {} in guild {} and payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
@@ -299,6 +313,7 @@ public class RequestHandler {
     }
 
     @Nullable
+    @Override
     public JsonObject destroy(@Nonnull String userId, @Nonnull String guildId) {
         log.info("Destroying player for user {} in guild {} and payload {}", userId, guildId);
         var player = andesite.removePlayer(userId, guildId);
@@ -309,6 +324,7 @@ public class RequestHandler {
 
     @Nonnull
     @CheckReturnValue
+    @Override
     public CompletionStage<JsonObject> resolveTracks(@Nonnull String identifier) {
         var future = new CompletableFuture<JsonObject>();
         var isUrl = true;
@@ -360,7 +376,8 @@ public class RequestHandler {
 
     @Nonnull
     @CheckReturnValue
-    public JsonObject getNodeStats() {
+    @Override
+    public JsonObject nodeStats() {
         var root = new JsonObject();
 
         var playerStats = andesite.allPlayers().reduce(new int[2], (ints, player) -> {
@@ -496,11 +513,9 @@ public class RequestHandler {
 
     @Nonnull
     @CheckReturnValue
-    public JsonObject getNodeStatsForLavalink(boolean includeDetailed) {
+    @Override
+    public JsonObject nodeStatsForLavalink() {
         var root = new JsonObject();
-        if(includeDetailed) {
-            root.put("detailed", getNodeStats());
-        }
 
         var playerStats = andesite.allPlayers().reduce(new int[2], (ints, player) -> {
             ints[0]++;

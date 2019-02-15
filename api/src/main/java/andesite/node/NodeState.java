@@ -2,6 +2,7 @@ package andesite.node;
 
 import andesite.node.config.Config;
 import andesite.node.event.EventDispatcher;
+import andesite.node.handler.AndesiteRequestHandler;
 import andesite.node.player.AndesitePlayer;
 import andesite.node.send.AudioHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -36,6 +37,15 @@ public interface NodeState {
     @Nonnull
     @CheckReturnValue
     Vertx vertx();
+
+    /**
+     * The request handler used by the node.
+     *
+     * @return The request handler.
+     */
+    @Nonnull
+    @CheckReturnValue
+    AndesiteRequestHandler requestHandler();
 
     /**
      * The regular player manager, which returns opus data.

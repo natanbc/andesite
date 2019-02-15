@@ -120,13 +120,11 @@ public class RestHandler {
             trackRoutes(andesite, router);
 
             router.get("/stats").handler(context -> context.response().end(
-                    andesite.requestHandler().getNodeStats().toBuffer()
+                    andesite.requestHandler().nodeStats().toBuffer()
             ));
 
             router.get("/stats/lavalink").handler(context -> context.response().end(
-                    andesite.requestHandler().getNodeStatsForLavalink(
-                            context.queryParams().contains("detailed")
-                    ).toBuffer()
+                    andesite.requestHandler().nodeStatsForLavalink().toBuffer()
             ));
         }
 

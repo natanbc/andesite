@@ -125,12 +125,6 @@ public class Andesite implements NodeState {
 
     @Nonnull
     @CheckReturnValue
-    public RequestHandler requestHandler() {
-        return handler;
-    }
-
-    @Nonnull
-    @CheckReturnValue
     public Set<String> enabledSources() {
         return enabledSources;
     }
@@ -165,6 +159,13 @@ public class Andesite implements NodeState {
     @Override
     public Vertx vertx() {
         return vertx;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public RequestHandler requestHandler() {
+        return handler;
     }
 
     @Nonnull

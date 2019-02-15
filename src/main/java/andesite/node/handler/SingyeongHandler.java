@@ -85,7 +85,7 @@ public class SingyeongHandler {
                 case "get-stats": {
                     sendResponse(client, event, new JsonObject()
                             .put("op", "stats")
-                            .put("stats", andesite.requestHandler().getNodeStats())
+                            .put("stats", andesite.requestHandler().nodeStats())
                     );
                     break;
                 }

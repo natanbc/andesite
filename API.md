@@ -228,6 +228,7 @@ Setting the `noreply` field to `true` will prevent a response from being sent (e
 | end | integer/null | timestamp, in milliseconds, to end the track |
 | pause | boolean/null | whether or not to pause the player |
 | volume | integer/null | volume to set on the player |
+| noReplace | boolean | if true and a track is already playing/paused, this command is ignored |
 
 ## Pause
 
