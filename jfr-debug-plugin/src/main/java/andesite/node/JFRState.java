@@ -1,4 +1,4 @@
-package andesite.node.util;
+package andesite.node;
 
 import jdk.jfr.FlightRecorder;
 import jdk.jfr.Recording;

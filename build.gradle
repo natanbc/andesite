@@ -5,7 +5,7 @@ plugins {
 	id 'com.palantir.docker' version '0.21.0'
 }
 
-def versionObj = new Version(major: 0, minor: 11, revision: 1)
+def versionObj = new Version(major: 0, minor: 11, revision: 2)
 
 allprojects {
     group 'com.github.natanbc'
@@ -60,7 +60,9 @@ dependencies {
     compile "com.sedmelluq:jda-nas:$jdaNasVersion"
 
     //Singyeong connection support
-    compile "com.github.singyeong:java-client:$singyeongVersion"
+    compile("com.github.singyeong:java-client:$singyeongVersion") {
+        exclude group: 'org.projectlombok', module: 'lombok'
+    }
 
     //Logger implementation
     compile "ch.qos.logback:logback-classic:$logbackVersion"
@@ -81,7 +83,8 @@ dependencies {
 docker {
     name "natanbc/andesite:${versionObj}"
     files "build/libs/andesite-node-${versionObj}-all.jar",
-            project(':jattach-debug-plugin').getTasksByName('jar', false).outputs
+            project(':jattach-debug-plugin').getTasksByName('jar', false).outputs,
+            project(':jfr-debug-plugin').getTasksByName('jar', false).outputs
     buildArgs([
         version: versionObj.toString(),
         jattachVersion: jattachVersion
@@ -103,6 +106,7 @@ task buildAll {}
 tasks.docker.dependsOn buildAll
 tasks.docker.dependsOn ':jattach-debug-plugin:jar'
 buildAll.dependsOn ':jattach-debug-plugin:jar'
+buildAll.dependsOn ':jfr-debug-plugin:jar'
 buildAll.dependsOn ':api:jar'
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar

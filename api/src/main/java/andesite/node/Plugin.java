@@ -33,9 +33,34 @@ public interface Plugin {
     default void configurePlayerManager(@Nonnull NodeState state, @Nonnull AudioPlayerManager manager) {}
 
     /**
+     * Whether or not this plugin requires a router to work. If this returns true,
+     * a router will always be created, regardless of other settings. This
+     * method might not be called.
+     *
+     * <br>Even if this returns false, a router may still be created and
+     * {@link #configureRouter(NodeState, Router) configureRouter()} may
+     * be called. Returning true only ensures the creation, returning false
+     * doesn't stop it.
+     *
+     * <br>A router will be created if any of these conditions are met
+     * <ul>
+     *     <li>HTTP or WebSocket transports are enabled</li>
+     *     <li>Prometheus metrics are enabled</li>
+     *     <li><b>Any</b> plugins returns true on this method</li>
+     * </ul>
+     *
+     * <br><br>Blocking in this method is not a problem, but will delay node initialization.
+     *
+     * @return Whether or not this plugin requires a router.
+     */
+    default boolean requiresRouter() {
+        return false;
+    }
+
+    /**
      * Called to allow injecting custom routes on the provided router.
-     * Only called if the HTTP server is enabled (http/websocket transports,
-     * jfr or prometheus being enabled).
+     * Only called if the HTTP server is enabled (see {@link #requiresRouter() requiresRouter()}
+     * for HTTP server creation conditions).
      *
      * <br><br>Blocking in this method is not a problem, but will delay node initialization.
      *

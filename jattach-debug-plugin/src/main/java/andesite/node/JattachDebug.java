@@ -4,6 +4,8 @@ import andesite.node.util.RequestUtils;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -17,6 +19,13 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 public class JattachDebug implements Plugin {
+    private static final Logger log = LoggerFactory.getLogger(JattachDebug.class);
+
+    @Override
+    public boolean requiresRouter() {
+        return true;
+    }
+
     @Override
     public void configureRouter(@Nonnull NodeState state, @Nonnull Router router) {
         Router r = Router.router(state.vertx());
@@ -65,6 +74,7 @@ public class JattachDebug implements Plugin {
                 badRequest(c, "File not readable");
                 return;
             }
+            log.info("Sending file " + f.getPath());
             c.response().sendFile(f.getPath());
         });
 
@@ -136,14 +146,8 @@ public class JattachDebug implements Plugin {
         router.mountSubRouter("/debug", r);
     }
 
-    @Nonnull
-    @Override
-    public HookResult onRawHttpRequest(@Nonnull NodeState state, @Nonnull RoutingContext context) {
-        context.response().putHeader("Jattach-Debug-Available", "true");
-        return HookResult.CALL_NEXT;
-    }
-
     private static void exec(RoutingContext context, String... command) {
+        log.info("Executing command " + Arrays.toString(command));
         try {
             var list = new ArrayList<String>();
             list.add("jattach");

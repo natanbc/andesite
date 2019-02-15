@@ -40,6 +40,15 @@ public class PluginManager {
         }
     }
 
+    public boolean requiresRouter() {
+        for(var p : plugins) {
+            if(p.requiresRouter()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void configureRouter(@Nonnull Router router) {
         for(var p : plugins) {
             p.configureRouter(state, router);
@@ -60,21 +69,27 @@ public class PluginManager {
 
     public boolean customHandleHttpRequest(@Nonnull RoutingContext context) {
         for(var p : plugins) {
-            if(p.onRawHttpRequest(state, context) == Plugin.HookResult.ABORT) return true;
+            if(p.onRawHttpRequest(state, context) == Plugin.HookResult.ABORT) {
+                return true;
+            }
         }
         return false;
     }
 
     public boolean customHandleWebSocketPayload(@Nonnull WebSocketState state, @Nonnull JsonObject payload) {
         for(var p : plugins) {
-            if(p.onRawWebSocketPayload(this.state, state, payload) == Plugin.HookResult.ABORT) return true;
+            if(p.onRawWebSocketPayload(this.state, state, payload) == Plugin.HookResult.ABORT) {
+                return true;
+            }
         }
         return false;
     }
 
     public boolean customHandleSingyeongPayload(@Nonnull Dispatch dispatch) {
         for(var p : plugins) {
-            if(p.onRawSingyeongPayload(state, dispatch) == Plugin.HookResult.ABORT) return true;
+            if(p.onRawSingyeongPayload(state, dispatch) == Plugin.HookResult.ABORT) {
+                return true;
+            }
         }
         return false;
     }

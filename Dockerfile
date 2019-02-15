@@ -12,5 +12,6 @@ WORKDIR /andesite
 
 COPY andesite-node-${version}-all.jar andesite.jar
 COPY jattach-debug-plugin-${version}.jar plugins/jattach-debug.jar
+COPY jfr-debug-plugin-${version}.jar plugins/jfr-debug.jar
 
 CMD ["java", "-jar", "andesite.jar"]

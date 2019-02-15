@@ -1,3 +1,5 @@
 rootProject.name = 'andesite-node'
 include 'api'
 include 'jattach-debug-plugin'
+include 'jfr-debug-plugin'
+
