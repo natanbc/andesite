@@ -2,7 +2,6 @@ package andesite.node.plugin;
 
 import andesite.node.NodeState;
 import andesite.node.Plugin;
-import andesite.node.event.EventDispatcher;
 import andesite.node.handler.WebSocketState;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import gg.amy.singyeong.Dispatch;
@@ -40,6 +39,18 @@ public class PluginManager {
         }
     }
 
+    public void init() {
+        for(var p : plugins) {
+            p.init(state);
+        }
+    }
+
+    public void configurePlayerManager(@Nonnull AudioPlayerManager manager) {
+        for(var p : plugins) {
+            p.configurePlayerManager(state, manager);
+        }
+    }
+
     public boolean requiresRouter() {
         for(var p : plugins) {
             if(p.requiresRouter()) {
@@ -55,16 +66,12 @@ public class PluginManager {
         }
     }
 
-    public void configurePlayerManager(@Nonnull AudioPlayerManager manager) {
+    public boolean startListeners() {
+        var started = false;
         for(var p : plugins) {
-            p.configurePlayerManager(state, manager);
+            started |= p.startListeners(state);
         }
-    }
-
-    public void registerListeners(@Nonnull EventDispatcher dispatcher) {
-        for(var p : plugins) {
-            p.registerListeners(state, dispatcher);
-        }
+        return started;
     }
 
     public boolean customHandleHttpRequest(@Nonnull RoutingContext context) {

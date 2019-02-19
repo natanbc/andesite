@@ -96,7 +96,7 @@ public class Andesite implements NodeState {
         this.config = config;
         this.audioHandler = createAudioHandler(config);
         this.handler = new RequestHandler(this);
-        pluginManager.registerListeners(dispatcher);
+        pluginManager.init();
         pluginManager.configurePlayerManager(playerManager);
         pluginManager.configurePlayerManager(pcmPlayerManager);
         this.enabledSources = SOURCE_MANAGERS.keySet().stream()
@@ -255,7 +255,9 @@ public class Andesite implements NodeState {
         var andesite = new Andesite(Vertx.vertx(), config);
         Init.postInit(andesite);
         //NOTE: use the bitwise or operator, as it forces evaluation of all elements
-        if(!(RestHandler.setup(andesite) | SingyeongHandler.setup(andesite))) {
+        if(!(RestHandler.setup(andesite)
+                | SingyeongHandler.setup(andesite)
+                | andesite.pluginManager().startListeners())) {
             log.error("No handlers enabled, aborting");
             System.exit(-1);
         }

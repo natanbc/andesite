@@ -1,6 +1,5 @@
 package andesite.node;
 
-import andesite.node.event.EventDispatcher;
 import andesite.node.handler.WebSocketState;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import gg.amy.singyeong.Dispatch;
@@ -16,6 +15,18 @@ import javax.annotation.Nonnull;
  * or intercept commands.
  */
 public interface Plugin {
+    /**
+     * Called when plugin loading is complete. This method is the first callback to be called
+     * and is guaranteed to run only once.
+     *
+     * <br><br>Blocking in this method is not a problem, but will delay node initialization.
+     *
+     * @param state State of the node.
+     *
+     * @see NodeState
+     */
+    default void init(@Nonnull NodeState state) {}
+
     /**
      * Called to allow configuration of an audio player manager. May be called more than once with
      * different player managers.
@@ -73,21 +84,20 @@ public interface Plugin {
     default void configureRouter(@Nonnull NodeState state, @Nonnull Router router) {}
 
     /**
-     * Called to allow registration of listeners. The event dispatcher provided is the same as
-     * {@link NodeState#dispatcher()}. This method is guaranteed to run exactly once and before
-     * all other callbacks.
-     *
-     * <br>If you need to do any setup when the plugin loads, do it in this method.
+     * Starts custom listeners for this plugin. If the default listeners are disabled
+     * and no plugin has custom listeners, the process will exit.
      *
      * <br><br>Blocking in this method is not a problem, but will delay node initialization.
      *
      * @param state State of the node.
-     * @param dispatcher Event dispatcher, shortcut for {@link NodeState#dispatcher()}.
+     *
+     * @return True if a listener was started.
      *
      * @see NodeState
-     * @see EventDispatcher
      */
-    default void registerListeners(@Nonnull NodeState state, @Nonnull EventDispatcher dispatcher) {}
+    default boolean startListeners(@Nonnull NodeState state) {
+        return false;
+    }
 
     /**
      * Called when a REST request is received. Runs on the event loop, so <b>blocking should be avoided.</b>
