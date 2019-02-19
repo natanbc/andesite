@@ -107,7 +107,9 @@ public class WebSocketHandler {
             if(lavalink) {
                 this.timerId = andesite.vertx().setPeriodic(30_000, __ -> {
                     var stats = andesite.requestHandler().nodeStatsForLavalink();
-                    ws.writeFinalTextFrame(stats.encode());
+                    ws.writeFinalTextFrame(stats
+                            .put("op", "stats")
+                            .encode());
                 });
             } else {
                 this.timerId = 0;

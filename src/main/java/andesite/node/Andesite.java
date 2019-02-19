@@ -251,8 +251,9 @@ public class Andesite implements NodeState {
     public static void main(String[] args) throws IOException {
         log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
         var config = ConfigUtil.load();
-        Init.handleInit(config);
+        Init.preInit(config);
         var andesite = new Andesite(Vertx.vertx(), config);
+        Init.postInit(andesite);
         //NOTE: use the bitwise or operator, as it forces evaluation of all elements
         if(!(RestHandler.setup(andesite) | SingyeongHandler.setup(andesite))) {
             log.error("No handlers enabled, aborting");

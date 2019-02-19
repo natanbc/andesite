@@ -8,6 +8,7 @@ import andesite.node.send.nio.NioSendFactory;
 import andesite.node.util.ByteArrayProvider;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
+import com.sedmelluq.discord.lavaplayer.udpqueue.natives.UdpQueueManager;
 import net.dv8tion.jda.core.audio.AudioSendHandler;
 import net.dv8tion.jda.core.audio.factory.IAudioSendFactory;
 import org.slf4j.Logger;
@@ -96,8 +97,13 @@ public class MagmaHandler implements AudioHandler {
     private static IAudioSendFactory createSendFactory(Andesite andesite) {
         var config = andesite.config();
         IAudioSendFactory factory;
-        switch(config.get("send-system.type", "nas")) {
+        var hasNas = isNasSupported();
+        switch(config.get("send-system.type", hasNas ? "nas" : "nio")) {
             case "nas":
+                if(!hasNas) {
+                    throw new IllegalArgumentException("NAS is unsupported in this environment. " +
+                            "Please choose a different send system.");
+                }
                 factory = new NativeAudioSendFactory(config.getInt("send-system.nas-buffer", 400));
                 break;
             case "jda":
@@ -117,6 +123,15 @@ public class MagmaHandler implements AudioHandler {
                 config.getBoolean("send-system.async", true) ? "enabled" : "disabled"
         );
         return factory;
+    }
+
+    private static boolean isNasSupported() {
+        try {
+            new UdpQueueManager(20, 20_000_000, 4096).close();
+            return true;
+        } catch(UnsatisfiedLinkError e) {
+            return false;
+        }
     }
 
     private static ByteArrayProvider createArrayProvider(Config config) {

@@ -49,7 +49,7 @@ Example:
 | audio-handler | string | audio handler implementation to use. currently only `magma` is supported | magma |
 | magma.array-provider | string | either `create-new` or `reuse-existing`. reuse-existing is more efficient, but only works with specific JVMs. Don't complain if it crashes. If it doesn't crash, it's most likely safe to use | create-new |
 | lavalink.ws-path | string | route to run the lavalink websocket on. | /lavalink |
-| send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | nas |
+| send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | `nas` on supported environments, `nio` otherwise |
 | send-system.async | boolean | whether or not to use jda-async-packet-provider to wrap the send system | true |
 | send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |
 | send-system.non-allocating | boolean | whether or not to use the non allocating frame buffer | false |
@@ -77,7 +77,8 @@ Example:
 
 \* When running on architectures not supported by [jda-nas](https://github.com/sedmelluq/jda-nas), such as
 ARM or Darwin devices, you must use either `jda` or `nio` for the send system. For production, nio is preferred
-as it doesn't spawn a thread per voice connection.
+as it doesn't spawn a thread per voice connection. The default is changed to nio when running on unsupported
+architectures.
 
 ### Singyeong DSN Format
 
