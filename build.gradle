@@ -104,10 +104,10 @@ def natives = [
 task buildAll {}
 
 tasks.docker.dependsOn buildAll
-tasks.docker.dependsOn ':jattach-debug-plugin:jar'
 buildAll.dependsOn ':jattach-debug-plugin:jar'
 buildAll.dependsOn ':jfr-debug-plugin:jar'
 buildAll.dependsOn ':api:jar'
+buildAll.dependsOn ':api:javadoc'
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 

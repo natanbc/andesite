@@ -9,6 +9,27 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
+import org.gradle.external.javadoc.StandardJavadocDocletOptions
+
+javadoc {
+    failOnError = false
+    options.encoding = "UTF-8"
+    options.addBooleanOption('html5', true)
+    options.addBooleanOption("-no-module-directories", true)
+    if(options instanceof StandardJavadocDocletOptions) {
+        options
+                .linkSource()
+                .noDeprecated()
+                .links(
+                    "https://docs.oracle.com/en/java/javase/$targetCompatibility/docs/api/",
+                    "https://vertx.io/docs/$vertxWebVersion/apidocs/",
+                    "https://natanbc.github.io/lavadsp/"
+                )
+                .charSet("UTF-8")
+                .docEncoding("UTF-8")
+    }
+}
+
 dependencies {
     //REST, WebSocket, etc
     api "io.vertx:vertx-web:$vertxWebVersion"

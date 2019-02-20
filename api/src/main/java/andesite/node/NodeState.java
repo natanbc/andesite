@@ -89,7 +89,7 @@ public interface NodeState {
      *
      * @param userId User id that owns the map.
      *
-     * @return The map of guild id -> player for the provided user.
+     * @return The map of guild id {@literal ->} player for the provided user.
      *
      * @see AndesitePlayer
      */
