@@ -15,7 +15,6 @@ javadoc {
     failOnError = false
     options.encoding = "UTF-8"
     options.addBooleanOption('html5', true)
-    options.addBooleanOption("-no-module-directories", true)
     if(options instanceof StandardJavadocDocletOptions) {
         options
                 .linkSource()
@@ -23,10 +22,12 @@ javadoc {
                 .links(
                     "https://docs.oracle.com/en/java/javase/$targetCompatibility/docs/api/",
                     "https://vertx.io/docs/$vertxWebVersion/apidocs/",
+                    "https://static.javadoc.io/com.google.code.findbugs/jsr305/$jsr305Version/",
                     "https://natanbc.github.io/lavadsp/"
                 )
                 .charSet("UTF-8")
                 .docEncoding("UTF-8")
+                .jFlags("-Dhttp.agent=javadoc")
     }
 }
 
