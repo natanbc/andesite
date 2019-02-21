@@ -95,11 +95,11 @@ public class RequestHandler implements AndesiteRequestHandler {
             return player.encodeState();
         }
         var track = RequestUtils.decodeTrack(andesite.audioPlayerManager(), payload.getString("track"));
-        var start = payload.getInteger("start", payload.getInteger("startTime", 0));
+        var start = asLong(payload.getValue("start", payload.getValue("startTime")), 0);
         if(start != 0) {
             track.setPosition(start);
         }
-        var end = payload.getInteger("end", payload.getInteger("endTime", 0));
+        var end = asLong(payload.getValue("end", payload.getValue("endTime")), 0);
         if(end != 0) {
             track.setMarker(new TrackMarker(end, state -> {
                 switch(state) {
@@ -148,14 +148,14 @@ public class RequestHandler implements AndesiteRequestHandler {
             AudioTrack track;
             if(config.containsKey("track")) {
                 track = RequestUtils.decodeTrack(andesite.audioPlayerManager(), config.getString("track"));
-                var start = config.getInteger("start", config.getInteger("startTime", 0));
+                var start = asLong(config.getValue("start", config.getValue("startTime")), 0);
                 if(start != 0) {
                     track.setPosition(start);
                 }
             } else {
                 track = p.getPlayingTrack();
             }
-            var end = config.getInteger("end", config.getInteger("endTime", 0));
+            var end = asLong(config.getValue("end", config.getValue("endTime")), 0);
             if(end != 0 && track != null) {
                 track.setMarker(new TrackMarker(end, state -> {
                     switch(state) {
@@ -178,7 +178,7 @@ public class RequestHandler implements AndesiteRequestHandler {
             } else {
                 if(config.containsKey("position")) {
                     if(track != null) {
-                        track.setPosition(config.getLong("position"));
+                        track.setPosition(asLong(config.getValue("position"), -1));
                     }
                 }
             }
@@ -214,7 +214,7 @@ public class RequestHandler implements AndesiteRequestHandler {
         var player = andesite.getPlayer(userId, guildId);
         var track = player.audioPlayer().getPlayingTrack();
         if(track != null) {
-            track.setPosition(payload.getLong("position", 0L));
+            track.setPosition(asLong(payload.getValue("position"), 0L));
         }
         return player.encodeState();
     }
@@ -254,7 +254,7 @@ public class RequestHandler implements AndesiteRequestHandler {
         if(payload.containsKey("position")) {
             var track = player.audioPlayer().getPlayingTrack();
             if(track != null) {
-                track.setPosition(payload.getLong("position"));
+                track.setPosition(asLong(payload.getValue("position"), -1));
             }
         }
         if(payload.containsKey("volume")) {
@@ -571,5 +571,18 @@ public class RequestHandler implements AndesiteRequestHandler {
         json.put("committed", usage.getCommitted());
         json.put("max", usage.getMax());
         return json;
+    }
+
+    private static long asLong(Object value, long defaultValue) {
+        if(value == null) {
+            return defaultValue;
+        }
+        if(value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+        if(value instanceof String) {
+            return Long.parseLong((String)value);
+        }
+        throw new IllegalArgumentException("Unable to convert " + value.getClass() + " to a long");
     }
 }

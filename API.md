@@ -216,7 +216,7 @@ Setting the `noreply` field to `true` will prevent a response from being sent (e
 
 | key | type | description |
 |-----|------|-------------|
-| time | integer | current unix timestamp on the node |
+| time | string | current unix timestamp on the node |
 | position | integer/null | position of the current playing track, or null if nothing is playing |
 | paused | boolean | whether or not the player is paused |
 | volume | integer | the volume of the player |
@@ -228,7 +228,7 @@ Setting the `noreply` field to `true` will prevent a response from being sent (e
 
 | key | type | description |
 |-----|------|-------------|
-| time | integer | current unix timestamp on the node |
+| time | string | current unix timestamp on the node |
 | position | integer/null | position of the current playing track, or null if nothing is playing |
 | paused | boolean | whether or not the player is paused |
 | volume | integer | the volume of the player |

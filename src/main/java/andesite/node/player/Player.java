@@ -151,7 +151,7 @@ public class Player implements AudioProvider, AndesitePlayer {
         m.ifPresent(trackMixer -> trackMixer.players().forEach((k, p) -> {
             var audioPlayer = p.audioPlayer();
             mixerStats.put(k, new JsonObject()
-                    .put("time", Instant.now().toEpochMilli())
+                    .put("time", String.valueOf(Instant.now().toEpochMilli()))
                     .put("position", audioPlayer.getPlayingTrack() == null ? null : audioPlayer.getPlayingTrack().getPosition())
                     .put("paused", audioPlayer.isPaused())
                     .put("volume", audioPlayer.getVolume())
@@ -159,7 +159,7 @@ public class Player implements AudioProvider, AndesitePlayer {
             );
         }));
         return new JsonObject()
-                .put("time", Instant.now().toEpochMilli())
+                .put("time", String.valueOf(Instant.now().toEpochMilli()))
                 .put("position", audioPlayer.getPlayingTrack() == null ? null : audioPlayer.getPlayingTrack().getPosition())
                 .put("paused", audioPlayer.isPaused())
                 .put("volume", audioPlayer.getVolume())
