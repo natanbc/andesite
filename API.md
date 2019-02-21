@@ -8,10 +8,11 @@ Connections can be made over three methods:
 
 ## HTTP
 
-All requests must have an `Authorization` header with the password*
-defined in the config. Furthermore, all routes related to players,
-including the [WebSocket](#websocket) routes, must have an `User-Id` header
-with the bot's id.
+All requests must have an `Authorization` header or `password` query param
+with the password* defined in the config. Furthermore, all routes related
+to players, including the [WebSocket](#websocket) routes, must have an
+`User-Id` header or `user-id` query param with the bot's id. For both of
+them, the header takes priority.
 
 All responses have the following headers:
 
@@ -113,7 +114,29 @@ to read it when the response headers are not exposed (eg vert.x websocket client
 All commands that directly interact with players (updating it, changing it's state, etc) send a player update
 as a response.
 
+
 \* Currently the stats sent always have a null `frameStats` key.
+
+\* Lavalink resumes are not supported.
+
+### Browser 
+
+The WebSocket endpoints can be accessed from a browser with a few small changes to how the connection
+is established.
+
+The password must be provided as a websocket extension or query param.
+
+The user id must be provided as a query param.
+
+```js
+var ws = new WebSocket("ws://my.node/websocket?user-id=1234&password=youshallnotpass")
+```
+or
+```js
+var ws = new WebSocket("ws://my.node/websocket?user-id=1234", "andesite-password:youshallnotpass")
+```
+
+After the connection is established, the API is identical to 
 
 ## Singyeong
 

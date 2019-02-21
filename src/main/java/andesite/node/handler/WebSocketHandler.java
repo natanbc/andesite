@@ -45,11 +45,15 @@ public class WebSocketHandler {
                 var lavalinkConnection = lavalinkRoute
                         || "lavalink".equalsIgnoreCase(req.getHeader("Andesite-Compat"))
                         || llQuery != null && !llQuery.isEmpty();
+                log.info("New {}connection from {} with id {}",
+                        lavalinkConnection ? "lavalink " : "",
+                        context.request().remoteAddress(), id);
                 var resumeId = context.request().getHeader("Andesite-Resume-Id");
                 if(resumeId != null) {
                     try {
                         var buffer = andesite.removeEventBuffer(Long.parseLong(resumeId));
                         if(buffer != null) {
+                            log.info("Resuming connection {} to {}", resumeId, id);
                             andesite.allPlayers().forEach(p -> p.eventListeners().remove(buffer));
                             buffer.empty(json -> ws.writeFinalTextFrame(json.encode()));
                         }
@@ -77,7 +81,7 @@ public class WebSocketHandler {
         private final ServerWebSocket ws;
         private final long connectionId;
         private final boolean lavalink;
-        private final long timerId;
+        private final Long timerId;
         private final Set<Player> subscriptions = ConcurrentHashMap.newKeySet();
         private final AndesiteEventListener listener = new AndesiteEventListener() {
             @Override
@@ -112,7 +116,7 @@ public class WebSocketHandler {
                             .encode());
                 });
             } else {
-                this.timerId = 0;
+                this.timerId = null;
             }
             andesite.dispatcher().register(listener);
             ws.closeHandler(__ -> handleClose());
@@ -162,7 +166,9 @@ public class WebSocketHandler {
                     andesite.removeEventBuffer(connectionId);
                 });
             }
-            andesite.vertx().cancelTimer(timerId);
+            if(timerId != null) {
+                andesite.vertx().cancelTimer(timerId);
+            }
             andesite.dispatcher().unregister(listener);
             subscriptions.forEach(p -> p.eventListeners().remove(this));
         }

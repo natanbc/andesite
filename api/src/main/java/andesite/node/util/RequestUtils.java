@@ -10,6 +10,7 @@ import io.vertx.ext.web.RoutingContext;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,6 +18,54 @@ import java.util.Base64;
 import java.util.function.Function;
 
 public class RequestUtils {
+    /**
+     * Attempts to find a password in a request.
+     *
+     * The password will be read from the following locations, in order, with
+     * the first one present being returned.
+     *
+     * <ul>
+     *     <li>The {@code Authorization} header</li>
+     *     <li>A websocket protocol which starts with {@code andesite-password:}
+     *     (the returned password will have this prefix stripped)</li>
+     *     <li>The {@code password} query param</li>
+     * </ul>
+     *
+     * If the websocket protocol is matched, it's value will be inserted into the
+     * {@code Sec-WebSocket-Protocol} header of the response.
+     *
+     * @param context Context where the password should be located.
+     *
+     * @return The password located, or null if nothing was found.
+     */
+    @Nullable
+    @CheckReturnValue
+    public static String findPassword(@Nonnull RoutingContext context) {
+        var authHeader = context.request().getHeader("Authorization");
+        if(authHeader != null) {
+            return authHeader;
+        }
+
+        //allow browser access
+        //the browser websocket api doesn't support custom headers,
+        //so this hack is needed.
+        //browsers can use new WebSocket(url, "andesite-password:" + password)
+        var wsHeader = context.request().getHeader("Sec-WebSocket-Protocol");
+        if(wsHeader != null) {
+            var parts = wsHeader.split(",");
+            for(var part : parts) {
+                if(part.startsWith("andesite-password:")) {
+                    context.response().putHeader("Sec-WebSocket-Protocol", part);
+                    return part.substring("andesite-password:".length());
+                }
+            }
+        }
+
+        var query = context.queryParam("password");
+
+        return query.isEmpty() ? null : query.get(0);
+    }
+
     /**
      * Decodes an audio track from it's base64 representation.
      *

@@ -17,6 +17,7 @@ on the #andesite channel.
 - Mostly API compatible with [Lavalink](https://github.com/Frederikam/Lavalink)
 - Support for lavaplayer non allocating frame buffer
 - Detailed statistics about the JVM it's running on
+- Can be used from a [browser](https://github.com/natanbc/andesite-node/blob/master/API.md#browser)
 
 # Installing
 

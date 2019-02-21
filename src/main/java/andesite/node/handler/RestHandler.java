@@ -102,7 +102,7 @@ public class RestHandler {
         //verify authentication
         router.route().handler(context -> {
             var password = andesite.config().get("password");
-            if(password != null && !password.equals(context.request().getHeader("Authorization"))) {
+            if(password != null && !password.equals(RequestUtils.findPassword(context))) {
                 error(context, 401, "Unauthorized");
                 return;
             }
@@ -124,10 +124,13 @@ public class RestHandler {
         //verify user id
         router.route().handler(context -> {
             var id = context.request().getHeader("User-Id");
+            if(id == null) {
+                id = context.queryParams().get("user-id");
+            }
             try {
                 context.put("user-id", Long.toUnsignedString(Long.parseUnsignedLong(id)));
             } catch(Exception e) {
-                error(context, 400, "Missing or invalid User-Id header");
+                error(context, 400, "Missing or invalid user id");
                 return;
             }
             context.next();

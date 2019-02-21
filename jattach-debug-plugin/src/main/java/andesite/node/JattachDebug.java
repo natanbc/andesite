@@ -36,7 +36,7 @@ public class JattachDebug implements Plugin {
             if(password == null) {
                 password = config.get("password");
             }
-            if(password != null && !password.equals(c.request().getHeader("Authorization"))) {
+            if(password != null && !password.equals(RequestUtils.findPassword(c))) {
                 c.response()
                         .setStatusCode(401)
                         .setStatusMessage("Unauthorized")

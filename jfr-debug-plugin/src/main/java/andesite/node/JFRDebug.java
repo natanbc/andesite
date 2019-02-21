@@ -33,7 +33,7 @@ public class JFRDebug implements Plugin {
             if(password == null) {
                 password = config.get("password");
             }
-            if(password != null && !password.equals(c.request().getHeader("Authorization"))) {
+            if(password != null && !password.equals(RequestUtils.findPassword(c))) {
                 error(c, 401, "Unauthorized");
                 return;
             }
