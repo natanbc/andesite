@@ -14,6 +14,8 @@ An example plugin is available [here](https://github.com/natanbc/andesite-node/b
 
 The plugin API is also available as a jar in the releases.
 
+Javadocs can be found on [github pages](https://natanbc.github.io/andesite-node/)
+
 ## Plugin Root
 
 A plugin root is either a jar file or a directory. Plugins must define a file named
