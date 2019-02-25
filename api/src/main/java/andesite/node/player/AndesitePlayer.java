@@ -1,53 +1,27 @@
 package andesite.node.player;
 
-import andesite.node.NodeState;
-import andesite.node.player.filter.FilterChainConfiguration;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
-import io.vertx.core.json.JsonObject;
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
 
-public interface AndesitePlayer {
-    /**
-     * Returns the node that owns this player.
-     *
-     * @return The node that owns this player.
-     */
-    NodeState node();
-
-    /**
-     * Returns the filter configuration for this player.
-     *
-     * @return The filter configuration for this player.
-     */
-    FilterChainConfiguration filterConfig();
-
-    /**
-     * Returns the user id of this player.
-     *
-     * @return The user id for this player.
-     */
-    String userId();
-
-    /**
-     * Returns the guild id of this player.
-     *
-     * @return The guild id for this player.
-     */
-    String guildId();
-
-    /**
-     * Returns the audio player for this player.
-     *
-     * @return The audio player for this player.
-     */
-    AudioPlayer audioPlayer();
-
+public interface AndesitePlayer extends BasePlayer {
     /**
      * Returns the track mixer for this player.
      *
      * @return The track mixer for this player.
      */
+    @Nonnull
+    @CheckReturnValue
     AndesiteTrackMixer mixer();
-
+    
+    /**
+     * Returns the state of the mixer.
+     *
+     * @return The state of the mixer.
+     */
+    @Nonnull
+    @CheckReturnValue
+    MixerState mixerState();
+    
     /**
      * Requests the player switches to the mixer as soon as possible.
      *
@@ -63,11 +37,34 @@ public interface AndesitePlayer {
      * While it doesn't return one, the current provider will be used instead.
      */
     void switchToSingle();
-
-    /**
-     * Encodes the state of this player for sending to clients.
-     *
-     * @return A json object containing the state of this player.
-     */
-    JsonObject encodeState();
+    
+    enum MixerState {
+        /**
+         * The mixer is disabled.
+         */
+        DISABLED(false),
+        /**
+         * The mixer is being enabled, but is currently disabled.
+         */
+        ENABLING(false),
+        /**
+         * The mixer is enabled.
+         */
+        ENABLED(true),
+        /**
+         * The mixer is being disabled, but is currently enabled.
+         */
+        DISABLING(true);
+        
+        private final boolean isUsingMixer;
+    
+        MixerState(boolean isUsingMixer) {
+            this.isUsingMixer = isUsingMixer;
+        }
+        
+        @CheckReturnValue
+        public boolean isUsingMixer() {
+            return isUsingMixer;
+        }
+    }
 }

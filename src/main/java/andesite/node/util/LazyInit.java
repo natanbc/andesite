@@ -11,6 +11,10 @@ public class LazyInit<T> implements Supplier<T> {
         this.supplier = supplier;
     }
 
+    public boolean isPresent() {
+        return value != null;
+    }
+    
     public synchronized Optional<T> getIfPresent() {
         return Optional.ofNullable(value);
     }

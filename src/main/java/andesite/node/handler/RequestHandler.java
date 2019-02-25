@@ -1,6 +1,7 @@
 package andesite.node.handler;
 
 import andesite.node.Andesite;
+import andesite.node.player.FrameLossCounter;
 import andesite.node.player.filter.FilterChainConfiguration;
 import andesite.node.util.RequestUtils;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
@@ -507,6 +508,42 @@ public class RequestHandler implements AndesiteRequestHandler {
                 .put("pools", Arrays.stream(bean.getMemoryPoolNames())
                         .reduce(new JsonArray(), JsonArray::add, JsonArray::addAll))
         ).reduce(new JsonArray(), JsonArray::add, JsonArray::addAll));
+        
+        andesite.allPlayers().reduce(new JsonArray(), (array, player) -> {
+            if(player.mixerState().isUsingMixer()) {
+                //average these values from the players
+                var count = 0;
+                var success = 0;
+                var loss = 0;
+                for(var p : player.mixer().players().values()) {
+                    var counter = p.frameLossCounter();
+                    if(counter.isDataUsable()) {
+                        count++;
+                        success += counter.lastMinuteSuccess().sum();
+                        loss += counter.lastMinuteLoss().sum();
+                    }
+                }
+                if(count > 0) {
+                    array.add(new JsonObject()
+                        .put("user", player.userId())
+                        .put("guild", player.guildId())
+                        .put("success", success / count)
+                        .put("loss", loss / count)
+                    );
+                }
+            } else {
+                var counter = player.frameLossCounter();
+                if(counter.isDataUsable()) {
+                    array.add(new JsonObject()
+                        .put("user", player.userId())
+                        .put("guild", player.guildId())
+                        .put("success", counter.lastMinuteSuccess().sum())
+                        .put("loss", counter.lastMinuteLoss().sum())
+                    );
+                }
+            }
+            return array;
+        }, JsonArray::addAll);
 
         return root;
     }
@@ -555,8 +592,56 @@ public class RequestHandler implements AndesiteRequestHandler {
                 .put("systemLoad", systemLoad)
                 .put("lavalinkLoad", load)
         );
-
-        root.putNull("frameStats");
+    
+        var frameStats = new int[3];
+        
+        andesite.allPlayers().forEach(player -> {
+            if(player.mixerState().isUsingMixer()) {
+                //average these values from the players
+                var count = 0;
+                var success = 0;
+                var loss = 0;
+                for(var p : player.mixer().players().values()) {
+                    var counter = p.frameLossCounter();
+                    if(counter.isDataUsable()) {
+                        count++;
+                        success += counter.lastMinuteSuccess().sum();
+                        loss += counter.lastMinuteLoss().sum();
+                    }
+                }
+                if(count > 0) {
+                    frameStats[0]++;
+                    frameStats[1] += success / count;
+                    frameStats[2] += loss / count;
+                }
+            } else {
+                var counter = player.frameLossCounter();
+                if(counter.isDataUsable()) {
+                    frameStats[0]++;
+                    frameStats[1] += counter.lastMinuteSuccess().sum();
+                    frameStats[2] += counter.lastMinuteLoss().sum();
+                }
+            }
+        });
+    
+    
+        int players = frameStats[0];
+        int totalSent = frameStats[1];
+        int totalLost = frameStats[2];
+    
+        int totalDeficit = players * FrameLossCounter.EXPECTED_PACKET_COUNT_PER_MIN
+            - (totalSent + totalLost);
+    
+        // We can't divide by 0
+        if (players != 0) {
+            var frames = new JsonObject();
+            frames.put("sent", totalSent / players);
+            frames.put("nulled", totalLost / players);
+            frames.put("deficit", totalDeficit / players);
+            root.put("frameStats", frames);
+        } else {
+            root.putNull("frameStats");
+        }
 
         return root;
     }

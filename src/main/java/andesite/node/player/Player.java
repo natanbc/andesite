@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 public class Player implements AudioProvider, AndesitePlayer {
     private static final Logger log = LoggerFactory.getLogger(Player.class);
 
+    private final FrameLossTracker frameLossTracker = new FrameLossTracker();
     private final Map<Object, EventEmitter> emitters = new ConcurrentHashMap<>();
     private final FilterChainConfiguration filterConfig = new FilterChainConfiguration();
     private final Andesite andesite;
@@ -47,11 +48,12 @@ public class Player implements AudioProvider, AndesitePlayer {
     public Player(@Nonnull Andesite andesite, @Nonnull String guildId, @Nonnull String userId) {
         this.andesite = andesite;
         this.audioPlayerManager = andesite.audioPlayerManager();
-        this.mixer = new LazyInit<>(() -> new TrackMixer(andesite.pcmAudioPlayerManager()));
+        this.mixer = new LazyInit<>(() -> new TrackMixer(andesite.pcmAudioPlayerManager(), this));
         this.guildId = guildId;
         this.userId = userId;
         this.audioPlayer = audioPlayerManager.createPlayer();
         this.audioPlayer.addListener(event -> emitters.values().forEach(e -> e.onEvent(event)));
+        this.audioPlayer.addListener(frameLossTracker);
         this.fastProvider = andesite.config().getBoolean("send-system.non-allocating", false) ?
                 new NonAllocatingProvider(audioPlayer) :
                 new AllocatingProvider(audioPlayer);
@@ -69,6 +71,8 @@ public class Player implements AudioProvider, AndesitePlayer {
     }
 
     @Override
+    @Nonnull
+    @CheckReturnValue
     public NodeState node() {
         return andesite;
     }
@@ -92,6 +96,12 @@ public class Player implements AudioProvider, AndesitePlayer {
     @CheckReturnValue
     public String userId() {
         return userId;
+    }
+
+    @Nonnull
+    @Override
+    public FrameLossCounter frameLossCounter() {
+        return frameLossTracker;
     }
 
     @Override
@@ -127,7 +137,29 @@ public class Player implements AudioProvider, AndesitePlayer {
     public TrackMixer mixer() {
         return mixer.get();
     }
-
+    
+    @CheckReturnValue
+    @Nonnull
+    @Override
+    public MixerState mixerState() {
+        if(mixer.isPresent()) {
+            var m = mixer.get();
+            if(switchWhenReady == m) {
+                return MixerState.ENABLING;
+            }
+            if(realProvider == m) {
+                return MixerState.ENABLED;
+            }
+        }
+        if(realProvider == fastProvider) {
+            return MixerState.DISABLED;
+        }
+        if(switchWhenReady == fastProvider) {
+            return MixerState.DISABLING;
+        }
+        throw new AssertionError("This state should be impossible");
+    }
+    
     @Override
     public void switchToMixer() {
         if(realProvider != mixer.get()) {
@@ -149,14 +181,7 @@ public class Player implements AudioProvider, AndesitePlayer {
         var m = mixer.getIfPresent();
         var mixerStats = new JsonObject();
         m.ifPresent(trackMixer -> trackMixer.players().forEach((k, p) -> {
-            var audioPlayer = p.audioPlayer();
-            mixerStats.put(k, new JsonObject()
-                    .put("time", String.valueOf(Instant.now().toEpochMilli()))
-                    .put("position", audioPlayer.getPlayingTrack() == null ? null : audioPlayer.getPlayingTrack().getPosition())
-                    .put("paused", audioPlayer.isPaused())
-                    .put("volume", audioPlayer.getVolume())
-                    .put("filters", p.filterConfig().encode())
-            );
+            mixerStats.put(k, p.encodeState());
         }));
         return new JsonObject()
                 .put("time", String.valueOf(Instant.now().toEpochMilli()))
@@ -165,7 +190,12 @@ public class Player implements AudioProvider, AndesitePlayer {
                 .put("volume", audioPlayer.getVolume())
                 .put("filters", filterConfig.encode())
                 .put("mixer", mixerStats)
-                .put("mixerEnabled", m.isPresent() && m.get() == realProvider);
+                .put("mixerEnabled", m.isPresent() && m.get() == realProvider)
+                .put("frame", new JsonObject()
+                    .put("loss", frameLossTracker.lastMinuteLoss().sum())
+                    .put("success", frameLossTracker.lastMinuteSuccess().sum())
+                    .put("usable", frameLossTracker.isDataUsable())
+                );
     }
 
     @Override
@@ -176,9 +206,16 @@ public class Player implements AudioProvider, AndesitePlayer {
             realProvider = switchWhenReady;
             switchWhenReady = null;
             emitters.values().forEach(EventEmitter::sendPlayerUpdate);
+            frameLossTracker.onSuccess();
             return true;
         }
-        return realProvider.canProvide();
+        var r = realProvider.canProvide();
+        if(r) {
+            frameLossTracker.onSuccess();
+        } else {
+            frameLossTracker.onFail();
+        }
+        return r;
     }
 
     @Override

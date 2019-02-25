@@ -56,7 +56,7 @@ are returned.
 | route | description |
 |-------|-------------|
 | GET /stats | returns stats about the node |
-| GET /stats/lavalink | returns lavalink compatible stats about the node. If the `detailed` query param is present, the detailed stats of the node are returned under the `detailed` key of the response |
+| GET /stats/lavalink | returns lavalink compatible stats about the node |
 | GET /loadtracks | loads tracks from the `identifier` query param. Returns a [loaded tracks](#loaded-tracks) response |
 | GET /decodetrack | returns metadata for a track in the `track` query param. Returns a [track info](#track-info) object |
 | POST /decodetrack | returns metadata for a track in the `track` body property. Returns a [track info](#track-info) object |
@@ -113,9 +113,6 @@ to read it when the response headers are not exposed (eg vert.x websocket client
 
 All commands that directly interact with players (updating it, changing it's state, etc) send a player update
 as a response.
-
-
-\* Currently the stats sent always have a null `frameStats` key.
 
 \* Lavalink resumes are not supported.
 

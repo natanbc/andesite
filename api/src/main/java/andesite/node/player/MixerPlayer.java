@@ -1,27 +1,35 @@
 package andesite.node.player;
 
-import andesite.node.player.filter.FilterChainConfiguration;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
-
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 
-public interface MixerPlayer {
+public interface MixerPlayer extends BasePlayer {
     /**
-     * Returns the filter configuration for this player.
+     * Returns the player that owns the mixer this player belongs to.
      *
-     * @return The filter configuration for this player.
+     * @return The owner of this player.
      */
     @Nonnull
     @CheckReturnValue
-    FilterChainConfiguration filterConfig();
+    AndesitePlayer parentPlayer();
 
     /**
-     * Returns the audio player for this player.
+     * Returns the key used for registering this player in the mixer.
      *
-     * @return The audio player for this player.
+     * @return The key of this player.
      */
     @Nonnull
     @CheckReturnValue
-    AudioPlayer audioPlayer();
+    String key();
+
+    /**
+     * Returns the mixer this player belongs to.
+     *
+     * @return The mixer this player belongs to.
+     */
+    @Nonnull
+    @CheckReturnValue
+    default AndesiteTrackMixer mixer() {
+        return parentPlayer().mixer();
+    }
 }

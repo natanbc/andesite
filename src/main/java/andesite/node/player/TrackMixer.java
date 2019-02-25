@@ -1,17 +1,20 @@
 package andesite.node.player;
 
+import andesite.node.NodeState;
 import andesite.node.player.filter.FilterChainConfiguration;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.format.transcoder.OpusChunkEncoder;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
+import io.vertx.core.json.JsonObject;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -23,11 +26,13 @@ public class TrackMixer implements AndesiteTrackMixer {
     private final ByteBuffer outputBuffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize());
 
     private final AudioPlayerManager playerManager;
+    private final AndesitePlayer parent;
     private final OpusChunkEncoder encoder;
 
-    public TrackMixer(AudioPlayerManager playerManager) {
+    public TrackMixer(AudioPlayerManager playerManager, AndesitePlayer parent) {
         this.playerManager = playerManager;
         this.encoder = new OpusChunkEncoder(playerManager.getConfiguration(), StandardAudioDataFormats.DISCORD_OPUS);
+        this.parent = parent;
     }
 
     @SuppressWarnings("unchecked")
@@ -42,7 +47,7 @@ public class TrackMixer implements AndesiteTrackMixer {
     @CheckReturnValue
     @Override
     public MixerPlayer getPlayer(@Nonnull String key) {
-        return players.computeIfAbsent(key, __ -> new Player(playerManager.createPlayer()));
+        return players.computeIfAbsent(key, k -> new Player(playerManager.createPlayer(), parent, k));
     }
 
     @Override
@@ -109,19 +114,55 @@ public class TrackMixer implements AndesiteTrackMixer {
         encoder.close();
     }
 
-    public static class Player implements MixerPlayer {
+    private static class Player implements MixerPlayer {
         private final ByteBuffer buffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_PCM_S16_BE.maximumChunkSize())
                 .order(ByteOrder.BIG_ENDIAN);
         private final MutableAudioFrame frame = new MutableAudioFrame();
+        private final FrameLossTracker frameLossTracker = new FrameLossTracker();
         private final FilterChainConfiguration filterConfig = new FilterChainConfiguration();
         private final AudioPlayer player;
+        private final AndesitePlayer parent;
+        private final String key;
         private boolean provided;
         private int framesWithoutProvide;
 
-        Player(AudioPlayer player) {
+        Player(AudioPlayer player, AndesitePlayer parent, String key) {
             this.player = player;
+            this.parent = parent;
+            this.key = key;
             frame.setBuffer(buffer);
             buffer.limit(frame.getDataLength());
+            this.player.addListener(frameLossTracker);
+        }
+
+        boolean tryProvide() {
+            provided = player.provide(frame);
+            if(provided) {
+                framesWithoutProvide = 0;
+                frameLossTracker.onSuccess();
+            } else {
+                framesWithoutProvide++;
+                frameLossTracker.onFail();
+            }
+            return provided;
+        }
+
+        @Nonnull
+        @Override
+        public NodeState node() {
+            return parent.node();
+        }
+
+        @Nonnull
+        @Override
+        public String userId() {
+            return parent.userId();
+        }
+
+        @Nonnull
+        @Override
+        public String guildId() {
+            return parent.guildId();
         }
 
         @Nonnull
@@ -132,20 +173,45 @@ public class TrackMixer implements AndesiteTrackMixer {
         }
 
         @Nonnull
+        @Override
+        public FrameLossCounter frameLossCounter() {
+            return frameLossTracker;
+        }
+
+        @Nonnull
         @CheckReturnValue
         @Override
         public AudioPlayer audioPlayer() {
             return player;
         }
 
-        boolean tryProvide() {
-            provided = player.provide(frame);
-            if(provided) {
-                framesWithoutProvide = 0;
-            } else {
-                framesWithoutProvide++;
-            }
-            return provided;
+        @Nonnull
+        @Override
+        public JsonObject encodeState() {
+            var track = player.getPlayingTrack();
+            return new JsonObject()
+                    .put("time", String.valueOf(Instant.now().toEpochMilli()))
+                    .put("position", track == null ? null : track.getPosition())
+                    .put("paused", player.isPaused())
+                    .put("volume", player.getVolume())
+                    .put("filters", filterConfig.encode())
+                    .put("frame", new JsonObject()
+                        .put("loss", frameLossTracker.lastMinuteLoss().sum())
+                        .put("success", frameLossTracker.lastMinuteSuccess().sum())
+                        .put("usable", frameLossTracker.isDataUsable())
+                    );
+        }
+
+        @Nonnull
+        @Override
+        public AndesitePlayer parentPlayer() {
+            return parent;
+        }
+
+        @Nonnull
+        @Override
+        public String key() {
+            return key;
         }
     }
 }
