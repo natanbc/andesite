@@ -13,7 +13,7 @@ import java.nio.channels.DatagramChannel;
 public class NioSendSystem implements IAudioSendSystem {
     private static final Logger log = LoggerFactory.getLogger(NioSendSystem.class);
     private static final int OPUS_FRAME_TIME_AMOUNT = 20;
-
+    
     private final Vertx vertx;
     private final IPacketProvider packetProvider;
     private final DatagramChannel channel;
@@ -21,7 +21,7 @@ public class NioSendSystem implements IAudioSendSystem {
     private volatile boolean stop;
     private long lastFrameSent;
     private boolean sentPacket = true;
-
+    
     public NioSendSystem(Vertx vertx, IPacketProvider packetProvider) {
         this.vertx = vertx;
         this.packetProvider = packetProvider;
@@ -32,7 +32,7 @@ public class NioSendSystem implements IAudioSendSystem {
             throw new IllegalStateException("Unable to create UDP channel", e);
         }
     }
-
+    
     @Override
     public synchronized void start() {
         if(started) return;
@@ -48,12 +48,12 @@ public class NioSendSystem implements IAudioSendSystem {
         }
         run();
     }
-
+    
     @Override
     public void shutdown() {
         stop = true;
     }
-
+    
     private void run() {
         if(stop) {
             try {
@@ -66,7 +66,7 @@ public class NioSendSystem implements IAudioSendSystem {
         lastFrameSent = System.currentTimeMillis();
         var changeTalking = !sentPacket || (System.currentTimeMillis() - lastFrameSent) > OPUS_FRAME_TIME_AMOUNT;
         var buffer = packetProvider.getNextPacketRaw(changeTalking);
-
+        
         sentPacket = buffer != null;
         if(sentPacket) {
             try {
@@ -78,7 +78,7 @@ public class NioSendSystem implements IAudioSendSystem {
         }
         scheduleNextPacket();
     }
-
+    
     private void scheduleNextPacket() {
         var sleepTime = (OPUS_FRAME_TIME_AMOUNT) - (System.currentTimeMillis() - lastFrameSent);
         if(sleepTime > 0) {
@@ -87,7 +87,7 @@ public class NioSendSystem implements IAudioSendSystem {
             sendNextPacket();
         }
     }
-
+    
     private void sendNextPacket() {
         if(System.currentTimeMillis() < lastFrameSent + 60) {
             // If the sending didn't took longer than 60ms (3 times the time frame)

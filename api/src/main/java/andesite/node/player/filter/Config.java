@@ -15,7 +15,7 @@ public interface Config {
      * value are smaller than this are considered equal to the default.
      */
     float MINIMUM_FP_DIFF = 0.01f;
-
+    
     /**
      * Returns the name of this filter, to be used in {@link FilterChainConfiguration#encode()}.
      *
@@ -24,7 +24,7 @@ public interface Config {
     @CheckReturnValue
     @Nonnull
     String name();
-
+    
     /**
      * Returns whether or not this filter should be enabled.
      *
@@ -35,7 +35,7 @@ public interface Config {
      */
     @CheckReturnValue
     boolean enabled();
-
+    
     /**
      * Creates a new audio filter with the current settings.
      *
@@ -47,7 +47,7 @@ public interface Config {
     @Nullable
     @CheckReturnValue
     AudioFilter create(AudioDataFormat format, FloatPcmAudioFilter output);
-
+    
     /**
      * Encodes the state of this configuration to send to clients.
      *
@@ -56,12 +56,12 @@ public interface Config {
     @Nonnull
     @CheckReturnValue
     JsonObject encode();
-
+    
     /**
      * Returns true if the difference between {@code value} and {@code defaultValue}
      * is greater or equal to {@link #MINIMUM_FP_DIFF}.
      *
-     * @param value Value to check.
+     * @param value        Value to check.
      * @param defaultValue Default value.
      *
      * @return True if the difference is greater or equal to the minimum.

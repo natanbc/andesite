@@ -20,17 +20,17 @@ public class PluginManager {
     private final List<Plugin> plugins = new ArrayList<>();
     private final List<String> loadedPlugins = new ArrayList<>();
     private final NodeState state;
-
+    
     public PluginManager(@Nonnull NodeState state) {
         this.state = state;
     }
-
+    
     @Nonnull
     @CheckReturnValue
     public List<String> loadedPlugins() {
         return loadedPlugins;
     }
-
+    
     public void load(@Nonnull File path) throws IOException {
         var p = PluginLoader.create(state, path).loadPlugins();
         plugins.addAll(p);
@@ -38,19 +38,19 @@ public class PluginManager {
             loadedPlugins.add(plugin.getClass().getName());
         }
     }
-
+    
     public void init() {
         for(var p : plugins) {
             p.init(state);
         }
     }
-
+    
     public void configurePlayerManager(@Nonnull AudioPlayerManager manager) {
         for(var p : plugins) {
             p.configurePlayerManager(state, manager);
         }
     }
-
+    
     public boolean requiresRouter() {
         for(var p : plugins) {
             if(p.requiresRouter()) {
@@ -59,13 +59,13 @@ public class PluginManager {
         }
         return false;
     }
-
+    
     public void configureRouter(@Nonnull Router router) {
         for(var p : plugins) {
             p.configureRouter(state, router);
         }
     }
-
+    
     public boolean startListeners() {
         var started = false;
         for(var p : plugins) {
@@ -73,7 +73,7 @@ public class PluginManager {
         }
         return started;
     }
-
+    
     public boolean customHandleHttpRequest(@Nonnull RoutingContext context) {
         for(var p : plugins) {
             if(p.onRawHttpRequest(state, context) == Plugin.HookResult.ABORT) {
@@ -82,7 +82,7 @@ public class PluginManager {
         }
         return false;
     }
-
+    
     public boolean customHandleWebSocketPayload(@Nonnull WebSocketState state, @Nonnull JsonObject payload) {
         for(var p : plugins) {
             if(p.onRawWebSocketPayload(this.state, state, payload) == Plugin.HookResult.ABORT) {
@@ -91,7 +91,7 @@ public class PluginManager {
         }
         return false;
     }
-
+    
     public boolean customHandleSingyeongPayload(@Nonnull Dispatch dispatch) {
         for(var p : plugins) {
             if(p.onRawSingyeongPayload(state, dispatch) == Plugin.HookResult.ABORT) {

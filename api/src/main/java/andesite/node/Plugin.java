@@ -26,7 +26,7 @@ public interface Plugin {
      * @see NodeState
      */
     default void init(@Nonnull NodeState state) {}
-
+    
     /**
      * Called to allow configuration of an audio player manager. May be called more than once with
      * different player managers.
@@ -35,14 +35,14 @@ public interface Plugin {
      *
      * <br><br>Blocking in this method is not a problem, but will delay node initialization.
      *
-     * @param state State of the node.
+     * @param state   State of the node.
      * @param manager Player manager to configure.
      *
      * @see NodeState
      * @see AudioPlayerManager
      */
     default void configurePlayerManager(@Nonnull NodeState state, @Nonnull AudioPlayerManager manager) {}
-
+    
     /**
      * Whether or not this plugin requires a router to work. If this returns true,
      * a router will always be created, regardless of other settings. This
@@ -55,9 +55,9 @@ public interface Plugin {
      *
      * <br>A router will be created if any of these conditions are met
      * <ul>
-     *     <li>HTTP or WebSocket transports are enabled</li>
-     *     <li>Prometheus metrics are enabled</li>
-     *     <li><b>Any</b> plugins returns true on this method</li>
+     * <li>HTTP or WebSocket transports are enabled</li>
+     * <li>Prometheus metrics are enabled</li>
+     * <li><b>Any</b> plugins returns true on this method</li>
      * </ul>
      *
      * <br><br>Blocking in this method is not a problem, but will delay node initialization.
@@ -67,7 +67,7 @@ public interface Plugin {
     default boolean requiresRouter() {
         return false;
     }
-
+    
     /**
      * Called to allow injecting custom routes on the provided router.
      * Only called if the HTTP server is enabled (see {@link #requiresRouter() requiresRouter()}
@@ -75,14 +75,14 @@ public interface Plugin {
      *
      * <br><br>Blocking in this method is not a problem, but will delay node initialization.
      *
-     * @param state State of the node.
+     * @param state  State of the node.
      * @param router Root router used by the node.
      *
      * @see NodeState
      * @see Router
      */
     default void configureRouter(@Nonnull NodeState state, @Nonnull Router router) {}
-
+    
     /**
      * Starts custom listeners for this plugin. If the default listeners are disabled
      * and no plugin has custom listeners, the process will exit.
@@ -98,11 +98,11 @@ public interface Plugin {
     default boolean startListeners(@Nonnull NodeState state) {
         return false;
     }
-
+    
     /**
      * Called when a REST request is received. Runs on the event loop, so <b>blocking should be avoided.</b>
      *
-     * @param state State of the node.
+     * @param state   State of the node.
      * @param context Context for the request.
      *
      * @return Whether or not other handlers should be called.
@@ -116,13 +116,13 @@ public interface Plugin {
     default HookResult onRawHttpRequest(@Nonnull NodeState state, @Nonnull RoutingContext context) {
         return HookResult.CALL_NEXT;
     }
-
+    
     /**
      * Called when a websocket payload is received. Runs on the event loop, so <b>blocking should be avoided.</b>
      *
      * @param nodeState State of the node.
-     * @param wsState State of the websocket connection.
-     * @param payload Payload received.
+     * @param wsState   State of the websocket connection.
+     * @param payload   Payload received.
      *
      * @return Whether or not other handlers should be called.
      *
@@ -135,11 +135,11 @@ public interface Plugin {
     default HookResult onRawWebSocketPayload(@Nonnull NodeState nodeState, @Nonnull WebSocketState wsState, @Nonnull JsonObject payload) {
         return HookResult.CALL_NEXT;
     }
-
+    
     /**
      * Called when a singyeong payload is received. Runs on the event loop, so <b>blocking should be avoided.</b>
      *
-     * @param state State of the node.
+     * @param state   State of the node.
      * @param payload Payload received plus metadata.
      *
      * @return Whether or not other handlers should be called.
@@ -153,7 +153,7 @@ public interface Plugin {
     default HookResult onRawSingyeongPayload(@Nonnull NodeState state, @Nonnull Dispatch payload) {
         return HookResult.CALL_NEXT;
     }
-
+    
     /**
      * Used to signal whether or not a payload should be dropped.
      *

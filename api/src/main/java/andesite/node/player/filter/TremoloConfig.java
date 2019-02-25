@@ -13,22 +13,22 @@ import javax.annotation.Nullable;
 public class TremoloConfig implements Config {
     private float frequency = 2f;
     private float depth = 0.5f;
-
+    
     public float frequency() {
         return frequency;
     }
-
+    
     public void setFrequency(float frequency) {
         if(frequency <= 0) {
             throw new IllegalArgumentException("Frequency <= 0");
         }
         this.frequency = frequency;
     }
-
+    
     public float depth() {
         return depth;
     }
-
+    
     public void setDepth(float depth) {
         if(depth <= 0) {
             throw new IllegalArgumentException("Depth <= 0");
@@ -38,32 +38,32 @@ public class TremoloConfig implements Config {
         }
         this.depth = depth;
     }
-
+    
     @Nonnull
     @Override
     public String name() {
         return "tremolo";
     }
-
+    
     @Override
     public boolean enabled() {
         return FilterUtil.TREMOLO_AVAILABLE &&
-                (Config.isSet(frequency, 2f) || Config.isSet(depth, 0.5f));
+            (Config.isSet(frequency, 2f) || Config.isSet(depth, 0.5f));
     }
-
+    
     @Nullable
     @Override
     public AudioFilter create(AudioDataFormat format, FloatPcmAudioFilter output) {
         return new TremoloPcmAudioFilter(output, format.channelCount, format.sampleRate)
-                .setFrequency(frequency)
-                .setDepth(depth);
+            .setFrequency(frequency)
+            .setDepth(depth);
     }
-
+    
     @Nonnull
     @Override
     public JsonObject encode() {
         return new JsonObject()
-                .put("frequency", frequency)
-                .put("depth", depth);
+            .put("frequency", frequency)
+            .put("depth", depth);
     }
 }

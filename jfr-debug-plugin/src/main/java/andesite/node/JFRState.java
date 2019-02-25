@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 
 public class JFRState {
     private static volatile Recording current;
-
+    
     @Nullable
     @CheckReturnValue
     public static synchronized Recording createNew() {
@@ -19,7 +19,7 @@ public class JFRState {
         }
         return current = r;
     }
-
+    
     @Nullable
     @CheckReturnValue
     public static synchronized Recording stop() {
@@ -29,7 +29,7 @@ public class JFRState {
         current = null;
         return r;
     }
-
+    
     @Nullable
     @CheckReturnValue
     public static synchronized Recording current() {

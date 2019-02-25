@@ -38,14 +38,14 @@ public class JattachDebug implements Plugin {
             }
             if(password != null && !password.equals(RequestUtils.findPassword(c))) {
                 c.response()
-                        .setStatusCode(401)
-                        .setStatusMessage("Unauthorized")
-                        .putHeader("Content-Type", "application/json")
-                        .end(new JsonObject()
-                                .put("code", 401)
-                                .put("message", "Unauthorized")
-                                .toBuffer()
-                        );
+                    .setStatusCode(401)
+                    .setStatusMessage("Unauthorized")
+                    .putHeader("Content-Type", "application/json")
+                    .end(new JsonObject()
+                        .put("code", 401)
+                        .put("message", "Unauthorized")
+                        .toBuffer()
+                    );
                 return;
             }
             c.next();
@@ -156,10 +156,10 @@ public class JattachDebug implements Plugin {
             File tmpOut = File.createTempFile("stdout", ".txt");
             File tmpErr = File.createTempFile("stderr", ".txt");
             var process = new ProcessBuilder()
-                    .command(list)
-                    .redirectOutput(tmpOut)
-                    .redirectError(tmpErr)
-                    .start();
+                .command(list)
+                .redirectOutput(tmpOut)
+                .redirectError(tmpErr)
+                .start();
             process.onExit().thenRun(() -> sendProcessResult(context, tmpOut, tmpErr, process));
         } catch(IOException e) {
             error(context, e);
@@ -169,12 +169,12 @@ public class JattachDebug implements Plugin {
     private static void sendProcessResult(RoutingContext context, File stdout, File stderr, Process process) {
         try(var outStream = new FileInputStream(stdout); var errStream = new FileInputStream(stderr)) {
             var json = new JsonObject()
-                    .put("exitCode", process.exitValue())
-                    .put("stdout", cleanOutput(toUTF8(outStream)))
-                    .put("stderr", toUTF8(errStream));
+                .put("exitCode", process.exitValue())
+                .put("stdout", cleanOutput(toUTF8(outStream)))
+                .put("stderr", toUTF8(errStream));
             context.response()
-                    .putHeader("Content-Type", "application/json")
-                    .end(json.toBuffer());
+                .putHeader("Content-Type", "application/json")
+                .end(json.toBuffer());
         } catch(IOException e) {
             error(context, e);
         } finally {
@@ -191,18 +191,18 @@ public class JattachDebug implements Plugin {
 
     private static void badRequest(RoutingContext context, String message) {
         context.response()
-                .setStatusCode(400)
-                .setStatusMessage(message)
-                .putHeader("Content-Type", "application/json")
-                .end(new JsonObject().put("error", true).put("message", message).toBuffer());
+            .setStatusCode(400)
+            .setStatusMessage(message)
+            .putHeader("Content-Type", "application/json")
+            .end(new JsonObject().put("error", true).put("message", message).toBuffer());
     }
 
     private static void error(RoutingContext context, Throwable t) {
         context.response()
-                .setStatusCode(500)
-                .setStatusMessage("Internal Server Error")
-                .putHeader("Content-Type", "application/json")
-                .end(RequestUtils.encodeThrowable(context, t).toBuffer());
+            .setStatusCode(500)
+            .setStatusMessage("Internal Server Error")
+            .putHeader("Content-Type", "application/json")
+            .end(RequestUtils.encodeThrowable(context, t).toBuffer());
     }
 
     private static String cleanOutput(String stdout) {

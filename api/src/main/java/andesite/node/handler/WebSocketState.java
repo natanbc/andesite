@@ -14,7 +14,7 @@ public interface WebSocketState {
      * @return The user id.
      */
     String user();
-
+    
     /**
      * The websocket connection. Can be used to send payloads to clients. All sent payloads
      * sent must be valid json objects.
@@ -22,14 +22,14 @@ public interface WebSocketState {
      * @return The websocket connection.
      */
     ServerWebSocket ws();
-
+    
     /**
      * The id of this connection. Used for resuming.
      *
      * @return The id of this connection.
      */
     String connectionId();
-
+    
     /**
      * Whether or not this connection is lavalink compatible.
      *
@@ -38,7 +38,7 @@ public interface WebSocketState {
      * @return Whether or not this connection is lavalink compatible.
      */
     boolean lavalink();
-
+    
     /**
      * Gets a value stored in this connection. Similar to ThreadLocal but on
      * a connection scope.
@@ -52,20 +52,20 @@ public interface WebSocketState {
      */
     @CheckReturnValue
     <T> T get(@Nonnull Key<T> key);
-
+    
     /**
      * Stores a value in this connection. Similar to ThreadLocal but on
      * a connection scope.
      *
-     * @param key Key to store.
+     * @param key   Key to store.
      * @param value Value to store.
-     * @param <T> Type of object to store.
+     * @param <T>   Type of object to store.
      *
      * @return The old value. May be null.
      */
     @Nullable
     <T> T set(@Nonnull Key<T> key, @Nullable T value);
-
+    
     /**
      * Key used for connection storage. Equality is implemented as identity equality.
      *
@@ -75,11 +75,11 @@ public interface WebSocketState {
      */
     final class Key<T> {
         private final T defaultValue;
-
+        
         public Key(@Nullable T defaultValue) {
             this.defaultValue = defaultValue;
         }
-
+        
         /**
          * The default value for this key.
          *

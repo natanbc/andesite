@@ -4,6 +4,7 @@ import net.dv8tion.jda.core.audio.factory.IAudioSendSystem;
 import net.dv8tion.jda.core.audio.factory.IPacketProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.NoRouteToHostException;
@@ -12,23 +13,24 @@ import java.net.SocketException;
 /**
  * Taken from JDA code and adapted to work wih magma.
  *
- * @see <a href="https://github.com/DV8FromTheWorld/JDA/blob/44d925d584ee8590c98d7fda4aa4e518a9d9047d/src/main/java/net/dv8tion/jda/core/audio/factory/DefaultSendSystem.java">JDA source</a>
+ * @see <a href="https://github.com/DV8FromTheWorld/JDA/blob/44d925d584ee8590c98d7fda4aa4e518a9d9047d/src/main/java/net/dv8tion/jda/core/audio/factory/DefaultSendSystem.java">JDA
+ * source</a>
  */
 public class JDASendSystem implements IAudioSendSystem {
     private static final int OPUS_FRAME_TIME_AMOUNT = 20;//This is 20 milliseconds. We are only dealing with 20ms opus packets.
     private static final Logger log = LoggerFactory.getLogger(JDASendSystem.class);
-
+    
     private final IPacketProvider packetProvider;
     private Thread sendThread;
-
+    
     public JDASendSystem(IPacketProvider packetProvider) {
         this.packetProvider = packetProvider;
     }
-
+    
     @Override
     public void start() {
         final DatagramSocket udpSocket = packetProvider.getUdpSocket();
-
+        
         sendThread = new Thread(() -> {
             long lastFrameSent = System.currentTimeMillis();
             boolean sentPacket = true;
@@ -36,7 +38,7 @@ public class JDASendSystem implements IAudioSendSystem {
                 try {
                     boolean changeTalking = !sentPacket || (System.currentTimeMillis() - lastFrameSent) > OPUS_FRAME_TIME_AMOUNT;
                     DatagramPacket packet = packetProvider.getNextPacket(changeTalking);
-
+                    
                     sentPacket = packet != null;
                     if(sentPacket) {
                         udpSocket.send(packet);
@@ -79,7 +81,7 @@ public class JDASendSystem implements IAudioSendSystem {
         sendThread.setPriority((Thread.NORM_PRIORITY + Thread.MAX_PRIORITY) / 2);
         sendThread.start();
     }
-
+    
     @Override
     public void shutdown() {
         if(sendThread != null) {

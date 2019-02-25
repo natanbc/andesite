@@ -12,11 +12,11 @@ import javax.annotation.Nullable;
 
 public class VolumeConfig implements Config {
     private float volume = 1f;
-
+    
     public float volume() {
         return volume;
     }
-
+    
     public void setVolume(float volume) {
         if(volume <= 0) {
             throw new IllegalArgumentException("Volume <= 0.0");
@@ -26,29 +26,29 @@ public class VolumeConfig implements Config {
         }
         this.volume = volume;
     }
-
+    
     @Nonnull
     @Override
     public String name() {
         return "volume";
     }
-
+    
     @Override
     public boolean enabled() {
         return FilterUtil.VOLUME_AVAILABLE && Config.isSet(volume, 1f);
     }
-
+    
     @Nullable
     @Override
     public AudioFilter create(AudioDataFormat format, FloatPcmAudioFilter output) {
         return new VolumePcmAudioFilter(output, format.channelCount)
-                .setVolume(volume);
+            .setVolume(volume);
     }
-
+    
     @Nonnull
     @Override
     public JsonObject encode() {
         return new JsonObject()
-                .put("volume", volume);
+            .put("volume", volume);
     }
 }

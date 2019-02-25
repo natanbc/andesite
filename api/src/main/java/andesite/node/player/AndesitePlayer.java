@@ -29,7 +29,7 @@ public interface AndesitePlayer extends BasePlayer {
      * While it doesn't return one, the current provider will be used instead.
      */
     void switchToMixer();
-
+    
     /**
      * Requests the player switches to the default provider as soon as possible.
      *
@@ -57,7 +57,7 @@ public interface AndesitePlayer extends BasePlayer {
         DISABLING(true);
         
         private final boolean isUsingMixer;
-    
+        
         MixerState(boolean isUsingMixer) {
             this.isUsingMixer = isUsingMixer;
         }

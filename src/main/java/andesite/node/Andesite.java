@@ -53,17 +53,17 @@ public class Andesite implements NodeState {
         return t;
     }));
     private static final Map<String, Supplier<AudioSourceManager>> SOURCE_MANAGERS = Map.of(
-            "bandcamp", BandcampAudioSourceManager::new,
-            "beam", BeamAudioSourceManager::new,
-            "http", HttpAudioSourceManager::new,
-            "local", LocalAudioSourceManager::new,
-            "soundcloud", SoundCloudAudioSourceManager::new,
-            "twitch", TwitchStreamAudioSourceManager::new,
-            "vimeo", VimeoAudioSourceManager::new,
-            "youtube", YoutubeAudioSourceManager::new
+        "bandcamp", BandcampAudioSourceManager::new,
+        "beam", BeamAudioSourceManager::new,
+        "http", HttpAudioSourceManager::new,
+        "local", LocalAudioSourceManager::new,
+        "soundcloud", SoundCloudAudioSourceManager::new,
+        "twitch", TwitchStreamAudioSourceManager::new,
+        "vimeo", VimeoAudioSourceManager::new,
+        "youtube", YoutubeAudioSourceManager::new
     );
     private static final Set<String> DISABLED_BY_DEFAULT = Set.of("http", "local");
-
+    
     private final PluginManager pluginManager = new PluginManager(this);
     private final AtomicLong nextBufferId = new AtomicLong();
     private final Map<Long, EventBuffer> buffers = new ConcurrentHashMap<>();
@@ -76,7 +76,7 @@ public class Andesite implements NodeState {
     private final AudioHandler audioHandler;
     private final RequestHandler handler;
     private final Set<String> enabledSources;
-
+    
     private Andesite(@Nonnull Vertx vertx, @Nonnull Config config) throws IOException {
         var plugins = new File("plugins").listFiles();
         if(plugins != null) {
@@ -100,10 +100,10 @@ public class Andesite implements NodeState {
         pluginManager.configurePlayerManager(playerManager);
         pluginManager.configurePlayerManager(pcmPlayerManager);
         this.enabledSources = SOURCE_MANAGERS.keySet().stream()
-                .filter(key -> config.getBoolean("source." + key, !DISABLED_BY_DEFAULT.contains(key)))
-                .peek(key -> playerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
-                .peek(key -> pcmPlayerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
-                .collect(Collectors.toSet());
+            .filter(key -> config.getBoolean("source." + key, !DISABLED_BY_DEFAULT.contains(key)))
+            .peek(key -> playerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
+            .peek(key -> pcmPlayerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
+            .collect(Collectors.toSet());
         log.info("Enabled default sources: {}", enabledSources);
         //we need to set the cleanup to basically never run so mixer players aren't destroyed without need.
         playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
@@ -116,24 +116,24 @@ public class Andesite implements NodeState {
         pcmPlayerManager.getConfiguration().setFilterHotSwapEnabled(true);
         pcmPlayerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
     }
-
+    
     @Nonnull
     @CheckReturnValue
     public PluginManager pluginManager() {
         return pluginManager;
     }
-
+    
     @Nonnull
     @CheckReturnValue
     public Set<String> enabledSources() {
         return enabledSources;
     }
-
+    
     @CheckReturnValue
     public long nextConnectionId() {
         return nextBufferId.incrementAndGet();
     }
-
+    
     @Nonnull
     @CheckReturnValue
     public EventBuffer createEventBuffer(long id) {
@@ -141,68 +141,68 @@ public class Andesite implements NodeState {
         buffers.put(id, buffer);
         return buffer;
     }
-
+    
     @Nullable
     public EventBuffer removeEventBuffer(long id) {
         return buffers.remove(id);
     }
-
+    
     @Nonnull
     @CheckReturnValue
     @Override
     public Config config() {
         return config;
     }
-
+    
     @Nonnull
     @CheckReturnValue
     @Override
     public Vertx vertx() {
         return vertx;
     }
-
+    
     @Nonnull
     @CheckReturnValue
     @Override
     public RequestHandler requestHandler() {
         return handler;
     }
-
+    
     @Nonnull
     @CheckReturnValue
     @Override
     public AudioPlayerManager audioPlayerManager() {
         return playerManager;
     }
-
+    
     @Nonnull
     @CheckReturnValue
     @Override
     public AudioPlayerManager pcmAudioPlayerManager() {
         return pcmPlayerManager;
     }
-
+    
     @Nonnull
     @CheckReturnValue
     @Override
     public EventDispatcherImpl dispatcher() {
         return dispatcher;
     }
-
+    
     @Nonnull
     @CheckReturnValue
     @Override
     public AudioHandler audioHandler() {
         return audioHandler;
     }
-
+    
     @Nonnull
     @CheckReturnValue
     @Override
     public Map<String, Player> playerMap(@Nonnull String userId) {
         return players.computeIfAbsent(userId, __ -> new ConcurrentHashMap<>());
     }
-
+    
     @Nonnull
     @CheckReturnValue
     @Override
@@ -213,7 +213,7 @@ public class Andesite implements NodeState {
             return player;
         });
     }
-
+    
     @Nullable
     @CheckReturnValue
     @Override
@@ -221,7 +221,7 @@ public class Andesite implements NodeState {
         var map = players.get(userId);
         return map == null ? null : map.get(guildId);
     }
-
+    
     @Nullable
     @Override
     public Player removePlayer(@Nonnull String userId, @Nonnull String guildId) {
@@ -233,21 +233,32 @@ public class Andesite implements NodeState {
         }
         return player;
     }
-
+    
     @Nonnull
     @CheckReturnValue
     @Override
     public Stream<Player> allPlayers() {
         return players.values().stream().flatMap(m -> m.values().stream());
     }
-
+    
     @Nonnull
     @CheckReturnValue
     @Override
     public Cleaner cleaner() {
         return CLEANER.get();
     }
-
+    
+    @Nonnull
+    @CheckReturnValue
+    private AudioHandler createAudioHandler(@Nonnull Config config) {
+        switch(config.get("audio-handler", "magma")) {
+            case "magma":
+                return new MagmaHandler(this);
+            default:
+                throw new IllegalArgumentException("No audio handler with type " + config.get("audio-handler"));
+        }
+    }
+    
     public static void main(String[] args) throws IOException {
         log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
         var config = ConfigUtil.load();
@@ -256,32 +267,22 @@ public class Andesite implements NodeState {
         Init.postInit(andesite);
         //NOTE: use the bitwise or operator, as it forces evaluation of all elements
         if(!(RestHandler.setup(andesite)
-                | SingyeongHandler.setup(andesite)
-                | andesite.pluginManager().startListeners())) {
+            | SingyeongHandler.setup(andesite)
+            | andesite.pluginManager().startListeners())) {
             log.error("No handlers enabled, aborting");
             System.exit(-1);
         }
         log.info("Handlers: REST {}, WebSocket {}, Singyeong {}",
-                config.getBoolean("transport.http.rest", true) ? "enabled" : "disabled",
-                config.getBoolean("transport.http.ws", true) ? "enabled" : "disabled",
-                config.getBoolean("transport.singyeong.enabled", false) ? "enabled" : "disabled"
+            config.getBoolean("transport.http.rest", true) ? "enabled" : "disabled",
+            config.getBoolean("transport.http.ws", true) ? "enabled" : "disabled",
+            config.getBoolean("transport.singyeong.enabled", false) ? "enabled" : "disabled"
         );
         log.info("Filters: Karaoke {}, Timescale {}, Tremolo {}, Vibrato {}, Volume {}",
-                FilterUtil.KARAOKE_AVAILABLE ? "available" : "unavailable",
-                FilterUtil.TIMESCALE_AVAILABLE ? "available" : "unavailable",
-                FilterUtil.TREMOLO_AVAILABLE ? "available" : "unavailable",
-                FilterUtil.VIBRATO_AVAILABLE ? "available" : "unavailable",
-                FilterUtil.VOLUME_AVAILABLE ? "available" : "unavailable"
+            FilterUtil.KARAOKE_AVAILABLE ? "available" : "unavailable",
+            FilterUtil.TIMESCALE_AVAILABLE ? "available" : "unavailable",
+            FilterUtil.TREMOLO_AVAILABLE ? "available" : "unavailable",
+            FilterUtil.VIBRATO_AVAILABLE ? "available" : "unavailable",
+            FilterUtil.VOLUME_AVAILABLE ? "available" : "unavailable"
         );
-    }
-
-    @Nonnull
-    @CheckReturnValue
-    private AudioHandler createAudioHandler(@Nonnull Config config) {
-        switch(config.get("audio-handler", "magma")) {
-            case "magma": return new MagmaHandler(this);
-            default:
-                throw new IllegalArgumentException("No audio handler with type " + config.get("audio-handler"));
-        }
     }
 }

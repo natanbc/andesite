@@ -16,14 +16,14 @@ public interface AudioProvider extends AutoCloseable {
      * @return Whether or not an audio frame was loaded.
      */
     boolean canProvide();
-
+    
     /**
      * Returns the data for the latest frame.
      *
      * @return Buffer containing the frame's data.
      */
     ByteBuffer provide();
-
+    
     /**
      * Runs any cleanup actions. Called when this provider is removed with
      * {@link AudioHandler#setProvider(String, String, AudioProvider)} or

@@ -24,19 +24,19 @@ import java.util.List;
 
 public abstract class PluginLoader extends ClassLoader {
     private static final Logger log = LoggerFactory.getLogger(PluginLoader.class);
-
+    
     @Nullable
     @CheckReturnValue
     public abstract InputStream openFile(@Nonnull String path) throws IOException;
-
+    
     @Nonnull
     @CheckReturnValue
     public abstract URL baseUrl();
-
+    
     @Nullable
     @CheckReturnValue
     public abstract URL createUrl(@Nonnull String path);
-
+    
     @Nonnull
     @CheckReturnValue
     public List<Plugin> loadPlugins() {
@@ -55,17 +55,17 @@ public abstract class PluginLoader extends ClassLoader {
             }
             log.info("Loading plugin {}", v);
             try {
-                var c = loadClass((String)v);
+                var c = loadClass((String) v);
                 var ctor = c.getDeclaredConstructor();
                 ctor.setAccessible(true);
-                list.add((Plugin)ctor.newInstance());
+                list.add((Plugin) ctor.newInstance());
             } catch(Exception e) {
                 throw new IllegalStateException("Unable to load plugin " + v, e);
             }
         }
         return list;
     }
-
+    
     @Nullable
     @CheckReturnValue
     private JsonObject loadManifest() {
@@ -79,12 +79,7 @@ public abstract class PluginLoader extends ClassLoader {
             throw new IllegalArgumentException("Malformed manifest", e);
         }
     }
-
-    @Override
-    protected URL findResource(String name) {
-        return createUrl(name);
-    }
-
+    
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         try(var is = openFile(name.replace('.', '/') + ".class")) {
@@ -93,13 +88,18 @@ public abstract class PluginLoader extends ClassLoader {
             }
             var bytes = is.readAllBytes();
             return defineClass(name, bytes, 0, bytes.length,
-                    new ProtectionDomain(new CodeSource(baseUrl(),
-                            (CodeSigner[])null), new Permissions()));
+                new ProtectionDomain(new CodeSource(baseUrl(),
+                    (CodeSigner[]) null), new Permissions()));
         } catch(IOException e) {
             throw new ClassNotFoundException(name, e);
         }
     }
-
+    
+    @Override
+    protected URL findResource(String name) {
+        return createUrl(name);
+    }
+    
     @Nonnull
     @CheckReturnValue
     public static PluginLoader create(NodeState state, File file) throws IOException {

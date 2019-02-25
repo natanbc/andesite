@@ -11,18 +11,18 @@ import java.util.function.Function;
 
 class NonAllocatingProvider implements AudioProvider {
     private static final Function<MutableAudioFrame, ByteBuffer> INTERNAL_BUFFER_GETTER;
-
+    
     private final ByteBuffer buffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize());
     private final MutableAudioFrame frame = new MutableAudioFrame();
     private final AudioPlayer player;
-
+    
     static {
         try {
             Field f = MutableAudioFrame.class.getDeclaredField("frameBuffer");
             f.setAccessible(true);
             INTERNAL_BUFFER_GETTER = frame -> {
                 try {
-                    return (ByteBuffer)f.get(frame);
+                    return (ByteBuffer) f.get(frame);
                 } catch(Exception impossible) {
                     throw new AssertionError(impossible);
                 }
@@ -31,18 +31,18 @@ class NonAllocatingProvider implements AudioProvider {
             throw new ExceptionInInitializerError(e);
         }
     }
-
+    
     public NonAllocatingProvider(AudioPlayer player) {
         this.player = player;
         frame.setBuffer(buffer);
     }
-
+    
     @Override
     public boolean canProvide() {
         buffer.clear();
         return player.provide(frame);
     }
-
+    
     @Override
     public ByteBuffer provide() {
         if(INTERNAL_BUFFER_GETTER.apply(frame) != buffer) {
@@ -55,7 +55,7 @@ class NonAllocatingProvider implements AudioProvider {
         }
         return buffer.position(0).limit(frame.getDataLength());
     }
-
+    
     @Override
     public void close() {
         //noop

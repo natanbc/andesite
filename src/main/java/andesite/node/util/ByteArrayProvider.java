@@ -11,7 +11,7 @@ public interface ByteArrayProvider {
     @Nonnull
     @CheckReturnValue
     byte[] provide(@Nonnegative int size);
-
+    
     //tested with jdk 11+28, will probably work with any hotspot compatible
     //array layout
     //don't complain if it crashes - this code modifies internal jvm data
@@ -45,7 +45,7 @@ public interface ByteArrayProvider {
             return array;
         };
     }
-
+    
     @Nonnull
     @CheckReturnValue
     static ByteArrayProvider createNew() {

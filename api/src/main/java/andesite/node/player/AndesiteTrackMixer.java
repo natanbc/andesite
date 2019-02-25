@@ -15,7 +15,7 @@ public interface AndesiteTrackMixer extends AudioProvider {
     @Nonnull
     @CheckReturnValue
     Map<String, MixerPlayer> players();
-
+    
     /**
      * Gets or creates a new player with the provided key. This key will be
      * used to store this player in the map.
@@ -27,7 +27,7 @@ public interface AndesiteTrackMixer extends AudioProvider {
     @Nonnull
     @CheckReturnValue
     MixerPlayer getPlayer(@Nonnull String key);
-
+    
     /**
      * Returns the current player for the provided key.
      *
@@ -37,7 +37,7 @@ public interface AndesiteTrackMixer extends AudioProvider {
      */
     @CheckReturnValue
     MixerPlayer getExistingPlayer(@Nonnull String key);
-
+    
     /**
      * Removes a player with the provided id.
      *

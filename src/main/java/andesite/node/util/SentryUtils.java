@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
 class SentryUtils {
     private static final String SENTRY_APPENDER_NAME = "SENTRY";
     private static SentryClient client;
-
+    
     static void setup(Config config) {
         var client = Sentry.init(config.get("sentry.dsn"));
         client.setRelease(Version.VERSION);
@@ -33,22 +33,22 @@ class SentryUtils {
         SentryUtils.client = client;
         var loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
         var root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
-
+        
         var sentryAppender = (SentryAppender) root.getAppender(SENTRY_APPENDER_NAME);
         if(sentryAppender == null) {
             sentryAppender = new SentryAppender();
             sentryAppender.setName(SENTRY_APPENDER_NAME);
-
+            
             var warningsOrAboveFilter = new ThresholdFilter();
             warningsOrAboveFilter.setLevel(config.get("sentry.log-level", Level.WARN.levelStr).toUpperCase());
             warningsOrAboveFilter.start();
             sentryAppender.addFilter(warningsOrAboveFilter);
-
+            
             sentryAppender.setContext(loggerContext);
             root.addAppender(sentryAppender);
         }
     }
-
+    
     static void configureWarns(NodeState state) {
         state.dispatcher().register(new AndesiteEventListener() {
             @Override
@@ -57,21 +57,21 @@ class SentryUtils {
                                           @Nullable String reason, boolean byRemote) {
                 if(byRemote) {
                     client.sendEvent(new EventBuilder()
-                            .withLevel(Event.Level.WARNING)
-                            .withMessage("Websocket closed by server")
-                            .withExtra("code", closeCode)
-                            .withExtra("reason", reason)
-                            .withExtra("user", userId)
-                            .withExtra("guild", guildId)
+                        .withLevel(Event.Level.WARNING)
+                        .withMessage("Websocket closed by server")
+                        .withExtra("code", closeCode)
+                        .withExtra("reason", reason)
+                        .withExtra("user", userId)
+                        .withExtra("guild", guildId)
                     );
                 } else {
                     client.sendEvent(new EventBuilder()
-                            .withLevel(Event.Level.INFO)
-                            .withMessage("Websocket closed by client")
-                            .withExtra("code", closeCode)
-                            .withExtra("reason", reason)
-                            .withExtra("user", userId)
-                            .withExtra("guild", guildId)
+                        .withLevel(Event.Level.INFO)
+                        .withMessage("Websocket closed by client")
+                        .withExtra("code", closeCode)
+                        .withExtra("reason", reason)
+                        .withExtra("user", userId)
+                        .withExtra("guild", guildId)
                     );
                 }
             }

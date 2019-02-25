@@ -13,7 +13,7 @@ public class ByteRingBuffer implements Iterable<Byte> {
     private final byte[] array;
     private int position;
     private int size;
-
+    
     public ByteRingBuffer(int size) {
         if(size < 1) {
             throw new IllegalArgumentException("Size < 1");
@@ -39,7 +39,7 @@ public class ByteRingBuffer implements Iterable<Byte> {
     public void clear() {
         position = 0;
         size = 0;
-        Arrays.fill(array, (byte)0);
+        Arrays.fill(array, (byte) 0);
     }
     
     /**
@@ -102,7 +102,7 @@ public class ByteRingBuffer implements Iterable<Byte> {
      *
      * @param n Index of the wanted element.
      *
-     * @return  The value of the {@code n}th last element.
+     * @return The value of the {@code n}th last element.
      *
      * @throws NoSuchElementException If {@code n >= size()}.
      */
@@ -112,29 +112,19 @@ public class ByteRingBuffer implements Iterable<Byte> {
         }
         return array[sub(position, n + 1, array.length)];
     }
-
-    private static int sub(int i, int j, int modulus) {
-        if ((i -= j) < 0) i += modulus;
-        return i;
-    }
-
-    private  static int inc(int i, int modulus) {
-        if (++i >= modulus) i = 0;
-        return i;
-    }
-
+    
     @Nonnull
     @Override
     public Iterator<Byte> iterator() {
         return new Iterator<>() {
             private int cursor = position;
             private int remaining = size;
-
+            
             @Override
             public boolean hasNext() {
                 return remaining > 0;
             }
-
+            
             @Override
             public Byte next() {
                 var v = array[cursor];
@@ -143,5 +133,15 @@ public class ByteRingBuffer implements Iterable<Byte> {
                 return v;
             }
         };
+    }
+    
+    private static int sub(int i, int j, int modulus) {
+        if((i -= j) < 0) i += modulus;
+        return i;
+    }
+    
+    private static int inc(int i, int modulus) {
+        if(++i >= modulus) i = 0;
+        return i;
     }
 }

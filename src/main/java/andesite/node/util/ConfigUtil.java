@@ -17,7 +17,7 @@ import java.nio.file.Paths;
 
 public class ConfigUtil {
     private static final Logger log = LoggerFactory.getLogger(ConfigUtil.class);
-
+    
     public static Config load() throws IOException {
         var filename = Config.getGlobalConfig("config-file");
         var path = Paths.get(filename == null ? "config.json" : filename);
@@ -27,21 +27,21 @@ public class ConfigUtil {
         }
         return new Config();
     }
-
+    
     private static class JsonConfig extends Config {
         private JsonObject json;
-
+        
         public JsonConfig(Path configPath) throws IOException {
             this.json = new JsonObject(Files.readString(configPath, StandardCharsets.UTF_8));
         }
-
+        
         @Override
         @Nullable
         @CheckReturnValue
         protected String loadValue(@Nonnull String key) {
             return get(json, key.split("\\."), 0);
         }
-
+        
         @Nullable
         private static String get(@Nonnull JsonObject object, @Nonnull String[] parts, @Nonnegative int idx) {
             if(idx == parts.length - 1) {
@@ -49,7 +49,7 @@ public class ConfigUtil {
                 return v == null ? null : v.toString();
             }
             Object obj = object.getValue(parts[idx], null);
-            return obj instanceof JsonObject ? get((JsonObject)obj, parts, idx + 1) : null;
+            return obj instanceof JsonObject ? get((JsonObject) obj, parts, idx + 1) : null;
         }
     }
 }

@@ -17,16 +17,16 @@ import java.time.Instant;
 
 public class JFRDebug implements Plugin {
     private static final Logger log = LoggerFactory.getLogger(JFRDebug.class);
-
+    
     @Override
     public boolean requiresRouter() {
         return true;
     }
-
+    
     @Override
     public void configureRouter(@Nonnull NodeState state, @Nonnull Router router) {
         var r = Router.router(state.vertx());
-
+        
         r.route().handler(c -> {
             var config = state.config();
             var password = config.get("debug-password");
@@ -39,7 +39,7 @@ public class JFRDebug implements Plugin {
             }
             c.next();
         });
-
+        
         r.get("/state").handler(c -> {
             var recording = JFRState.current();
             var response = new JsonObject().put("recording", recording != null);
@@ -48,33 +48,33 @@ public class JFRDebug implements Plugin {
                 var settings = new JsonObject();
                 recording.getSettings().forEach(settings::put);
                 response.put("maxSize", recording.getMaxSize())
-                        .put("size", recording.getSize())
-                        .put("id", recording.getId())
-                        .put("duration", Instant.now()
-                                .minusMillis(recording.getStartTime().toEpochMilli()).toEpochMilli())
-                        .put("name", recording.getName())
-                        .put("settings", settings)
-                        .put("destination", dest == null ? null : dest.toAbsolutePath().toString());
+                    .put("size", recording.getSize())
+                    .put("id", recording.getId())
+                    .put("duration", Instant.now()
+                        .minusMillis(recording.getStartTime().toEpochMilli()).toEpochMilli())
+                    .put("name", recording.getName())
+                    .put("settings", settings)
+                    .put("destination", dest == null ? null : dest.toAbsolutePath().toString());
             }
             c.response()
-                    .putHeader("Content-Type", "application/json")
-                    .end(response.toBuffer());
+                .putHeader("Content-Type", "application/json")
+                .end(response.toBuffer());
         });
-
+        
         r.get("/events").handler(c -> {
             var array = new JsonArray();
             for(var event : FlightRecorder.getFlightRecorder().getEventTypes()) {
                 array.add(new JsonObject()
-                        .put("name", event.getName())
-                        .put("label", event.getLabel())
-                        .put("description", event.getDescription())
-                        .put("id", event.getId()));
+                    .put("name", event.getName())
+                    .put("label", event.getLabel())
+                    .put("description", event.getDescription())
+                    .put("id", event.getId()));
             }
             c.response()
-                    .putHeader("Content-Type", "application/json")
-                    .end(array.toBuffer());
+                .putHeader("Content-Type", "application/json")
+                .end(array.toBuffer());
         });
-
+        
         r.post("/start").handler(c -> {
             var events = c.queryParams().get("events");
             if(events == null) {
@@ -108,17 +108,17 @@ public class JFRDebug implements Plugin {
                 } catch(Exception e) {
                     recording.close();
                     c.response()
-                            .setStatusCode(500)
-                            .setStatusMessage("Error configuring recorder")
-                            .putHeader("Content-Type", "application/json")
-                            .end(RequestUtils.encodeThrowable(c, e).toBuffer());
+                        .setStatusCode(500)
+                        .setStatusMessage("Error configuring recorder")
+                        .putHeader("Content-Type", "application/json")
+                        .end(RequestUtils.encodeThrowable(c, e).toBuffer());
                     return;
                 }
             }
             recording.start();
             c.response().setStatusCode(204).end();
         });
-
+        
         r.post("/stop").handler(c -> {
             var recording = JFRState.stop();
             if(recording == null) {
@@ -138,25 +138,25 @@ public class JFRDebug implements Plugin {
                     c.response().setStatusCode(204).end();
                 } catch(IOException e) {
                     c.response()
-                            .setStatusCode(500)
-                            .setStatusMessage("Error writing response")
-                            .putHeader("Content-Type", "application/json")
-                            .end(RequestUtils.encodeThrowable(c, e).toBuffer());
+                        .setStatusCode(500)
+                        .setStatusMessage("Error writing response")
+                        .putHeader("Content-Type", "application/json")
+                        .end(RequestUtils.encodeThrowable(c, e).toBuffer());
                 }
             }
         });
-
+        
         router.mountSubRouter("/jfr", r);
     }
-
+    
     private static void error(@Nonnull RoutingContext context, @Nonnegative int code, @Nonnull String message) {
         context.response()
-                .setStatusCode(code).setStatusMessage(message)
-                .putHeader("Content-Type", "application/json")
-                .end(new JsonObject()
-                        .put("code", code)
-                        .put("message", message)
-                        .toBuffer()
-                );
+            .setStatusCode(code).setStatusMessage(message)
+            .putHeader("Content-Type", "application/json")
+            .end(new JsonObject()
+                .put("code", code)
+                .put("message", message)
+                .toBuffer()
+            );
     }
 }

@@ -12,22 +12,22 @@ class AllocatingProvider implements AudioProvider {
     private final ByteBuffer buffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize());
     private final AudioPlayer player;
     private AudioFrame lastFrame;
-
+    
     public AllocatingProvider(AudioPlayer player) {
         this.player = player;
     }
-
+    
     @Override
     public boolean canProvide() {
         return (lastFrame = player.provide()) != null;
     }
-
+    
     @Override
     public ByteBuffer provide() {
         //the correct way would be lastFrame.getData(buffer.array(), 0);
         //but due to a bug in lavaplayer, the offset argument is used as
         //the length of the data to copy
-
+        
         //instanceof check just to be safe, the bug is only present
         //in ImmutableAudioFrame
         if(lastFrame instanceof ImmutableAudioFrame) {
@@ -37,7 +37,7 @@ class AllocatingProvider implements AudioProvider {
         }
         return buffer.position(0).limit(lastFrame.getDataLength());
     }
-
+    
     @Override
     public void close() {
         //noop

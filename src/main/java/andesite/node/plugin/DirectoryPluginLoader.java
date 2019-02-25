@@ -11,11 +11,11 @@ import java.net.URL;
 
 public class DirectoryPluginLoader extends PluginLoader {
     private final File base;
-
+    
     public DirectoryPluginLoader(File base) {
         this.base = base;
     }
-
+    
     @Nullable
     @Override
     public InputStream openFile(@Nonnull String path) throws IOException {
@@ -25,7 +25,7 @@ public class DirectoryPluginLoader extends PluginLoader {
         }
         return new FileInputStream(file);
     }
-
+    
     @Nonnull
     @Override
     public URL baseUrl() {
@@ -35,7 +35,7 @@ public class DirectoryPluginLoader extends PluginLoader {
             throw new AssertionError(e);
         }
     }
-
+    
     @Nullable
     @Override
     public URL createUrl(@Nonnull String path) {

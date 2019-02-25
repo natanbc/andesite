@@ -23,14 +23,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class WebSocketHandler {
     private static final Logger log = LoggerFactory.getLogger(WebSocketHandler.class);
-
+    
     public static void setup(@Nonnull Andesite andesite, @Nonnull Router router) {
         router.get("/websocket").handler(handler(andesite, false));
         router.get(
-                andesite.config().get("lavalink.ws-path", "/lavalink")
+            andesite.config().get("lavalink.ws-path", "/lavalink")
         ).handler(handler(andesite, true));
     }
-
+    
     @Nonnull
     @CheckReturnValue
     private static Handler<RoutingContext> handler(@Nonnull Andesite andesite, boolean lavalinkRoute) {
@@ -43,11 +43,11 @@ public class WebSocketHandler {
                 var userId = context.<String>get("user-id");
                 var llQuery = context.queryParam("lavalink");
                 var lavalinkConnection = lavalinkRoute
-                        || "lavalink".equalsIgnoreCase(req.getHeader("Andesite-Compat"))
-                        || llQuery != null && !llQuery.isEmpty();
+                    || "lavalink".equalsIgnoreCase(req.getHeader("Andesite-Compat"))
+                    || llQuery != null && !llQuery.isEmpty();
                 log.info("New {}connection from {} with id {}",
-                        lavalinkConnection ? "lavalink " : "",
-                        context.request().remoteAddress(), id);
+                    lavalinkConnection ? "lavalink " : "",
+                    context.request().remoteAddress(), id);
                 var resumeId = context.request().getHeader("Andesite-Resume-Id");
                 if(resumeId != null) {
                     try {
@@ -57,15 +57,16 @@ public class WebSocketHandler {
                             andesite.allPlayers().forEach(p -> p.eventListeners().remove(buffer));
                             buffer.empty(json -> ws.writeFinalTextFrame(json.encode()));
                         }
-                    } catch(Exception ignored) {}
+                    } catch(Exception ignored) {
+                    }
                 }
                 ws.writeTextMessage(new JsonObject()
-                        .put("op", "connection-id")
-                        //making it a string allows a future change of the
-                        //id format without breaking clients - the actual
-                        //format is opaque to them.
-                        .put("id", String.valueOf(id))
-                        .encode()
+                    .put("op", "connection-id")
+                    //making it a string allows a future change of the
+                    //id format without breaking clients - the actual
+                    //format is opaque to them.
+                    .put("id", String.valueOf(id))
+                    .encode()
                 );
                 ws.frameHandler(new FrameHandler(andesite, userId, ws, id, lavalinkConnection));
             } else {
@@ -73,7 +74,7 @@ public class WebSocketHandler {
             }
         };
     }
-
+    
     private static class FrameHandler implements Handler<WebSocketFrame>, WebSocketState {
         private final Map<Key<?>, Object> userData = new HashMap<>();
         private final Andesite andesite;
@@ -89,18 +90,18 @@ public class WebSocketHandler {
                                           @Nonnull String guildId, int closeCode,
                                           @Nullable String reason, boolean byRemote) {
                 var payload = new JsonObject()
-                        .put("op", "event")
-                        .put("type", "WebSocketClosedEvent")
-                        .put("userId", userId)
-                        .put("guildId", guildId)
-                        .put("reason", reason)
-                        .put("code", closeCode)
-                        .put("byRemote", byRemote);
+                    .put("op", "event")
+                    .put("type", "WebSocketClosedEvent")
+                    .put("userId", userId)
+                    .put("guildId", guildId)
+                    .put("reason", reason)
+                    .put("code", closeCode)
+                    .put("byRemote", byRemote);
                 ws.writeFinalTextFrame(payload.encode());
             }
         };
         private long timeout;
-
+        
         FrameHandler(@Nonnull Andesite andesite, @Nonnull String user,
                      @Nonnull ServerWebSocket ws, long connectionId, boolean lavalink) {
             this.andesite = andesite;
@@ -112,8 +113,8 @@ public class WebSocketHandler {
                 this.timerId = andesite.vertx().setPeriodic(30_000, __ -> {
                     var stats = andesite.requestHandler().nodeStatsForLavalink();
                     ws.writeFinalTextFrame(stats
-                            .put("op", "stats")
-                            .encode());
+                        .put("op", "stats")
+                        .encode());
                 });
             } else {
                 this.timerId = null;
@@ -121,34 +122,34 @@ public class WebSocketHandler {
             andesite.dispatcher().register(listener);
             ws.closeHandler(__ -> handleClose());
         }
-
+        
         @Override
         public String user() {
             return user;
         }
-
+        
         @Override
         public ServerWebSocket ws() {
             return ws;
         }
-
+        
         @Override
         public String connectionId() {
             return String.valueOf(connectionId);
         }
-
+        
         @Override
         public boolean lavalink() {
             return lavalink;
         }
-
+        
         @CheckReturnValue
         @Override
         @SuppressWarnings("unchecked")
         public <T> T get(@Nonnull Key<T> key) {
             return (T) userData.getOrDefault(key, key.defaultValue());
         }
-
+        
         @Nullable
         @CheckReturnValue
         @Override
@@ -156,7 +157,7 @@ public class WebSocketHandler {
         public <T> T set(@Nonnull Key<T> key, @Nullable T value) {
             return (T) userData.put(key, value);
         }
-
+        
         private void handleClose() {
             if(timeout != 0) {
                 var buffer = andesite.createEventBuffer(connectionId);
@@ -172,7 +173,7 @@ public class WebSocketHandler {
             andesite.dispatcher().unregister(listener);
             subscriptions.forEach(p -> p.eventListeners().remove(this));
         }
-
+        
         @Override
         public void handle(@Nonnull WebSocketFrame frame) {
             JsonObject payload;
@@ -185,7 +186,7 @@ public class WebSocketHandler {
                     return;
                 }
             } catch(Exception e) {
-                ws.close((short)4001, "Unable to read frame data as json: " + e);
+                ws.close((short) 4001, "Unable to read frame data as json: " + e);
                 return;
             }
             log.debug("Received payload {}", payload);
@@ -206,10 +207,10 @@ public class WebSocketHandler {
                 }
                 case "get-stats": {
                     ws.writeFinalTextFrame(new JsonObject()
-                            .put("op", "stats")
-                            .put("userId", user)
-                            .put("stats", andesite.requestHandler().nodeStats())
-                            .encode()
+                        .put("op", "stats")
+                        .put("userId", user)
+                        .put("stats", andesite.requestHandler().nodeStats())
+                        .encode()
                     );
                     break;
                 }
@@ -236,7 +237,7 @@ public class WebSocketHandler {
                 }
                 case "play": {
                     andesite.requestHandler().subscribe(user, guild, this,
-                            json -> ws.writeFinalTextFrame(json.encode()));
+                        json -> ws.writeFinalTextFrame(json.encode()));
                     subscriptions.add(andesite.getPlayer(user, guild));
                     var json = andesite.requestHandler().play(user, guild, payload);
                     sendPlayerUpdate(user, guild, json);
@@ -282,14 +283,14 @@ public class WebSocketHandler {
                 }
             }
         }
-
+        
         private void sendPlayerUpdate(@Nonnull String userId, @Nonnull String guildId, @Nullable JsonObject player) {
             if(lavalink && player == null) return;
             var payload = new JsonObject()
-                    .put("op", lavalink ? "playerUpdate" : "player-update")
-                    .put("userId", userId)
-                    .put("guildId", guildId)
-                    .put("state", player);
+                .put("op", lavalink ? "playerUpdate" : "player-update")
+                .put("userId", userId)
+                .put("guildId", guildId)
+                .put("state", player);
             ws.writeFinalTextFrame(payload.encode());
         }
     }
