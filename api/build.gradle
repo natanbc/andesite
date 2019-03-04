@@ -1,5 +1,8 @@
 plugins {
     id 'java-library'
+    id 'maven'
+    id 'maven-publish'
+    id 'com.jfrog.bintray' version '1.8.4'
 }
 
 archivesBaseName = 'andesite-api'
@@ -50,3 +53,60 @@ dependencies {
     api "com.google.code.findbugs:jsr305:$jsr305Version"
 }
 
+task sourceJar(type: Jar) {
+    classifier "sources"
+    from sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier "javadoc"
+    from javadoc.destinationDir
+}
+
+publishing {
+    publications {
+        BintrayRelease(MavenPublication) {
+            from components.java
+            groupId 'com.github.natanbc'
+            artifactId 'andesite-api'
+
+            artifact sourceJar
+            artifact javadocJar
+        }
+    }
+}
+
+bintray {
+    version = project.version
+    user = getProjectProperty("BINTRAY_USERNAME")
+    key = getProjectProperty("BINTRAY_API_KEY")
+    publications = ["BintrayRelease"]
+    pkg {
+        repo = 'maven'
+        name = 'andesite-api'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/natanbc/andesite-node.git'
+        publish = true
+        version {
+            name = project.version.toString()
+            released = new Date()
+        }
+    }
+}
+
+String getProjectProperty(String propertyName) {
+    String property = ""
+    if(hasProperty(propertyName)) {
+        property = project.properties[propertyName]
+    } else {
+        property = System.getenv(propertyName) ?: ""
+    }
+    return property
+}
+
+bintrayUpload {
+    dependsOn build
+
+    onlyIf { !getProjectProperty("bintrayUsername").empty }
+    onlyIf { !getProjectProperty("bintrayApiKey").empty }
+}

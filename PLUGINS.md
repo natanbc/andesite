@@ -53,19 +53,34 @@ A valid plugin root looks like the following
 
 ## Plugin API
 
-The plugin API is exposed with the `api` module. To install it, add [jitpack](https://jitpack.io)
-as a maven repository and the API dependency:
+The plugin API is exposed with the `api` module. You can get it from [bintray](https://bintray.com/natanbc/maven/andesite-api)
 
 ```xml
-<dependency>
-    <groupId>com.github.natanbc.andesite-node</groupId>
-    <artifactId>api</artifactId>
-    <version>VERSION</version>
-</dependency>
+<repositories>
+    <repository>
+      <id>bintray-natanbc-maven</id>
+      <name>bintray</name>
+      <url>https://dl.bintray.com/natanbc/maven</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>com.github.natanbc</groupId>
+        <artifactId>andesite-api</artifactId>
+        <version>VERSION</version>
+    </dependency>
+</dependencies>
 ```
 
 ```gradle
-compile 'com.github.natanbc.andesite-node:api:VERSION'
+repositories {
+	maven { url 'https://dl.bintray.com/natanbc/maven' }
+}
+
+dependencies {
+    compile 'com.github.natanbc:andesite-api:VERSION'
+}
 ```
 
 The `Plugin` interface defines the callbacks andesite will call after loading your plugin.

@@ -33,6 +33,10 @@ deploy:
     script: bash docker_push.sh
     on:
       tags: true
+  - provider: script
+    script: bash -c 'chmod +x gradlew && ./gradlew api:bintrayUpload'
+    on:
+      tags: true
   - provider: pages
     skip-cleanup: true
     local-dir: api/build/docs/javadoc

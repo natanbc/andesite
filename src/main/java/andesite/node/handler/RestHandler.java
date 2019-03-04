@@ -1,6 +1,7 @@
 package andesite.node.handler;
 
 import andesite.node.Andesite;
+import andesite.node.NodeState;
 import andesite.node.Version;
 import andesite.node.util.MemoryBodyHandler;
 import andesite.node.util.RequestUtils;
@@ -242,7 +243,7 @@ public class RestHandler {
         context.response().end(response.toBuffer());
     }
     
-    private static void trackRoutes(@Nonnull Andesite andesite, @Nonnull Router router) {
+    private static void trackRoutes(@Nonnull NodeState state, @Nonnull Router router) {
         router.get("/loadtracks").handler(context -> {
             var identifiers = context.queryParam("identifier");
             if(identifiers == null || identifiers.isEmpty()) {
@@ -251,7 +252,7 @@ public class RestHandler {
             }
             var identifier = identifiers.get(0);
             log.debug("Resolving tracks for {}", identifier);
-            andesite.requestHandler().resolveTracks(identifier)
+            state.requestHandler().resolveTracks(identifier)
                 .thenAccept(json -> context.response().end(json.toBuffer()))
                 .exceptionally(e -> {
                     if(e instanceof FriendlyException) {
@@ -275,7 +276,7 @@ public class RestHandler {
                 error(context, 400, "Missing track query param");
                 return;
             }
-            context.response().end(trackInfo(andesite, encoded.get(0)).toBuffer());
+            context.response().end(trackInfo(state, encoded.get(0)).toBuffer());
         });
         
         router.post("/decodetrack").handler(context -> {
@@ -284,22 +285,22 @@ public class RestHandler {
                 error(context, 400, "Missing track json field");
                 return;
             }
-            context.response().end(trackInfo(andesite, encoded).toBuffer());
+            context.response().end(trackInfo(state, encoded).toBuffer());
         });
         
         router.post("/decodetracks").handler(context -> {
             var encoded = context.getBodyAsJsonArray();
             var response = new JsonArray();
-            encoded.forEach(v -> response.add(trackInfo(andesite, (String) v)));
+            encoded.forEach(v -> response.add(trackInfo(state, (String) v)));
             context.response().end(response.toBuffer());
         });
     }
     
     @Nonnull
     @CheckReturnValue
-    private static JsonObject trackInfo(@Nonnull Andesite andesite, @Nonnull String encodedTrack) {
-        var track = RequestUtils.decodeTrack(andesite.audioPlayerManager(), encodedTrack);
-        return RequestUtils.encodeTrack(andesite.audioPlayerManager(), track);
+    private static JsonObject trackInfo(@Nonnull NodeState state, @Nonnull String encodedTrack) {
+        var track = RequestUtils.decodeTrack(state.audioPlayerManager(), encodedTrack);
+        return RequestUtils.encodeTrack(state.audioPlayerManager(), track);
     }
     
     private static void error(@Nonnull RoutingContext context, @Nonnegative int code, @Nonnull String message) {
