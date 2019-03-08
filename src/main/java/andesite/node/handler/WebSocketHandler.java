@@ -18,6 +18,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -237,7 +238,12 @@ public class WebSocketHandler {
                 }
                 case "play": {
                     andesite.requestHandler().subscribe(user, guild, this,
-                        json -> ws.writeFinalTextFrame(json.encode()));
+                        json -> {
+                            if(Objects.equals("player-update", json.getValue("op", null)) && lavalink) {
+                                json.put("op", "playerUpdate");
+                            }
+                            ws.writeFinalTextFrame(json.encode());
+                        });
                     subscriptions.add(andesite.getPlayer(user, guild));
                     var json = andesite.requestHandler().play(user, guild, payload);
                     sendPlayerUpdate(user, guild, json);

@@ -49,7 +49,7 @@ public class EventEmitter extends AudioEventAdapter {
     
     public void sendPlayerUpdate() {
         sendEvent.accept(new JsonObject()
-            .put("op", "playerUpdate")
+            .put("op", "player-update")
             .put("guildId", player.guildId())
             .put("userId", player.userId())
             .put("state", player.encodeState())

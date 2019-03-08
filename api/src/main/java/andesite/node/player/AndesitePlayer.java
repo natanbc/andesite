@@ -1,9 +1,11 @@
 package andesite.node.player;
 
+import andesite.node.send.AudioProvider;
+
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 
-public interface AndesitePlayer extends BasePlayer {
+public interface AndesitePlayer extends BasePlayer, AudioProvider {
     /**
      * Returns the track mixer for this player.
      *

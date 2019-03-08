@@ -294,6 +294,7 @@ public class RequestHandler implements AndesiteRequestHandler {
                 public void trackLoaded(AudioTrack track) {
                     future.complete(new JsonObject()
                         .put("loadType", "TRACK_LOADED")
+                        .put("playlistInfo", new JsonObject()) //thanks lavalink
                         .put("tracks", new JsonArray()
                             .add(RequestUtils.encodeTrack(andesite.audioPlayerManager(), track))));
                 }

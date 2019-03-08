@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public class Player implements AudioProvider, AndesitePlayer {
+public class Player implements AndesitePlayer {
     private static final Logger log = LoggerFactory.getLogger(Player.class);
     
     private final FrameLossTracker frameLossTracker = new FrameLossTracker();
