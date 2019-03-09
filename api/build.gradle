@@ -107,6 +107,6 @@ String getProjectProperty(String propertyName) {
 bintrayUpload {
     dependsOn build
 
-    onlyIf { !getProjectProperty("bintrayUsername").empty }
-    onlyIf { !getProjectProperty("bintrayApiKey").empty }
+    onlyIf { !getProjectProperty("BINTRAY_USERNAME").empty }
+    onlyIf { !getProjectProperty("BINTRAY_API_KEY").empty }
 }
