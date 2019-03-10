@@ -21,9 +21,16 @@ public class EventEmitter extends AudioEventAdapter {
     }
     
     @Override
+    public void onTrackStart(AudioPlayer player, AudioTrack track) {
+        sendEvent.accept(event("TrackStartEvent", track));
+        sendPlayerUpdate();
+    }
+    
+    @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         sendEvent.accept(event("TrackEndEvent", track)
-            .put("reason", endReason.toString()));
+            .put("reason", endReason.toString())
+            .put("mayStartNext", endReason.mayStartNext));
         sendPlayerUpdate();
     }
     
