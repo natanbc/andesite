@@ -74,13 +74,14 @@ public class RequestUtils {
      *
      * @return The decoded track.
      */
-    @Nonnull
+    @Nullable
     @CheckReturnValue
     public static AudioTrack decodeTrack(@Nonnull AudioPlayerManager playerManager, @Nonnull String base64) {
         try {
-            return playerManager.decodeTrack(new MessageInput(new ByteArrayInputStream(
+            var v = playerManager.decodeTrack(new MessageInput(new ByteArrayInputStream(
                 Base64.getDecoder().decode(base64)
-            ))).decodedTrack;
+            )));
+            return v == null ? null : v.decodedTrack;
         } catch(IOException e) {
             throw new AssertionError(e);
         }

@@ -96,12 +96,16 @@ public class RequestHandler implements AndesiteRequestHandler {
             return player.encodeState();
         }
         var track = RequestUtils.decodeTrack(andesite.audioPlayerManager(), payload.getString("track"));
+        if(track == null) {
+            log.warn("Unable to decode track {}. This will stop the player. Check if the source is enabled.",
+                payload.getString("track"));
+        }
         var start = asLong(payload.getValue("start", payload.getValue("startTime")), 0);
-        if(start != 0) {
+        if(track != null && start != 0) {
             track.setPosition(start);
         }
         var end = asLong(payload.getValue("end", payload.getValue("endTime")), 0);
-        if(end != 0) {
+        if(track != null && end != 0) {
             track.setMarker(new TrackMarker(end, state -> {
                 switch(state) {
                     case REACHED:
@@ -148,16 +152,21 @@ public class RequestHandler implements AndesiteRequestHandler {
             p.setVolume(config.getInteger("volume", p.getVolume()));
             AudioTrack track;
             if(config.containsKey("track")) {
-                track = RequestUtils.decodeTrack(andesite.audioPlayerManager(), config.getString("track"));
-                var start = asLong(config.getValue("start", config.getValue("startTime")), 0);
-                if(start != 0) {
-                    track.setPosition(start);
+                if(config.getValue("track") == null) {
+                    track = null;
+                } else {
+                    track = RequestUtils.decodeTrack(andesite.audioPlayerManager(), config.getString("track"));
+                    var start = asLong(config.getValue("start", config.getValue("startTime")), 0);
+                    if(track != null && start != 0) {
+                        track.setPosition(start);
+                    }
                 }
+                
             } else {
                 track = p.getPlayingTrack();
             }
             var end = asLong(config.getValue("end", config.getValue("endTime")), 0);
-            if(end != 0 && track != null) {
+            if(track != null && end != 0) {
                 track.setMarker(new TrackMarker(end, state -> {
                     switch(state) {
                         case REACHED:
@@ -462,7 +471,7 @@ public class RequestHandler implements AndesiteRequestHandler {
                 .reduce(new JsonArray(), JsonArray::add, JsonArray::addAll))
         ).reduce(new JsonArray(), JsonArray::add, JsonArray::addAll));
         
-        andesite.allPlayers().reduce(new JsonArray(), (array, player) -> {
+        root.put("frameStats", andesite.allPlayers().reduce(new JsonArray(), (array, player) -> {
             if(player.mixerState().isUsingMixer()) {
                 //average these values from the players
                 var count = 0;
@@ -496,7 +505,7 @@ public class RequestHandler implements AndesiteRequestHandler {
                 }
             }
             return array;
-        }, JsonArray::addAll);
+        }, JsonArray::addAll));
         
         return root;
     }

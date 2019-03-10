@@ -243,7 +243,7 @@ Setting the `noreply` field to `true` will prevent a response from being sent (e
 
 | key | type | description |
 |-----|------|-------------|
-| track | string | base64 encoded lavaplayer track |
+| track | string | base64 encoded lavaplayer track. If null, the player is stopped. Only use null for mixer players, for regular players use stop instead. |
 | start | integer/null | timestamp, in milliseconds, to start the track |
 | end | integer/null | timestamp, in milliseconds, to end the track |
 | pause | boolean/null | whether or not to pause the player |

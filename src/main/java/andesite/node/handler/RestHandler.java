@@ -276,7 +276,12 @@ public class RestHandler {
                 error(context, 400, "Missing track query param");
                 return;
             }
-            context.response().end(trackInfo(state, encoded.get(0)).toBuffer());
+            var track = trackInfo(state, encoded.get(0));
+            if(track == null) {
+                error(context, 400, "Unable to decode track. Is the source manager enabled?");
+                return;
+            }
+            context.response().end(track.toBuffer());
         });
         
         router.post("/decodetrack").handler(context -> {
@@ -285,21 +290,36 @@ public class RestHandler {
                 error(context, 400, "Missing track json field");
                 return;
             }
-            context.response().end(trackInfo(state, encoded).toBuffer());
+            var track = trackInfo(state, encoded);
+            if(track == null) {
+                error(context, 400, "Unable to decode track. Is the source manager enabled?");
+                return;
+            }
+            context.response().end(track.toBuffer());
         });
         
         router.post("/decodetracks").handler(context -> {
             var encoded = context.getBodyAsJsonArray();
             var response = new JsonArray();
-            encoded.forEach(v -> response.add(trackInfo(state, (String) v)));
+            encoded.forEach(v -> {
+                var track = trackInfo(state, (String) v);
+                if(track == null) {
+                    track = new JsonObject()
+                        .put("error", "Unable to decode track. Is the source manager enabled?");
+                }
+                response.add(track);
+            });
             context.response().end(response.toBuffer());
         });
     }
     
-    @Nonnull
+    @Nullable
     @CheckReturnValue
     private static JsonObject trackInfo(@Nonnull NodeState state, @Nonnull String encodedTrack) {
         var track = RequestUtils.decodeTrack(state.audioPlayerManager(), encodedTrack);
+        if(track == null) {
+            return null;
+        }
         return RequestUtils.encodeTrack(state.audioPlayerManager(), track);
     }
     
