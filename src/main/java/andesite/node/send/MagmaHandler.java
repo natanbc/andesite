@@ -58,7 +58,7 @@ public class MagmaHandler implements AudioHandler {
                 .build(),
             provider == null ? null : new MagmaSendHandler(provider, byteArrayProvider)
         );
-        if(old != null) {
+        if(old != null && old != provider) {
             old.close();
         }
     }
