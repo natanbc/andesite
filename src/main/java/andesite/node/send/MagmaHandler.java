@@ -51,6 +51,9 @@ public class MagmaHandler implements AudioHandler {
     @Override
     public void setProvider(@Nonnull String userId, @Nonnull String guildId, @Nullable AudioProvider provider) {
         var old = providers.computeIfAbsent(userId, __ -> new ConcurrentHashMap<>()).put(guildId, provider);
+        if(old == provider) {
+            return;
+        }
         magma.setSendHandler(
             MagmaMember.builder()
                 .userId(userId)
@@ -58,7 +61,7 @@ public class MagmaHandler implements AudioHandler {
                 .build(),
             provider == null ? null : new MagmaSendHandler(provider, byteArrayProvider)
         );
-        if(old != null && old != provider) {
+        if(old != null) {
             old.close();
         }
     }
