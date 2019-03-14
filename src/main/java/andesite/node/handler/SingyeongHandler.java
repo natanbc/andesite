@@ -67,6 +67,11 @@ public class SingyeongHandler {
         //used for player event listeners
         var key = new Object();
         
+        client.onInvalid(i ->
+            log.error("Got INVALID response for nonce {} with reason {}",
+                i.nonce(), i.reason())
+        );
+        
         client.onEvent(event -> {
             if(andesite.pluginManager().customHandleSingyeongPayload(event)) {
                 return;

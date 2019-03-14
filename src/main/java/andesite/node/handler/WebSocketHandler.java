@@ -195,6 +195,14 @@ public class WebSocketHandler {
             }
             var user = payload.getString("userId", this.user);
             var guild = payload.getString("guildId");
+            if(user == null) {
+                ws.close((short)4002, "Null user id provided");
+                return;
+            }
+            if(guild == null) {
+                ws.close((short)4002, "Null guild id provided");
+                return;
+            }
             switch(payload.getString("op")) {
                 case "voice-server-update":
                 case "voiceUpdate": {

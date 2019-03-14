@@ -44,13 +44,14 @@ public class RestHandler {
         var router = Router.router(andesite.vertx());
         
         //handle failures for all routes
-        router.route().failureHandler(context ->
+        router.route().failureHandler(context -> {
+            log.error("Error in HTTP handler", context.failure());
             context.response()
                 .setStatusCode(500)
                 .setStatusMessage("Internal server error")
                 .putHeader("Content-Type", "application/json")
-                .end(RequestUtils.encodeFailure(context).toBuffer())
-        );
+                .end(RequestUtils.encodeFailure(context).toBuffer());
+        });
         
         //setup headers
         router.route().handler(context -> {

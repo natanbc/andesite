@@ -38,6 +38,7 @@ class SentryUtils {
         if(sentryAppender == null) {
             sentryAppender = new SentryAppender();
             sentryAppender.setName(SENTRY_APPENDER_NAME);
+            sentryAppender.start();
             
             var warningsOrAboveFilter = new ThresholdFilter();
             warningsOrAboveFilter.setLevel(config.get("sentry.log-level", Level.WARN.levelStr).toUpperCase());
