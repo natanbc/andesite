@@ -1,8 +1,8 @@
 package andesite.node.handler;
 
 import andesite.node.Andesite;
+import andesite.node.player.BasePlayer;
 import andesite.node.player.FrameLossCounter;
-import andesite.node.player.filter.FilterChainConfiguration;
 import andesite.node.util.RequestUtils;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -172,16 +172,12 @@ public class RequestHandler implements AndesiteRequestHandler {
                         case REACHED:
                         case BYPASSED:
                         case LATE:
-                            player.audioPlayer().stopTrack();
+                            mixerPlayer.audioPlayer().stopTrack();
                     }
                 }));
             }
             if(config.containsKey("filters")) {
-                var cfg = player.filterConfig();
-                updateFilters(cfg, config.getJsonObject("filters"));
-                if(cfg.isEnabled()) {
-                    p.setFilterFactory(cfg.factory());
-                }
+                updateFilters(mixerPlayer, config.getJsonObject("filters"));
             }
             if(track != p.getPlayingTrack()) {
                 p.startTrack(track, false);
@@ -243,7 +239,7 @@ public class RequestHandler implements AndesiteRequestHandler {
     public JsonObject filters(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
         log.info("Updating filters for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
-        updateFilters(player.filterConfig(), payload);
+        updateFilters(player, payload);
         return player.encodeState();
     }
     
@@ -265,11 +261,7 @@ public class RequestHandler implements AndesiteRequestHandler {
             player.audioPlayer().setVolume(payload.getInteger("volume"));
         }
         if(payload.containsKey("filters")) {
-            var config = player.filterConfig();
-            updateFilters(config, payload.getJsonObject("filters"));
-            if(config.isEnabled()) {
-                player.audioPlayer().setFilterFactory(config.factory());
-            }
+            updateFilters(player, payload.getJsonObject("filters"));
         }
         return player.encodeState();
     }
@@ -614,7 +606,8 @@ public class RequestHandler implements AndesiteRequestHandler {
         return filters(userId, guildId, new JsonObject().put("equalizer", payload));
     }
     
-    private void updateFilters(@Nonnull FilterChainConfiguration filterConfig, @Nonnull JsonObject config) {
+    private void updateFilters(@Nonnull BasePlayer player, @Nonnull JsonObject config) {
+        var filterConfig = player.filterConfig();
         if(config.containsKey("equalizer")) {
             var array = config.getJsonObject("equalizer").getJsonArray("bands");
             var equalizerConfig = filterConfig.equalizer();
@@ -654,6 +647,7 @@ public class RequestHandler implements AndesiteRequestHandler {
             var volumeConfig = filterConfig.volume();
             volumeConfig.setVolume(config.getJsonObject("volume").getFloat("volume", volumeConfig.volume()));
         }
+        player.audioPlayer().setFilterFactory(filterConfig.factory());
     }
     
     @Nullable

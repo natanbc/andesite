@@ -109,6 +109,9 @@ public class RestHandler {
             }
             context.next();
         });
+    
+        //read bodies
+        router.route().handler(new MemoryBodyHandler(65536)); /* 64KiB max body size */
         
         if(enableRest) {
             trackRoutes(andesite, router);
@@ -142,9 +145,6 @@ public class RestHandler {
         }
         
         if(enableRest) {
-            //read bodies
-            router.route().handler(new MemoryBodyHandler(65536)); /* 64KiB max body size */
-            
             router.post("/player/voice-server-update").handler(context -> {
                 andesite.requestHandler().provideVoiceServerUpdate(context.get("user-id"), context.getBodyAsJson());
                 context.response().setStatusCode(204).setStatusMessage("No content").end();
