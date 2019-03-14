@@ -74,6 +74,8 @@ Example:
 | source.twitch | boolean | whether or not to enable playing and resolving tracks from twitch | true |
 | source.vimeo | boolean | whether or not to enable playing and resolving tracks from vimeo | true |
 | source.youtube | boolean | whether or not to enable playing and resolving tracks from youtube | true |
+| youtube.max-playlist-page-count | maximum number of pages loaded from one playlist. There are 100 tracks per page. | 6 |
+| youtube.mix-loader-max-pool-size | maximum number of threads used by the mix loader pool | 10 |
 
 \* When running on architectures not supported by [jda-nas](https://github.com/sedmelluq/jda-nas), such as
 ARM or Darwin devices, you must use either `jda` or `nio` for the send system. For production, nio is preferred

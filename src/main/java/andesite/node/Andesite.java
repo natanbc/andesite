@@ -104,6 +104,10 @@ public class Andesite implements NodeState {
             .peek(key -> playerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
             .peek(key -> pcmPlayerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
             .collect(Collectors.toSet());
+    
+        configureYt(playerManager, config);
+        configureYt(pcmPlayerManager, config);
+        
         log.info("Enabled default sources: {}", enabledSources);
         //we need to set the cleanup to basically never run so mixer players aren't destroyed without need.
         playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
@@ -257,6 +261,15 @@ public class Andesite implements NodeState {
             default:
                 throw new IllegalArgumentException("No audio handler with type " + config.get("audio-handler"));
         }
+    }
+    
+    private static void configureYt(@Nonnull AudioPlayerManager manager, @Nonnull Config config) {
+        var yt = manager.source(YoutubeAudioSourceManager.class);
+        if(yt == null) {
+            return;
+        }
+        yt.setPlaylistPageCount(config.getInt("youtube.max-playlist-page-count", 6));
+        yt.setMixLoaderMaximumPoolSize(config.getInt("youtube.mix-loader-max-pool-size", 10));
     }
     
     public static void main(String[] args) throws IOException {

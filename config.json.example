@@ -48,5 +48,9 @@
         "twitch": true,
         "vimeo": true,
         "youtube": true
+    },
+    "youtube": {
+        "max-playlist-page-count": 6,
+        "mix-loader-max-pool-size": 10
     }
 }
