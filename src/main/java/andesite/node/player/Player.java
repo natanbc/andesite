@@ -64,7 +64,9 @@ public class Player implements AndesitePlayer {
         });
         this.cleanupTimerId = andesite.vertx().setPeriodic(30_000, __ -> {
             var now = System.nanoTime();
-            if(now > lastUse + TimeUnit.SECONDS.toNanos(60)) {
+            var regularPlaying = audioPlayer.getPlayingTrack() != null && !audioPlayer.isPaused();
+            var mixerPlaying = mixer.isPresent() && anyPlaying(mixer.get().players().values());
+            if((regularPlaying || mixerPlaying) && now > lastUse + TimeUnit.SECONDS.toNanos(60)) {
                 andesite.requestHandler().destroy(userId, guildId);
             }
         });
@@ -231,5 +233,14 @@ public class Player implements AndesitePlayer {
         audioPlayer.destroy();
         andesite.vertx().cancelTimer(updateTimerId);
         andesite.vertx().cancelTimer(cleanupTimerId);
+    }
+    
+    private static boolean anyPlaying(Iterable<MixerPlayer> iterable) {
+        for(var p : iterable) {
+            if(p.audioPlayer().getPlayingTrack() != null && !p.audioPlayer().isPaused()) {
+                return true;
+            }
+        }
+        return false;
     }
 }
