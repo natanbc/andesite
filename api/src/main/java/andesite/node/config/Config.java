@@ -140,7 +140,7 @@ public class Config {
     /**
      * Loads a global config with the given name.
      * <br>The load order is the same as configured, except
-     * the {@link Source#FILE DEFAULT} source is ignored.
+     * the {@link Source#FILE file} source is ignored.
      *
      * @param key Key to load.
      *

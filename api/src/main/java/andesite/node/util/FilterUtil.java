@@ -18,6 +18,11 @@ public class FilterUtil {
     public static final boolean VOLUME_AVAILABLE = tryLoad(VolumeNativeLibLoader::loadVolumeLibrary);
     
     private static boolean tryLoad(Runnable load) {
+        //all natives are compiled with avx2
+        //loading them on systems without avx2 crashes the JVM
+        if(NativeUtil.AVX_MODE == NativeUtil.AVXMode.DISABLED) {
+            return false;
+        }
         try {
             load.run();
             return true;

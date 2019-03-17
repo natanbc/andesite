@@ -14,6 +14,7 @@ import andesite.node.util.ConfigUtil;
 import andesite.node.util.FilterUtil;
 import andesite.node.util.Init;
 import andesite.node.util.LazyInit;
+import andesite.node.util.NativeUtil;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -290,6 +291,7 @@ public class Andesite implements NodeState {
             config.getBoolean("transport.http.ws", true) ? "enabled" : "disabled",
             config.getBoolean("transport.singyeong.enabled", false) ? "enabled" : "disabled"
         );
+        log.info("AVX2 {}", NativeUtil.AVX_MODE.name().toLowerCase());
         log.info("Filters: Karaoke {}, Timescale {}, Tremolo {}, Vibrato {}, Volume {}",
             FilterUtil.KARAOKE_AVAILABLE ? "available" : "unavailable",
             FilterUtil.TIMESCALE_AVAILABLE ? "available" : "unavailable",

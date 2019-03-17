@@ -38,6 +38,19 @@ Example:
 | x.y | ANDESITE_X_Y |
 | x.y-z | ANDESITE_X_Y_Z |
 
+# AVX2
+
+Lavadsp natives, which are used for filters, need AVX2 support. If your cpu doesn't support this extension,
+those natives must be disabled. On *nix, they're automatically disabled. On windows, they must be manually
+disabled.
+
+These settings are only available as system properties or environment variables.
+
+| key | type | description | default |
+|-----|------|-------------|---------|
+| avx2.enabled | boolean | whether or not AVX2 should be enabled. Even if set to true, additional checks may be done and AVX2 natives may still be disabled | true |
+| avx2.force | boolean | whether or not AVX2 natives should be loaded even if AVX2 is detected as absent. This may be useful if it's actually supported but the OS marks it as unsupported (eg WSL) | false |
+
 # Settings
 
 | key | type | description | default |
