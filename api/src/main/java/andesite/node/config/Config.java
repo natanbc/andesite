@@ -148,14 +148,14 @@ public class Config {
      */
     @Nullable
     public static String getGlobalConfig(@Nonnull String key) {
-        String value = null;
+        String value;
         for(Source source : LOAD_ORDER) {
             if(source == Source.FILE) continue;
-            if(value == null) {
-                value = source.get(null, key);
+            if((value = source.get(null, key)) != null) {
+                return value;
             }
         }
-        return value;
+        return null;
     }
     
     private static Source[] parseLoadOrder() {

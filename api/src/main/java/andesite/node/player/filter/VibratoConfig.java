@@ -1,7 +1,5 @@
 package andesite.node.player.filter;
 
-import andesite.node.util.FilterUtil;
-import com.github.natanbc.lavadsp.natives.VibratoNativeLibLoader;
 import com.github.natanbc.lavadsp.vibrato.VibratoPcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter;
@@ -12,6 +10,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class VibratoConfig implements Config {
+    private static final float VIBRATO_FREQUENCY_MAX_HZ = 14;
+    
     private float frequency = 2f;
     private float depth = 0.5f;
     
@@ -23,8 +23,8 @@ public class VibratoConfig implements Config {
         if(frequency <= 0) {
             throw new IllegalArgumentException("Frequency <= 0");
         }
-        if(frequency > VibratoNativeLibLoader.maxFrequency()) {
-            throw new IllegalArgumentException("Frequency > max (" + VibratoNativeLibLoader.maxFrequency() + ")");
+        if(frequency > VIBRATO_FREQUENCY_MAX_HZ) {
+            throw new IllegalArgumentException("Frequency > max (" + VIBRATO_FREQUENCY_MAX_HZ + ")");
         }
         this.frequency = frequency;
     }
@@ -51,8 +51,7 @@ public class VibratoConfig implements Config {
     
     @Override
     public boolean enabled() {
-        return FilterUtil.VIBRATO_AVAILABLE &&
-            (Config.isSet(frequency, 2f) || Config.isSet(depth, 0.5f));
+        return Config.isSet(frequency, 2f) || Config.isSet(depth, 0.5f);
     }
     
     @Nullable

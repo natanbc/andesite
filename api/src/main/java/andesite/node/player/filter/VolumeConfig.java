@@ -1,6 +1,5 @@
 package andesite.node.player.filter;
 
-import andesite.node.util.FilterUtil;
 import com.github.natanbc.lavadsp.volume.VolumePcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter;
@@ -35,7 +34,7 @@ public class VolumeConfig implements Config {
     
     @Override
     public boolean enabled() {
-        return FilterUtil.VOLUME_AVAILABLE && Config.isSet(volume, 1f);
+        return Config.isSet(volume, 1f);
     }
     
     @Nullable

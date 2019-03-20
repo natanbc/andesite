@@ -1,6 +1,5 @@
 package andesite.node.player.filter;
 
-import andesite.node.util.FilterUtil;
 import com.github.natanbc.lavadsp.tremolo.TremoloPcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter;
@@ -47,8 +46,7 @@ public class TremoloConfig implements Config {
     
     @Override
     public boolean enabled() {
-        return FilterUtil.TREMOLO_AVAILABLE &&
-            (Config.isSet(frequency, 2f) || Config.isSet(depth, 0.5f));
+        return Config.isSet(frequency, 2f) || Config.isSet(depth, 0.5f);
     }
     
     @Nullable

@@ -62,6 +62,11 @@ The plugin API is exposed with the `api` module. You can get it from [bintray](h
       <name>bintray</name>
       <url>https://dl.bintray.com/natanbc/maven</url>
     </repository>
+    <repository>
+      <id>jitpack</id>
+      <name>jitpack</name>
+      <url>https://jitpack.io</url>
+    </repository>
 </repositories>
 
 <dependencies>
@@ -76,6 +81,7 @@ The plugin API is exposed with the `api` module. You can get it from [bintray](h
 ```gradle
 repositories {
 	maven { url 'https://dl.bintray.com/natanbc/maven' }
+	maven { url 'https://jitpack.io' }
 }
 
 dependencies {
