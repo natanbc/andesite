@@ -9,6 +9,7 @@ archivesBaseName = 'andesite-api'
 
 repositories {
     jcenter()
+    maven { url 'https://dl.bintray.com/natanbc/maven' }
     maven { url 'https://jitpack.io' }
 }
 
