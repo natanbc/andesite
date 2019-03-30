@@ -69,7 +69,7 @@ public class RequestHandler implements AndesiteRequestHandler {
         }
         
         andesite.audioHandler()
-            .handleVoiceUpdate(userId, guildId, sessionId, endpoint, token);
+                .handleVoiceUpdate(userId, guildId, sessionId, endpoint, token);
     }
     
     @Nullable
@@ -98,7 +98,7 @@ public class RequestHandler implements AndesiteRequestHandler {
         var track = RequestUtils.decodeTrack(andesite.audioPlayerManager(), payload.getString("track"));
         if(track == null) {
             log.warn("Unable to decode track {}. This will stop the player. Check if the source is enabled.",
-                payload.getString("track"));
+                    payload.getString("track"));
         }
         var start = asLong(payload.getValue("start", payload.getValue("startTime")), 0);
         if(track != null && start != 0) {
@@ -269,7 +269,7 @@ public class RequestHandler implements AndesiteRequestHandler {
     @Nullable
     @Override
     public JsonObject destroy(@Nonnull String userId, @Nonnull String guildId) {
-        log.info("Destroying player for user {} in guild {} and payload {}", userId, guildId);
+        log.info("Destroying player for user {} in guild {}", userId, guildId);
         var player = andesite.removePlayer(userId, guildId);
         //will call close()
         andesite.audioHandler().closeConnection(userId, guildId);
@@ -289,43 +289,43 @@ public class RequestHandler implements AndesiteRequestHandler {
         }
         var isSearch = identifier.startsWith("ytsearch:") || identifier.startsWith("scsearch:");
         andesite.audioPlayerManager().loadItem(isUrl || isSearch ? identifier :
-                identifier.startsWith("raw:") ? identifier.substring(4) : "ytsearch:" + identifier,
-            new AudioLoadResultHandler() {
-                @Override
-                public void trackLoaded(AudioTrack track) {
-                    future.complete(new JsonObject()
-                        .put("loadType", "TRACK_LOADED")
-                        .put("playlistInfo", new JsonObject()) //thanks lavalink
-                        .put("tracks", new JsonArray()
-                            .add(RequestUtils.encodeTrack(andesite.audioPlayerManager(), track))));
-                }
-                
-                @Override
-                public void playlistLoaded(AudioPlaylist playlist) {
-                    var array = new JsonArray();
-                    for(AudioTrack track : playlist.getTracks()) {
-                        array.add(RequestUtils.encodeTrack(andesite.audioPlayerManager(), track));
+                        identifier.startsWith("raw:") ? identifier.substring(4) : "ytsearch:" + identifier,
+                new AudioLoadResultHandler() {
+                    @Override
+                    public void trackLoaded(AudioTrack track) {
+                        future.complete(new JsonObject()
+                                .put("loadType", "TRACK_LOADED")
+                                .put("playlistInfo", new JsonObject()) //thanks lavalink
+                                .put("tracks", new JsonArray()
+                                        .add(RequestUtils.encodeTrack(andesite.audioPlayerManager(), track))));
                     }
-                    var idx = playlist.getTracks().indexOf(playlist.getSelectedTrack());
-                    future.complete(new JsonObject()
-                        .put("loadType", playlist.isSearchResult() ? "SEARCH_RESULT" : "PLAYLIST_LOADED")
-                        .put("tracks", array)
-                        .put("playlistInfo", new JsonObject()
-                            .put("name", playlist.getName())
-                            .put("selectedTrack", idx == -1 ? null : idx)
-                        ));
-                }
-                
-                @Override
-                public void noMatches() {
-                    future.complete(new JsonObject().put("loadType", "NO_MATCHES"));
-                }
-                
-                @Override
-                public void loadFailed(FriendlyException exception) {
-                    future.completeExceptionally(exception);
-                }
-            });
+                    
+                    @Override
+                    public void playlistLoaded(AudioPlaylist playlist) {
+                        var array = new JsonArray();
+                        for(AudioTrack track : playlist.getTracks()) {
+                            array.add(RequestUtils.encodeTrack(andesite.audioPlayerManager(), track));
+                        }
+                        var idx = playlist.getTracks().indexOf(playlist.getSelectedTrack());
+                        future.complete(new JsonObject()
+                                .put("loadType", playlist.isSearchResult() ? "SEARCH_RESULT" : "PLAYLIST_LOADED")
+                                .put("tracks", array)
+                                .put("playlistInfo", new JsonObject()
+                                        .put("name", playlist.getName())
+                                        .put("selectedTrack", idx == -1 ? null : idx)
+                                ));
+                    }
+                    
+                    @Override
+                    public void noMatches() {
+                        future.complete(new JsonObject().put("loadType", "NO_MATCHES"));
+                    }
+                    
+                    @Override
+                    public void loadFailed(FriendlyException exception) {
+                        future.completeExceptionally(exception);
+                    }
+                });
         return future;
     }
     
@@ -345,51 +345,51 @@ public class RequestHandler implements AndesiteRequestHandler {
             return ints1;
         });
         root.put("players", new JsonObject()
-            .put("total", playerStats[0])
-            .put("playing", playerStats[1]));
+                .put("total", playerStats[0])
+                .put("playing", playerStats[1]));
         
         var runtime = ManagementFactory.getRuntimeMXBean();
         var version = Runtime.version();
         root.put("runtime", new JsonObject()
-            .put("uptime", runtime.getUptime())
-            .put("pid", runtime.getPid())
-            .put("managementSpecVersion", runtime.getManagementSpecVersion())
-            .put("name", runtime.getName())
-            .put("vm", new JsonObject()
-                .put("name", runtime.getVmName())
-                .put("vendor", runtime.getVmVendor())
-                .put("version", runtime.getVmVersion())
-            )
-            .put("spec", new JsonObject()
-                .put("name", runtime.getSpecName())
-                .put("vendor", runtime.getSpecVendor())
-                .put("version", runtime.getSpecVersion())
-            )
-            .put("version", new JsonObject()
-                .put("feature", version.feature())
-                .put("interim", version.interim())
-                .put("update", version.update())
-                .put("patch", version.patch())
-                .put("pre", version.pre().orElse(null))
-                .put("build", version.build().orElse(null))
-                .put("optional", version.optional().orElse(null))
-            )
+                .put("uptime", runtime.getUptime())
+                .put("pid", runtime.getPid())
+                .put("managementSpecVersion", runtime.getManagementSpecVersion())
+                .put("name", runtime.getName())
+                .put("vm", new JsonObject()
+                        .put("name", runtime.getVmName())
+                        .put("vendor", runtime.getVmVendor())
+                        .put("version", runtime.getVmVersion())
+                )
+                .put("spec", new JsonObject()
+                        .put("name", runtime.getSpecName())
+                        .put("vendor", runtime.getSpecVendor())
+                        .put("version", runtime.getSpecVersion())
+                )
+                .put("version", new JsonObject()
+                        .put("feature", version.feature())
+                        .put("interim", version.interim())
+                        .put("update", version.update())
+                        .put("patch", version.patch())
+                        .put("pre", version.pre().orElse(null))
+                        .put("build", version.build().orElse(null))
+                        .put("optional", version.optional().orElse(null))
+                )
         );
         
         var os = ManagementFactory.getOperatingSystemMXBean();
         root.put("os", new JsonObject()
-            .put("processors", os.getAvailableProcessors())
-            .put("name", os.getName())
-            .put("arch", os.getArch())
-            .put("version", os.getVersion())
+                .put("processors", os.getAvailableProcessors())
+                .put("name", os.getName())
+                .put("arch", os.getArch())
+                .put("version", os.getVersion())
         );
         
         //INTERNAL_BEAN_CLASS is a Class<?> object to the com.sun.management.OperatingSystemMXBean class
         if(INTERNAL_BEAN_CLASS != null && INTERNAL_BEAN_CLASS.isInstance(os)) {
             var internalBean = (com.sun.management.OperatingSystemMXBean) os;
             root.put("cpu", new JsonObject()
-                .put("andesite", internalBean.getProcessCpuLoad())
-                .put("system", internalBean.getSystemCpuLoad())
+                    .put("andesite", internalBean.getProcessCpuLoad())
+                    .put("system", internalBean.getSystemCpuLoad())
             );
         } else {
             root.putNull("cpu");
@@ -397,70 +397,70 @@ public class RequestHandler implements AndesiteRequestHandler {
         
         var classLoading = ManagementFactory.getClassLoadingMXBean();
         root.put("classLoading", new JsonObject()
-            .put("loaded", classLoading.getLoadedClassCount())
-            .put("totalLoaded", classLoading.getTotalLoadedClassCount())
-            .put("unloaded", classLoading.getUnloadedClassCount())
+                .put("loaded", classLoading.getLoadedClassCount())
+                .put("totalLoaded", classLoading.getTotalLoadedClassCount())
+                .put("unloaded", classLoading.getUnloadedClassCount())
         );
         
         var thread = ManagementFactory.getThreadMXBean();
         root.put("thread", new JsonObject()
-            .put("running", thread.getThreadCount())
-            .put("daemon", thread.getDaemonThreadCount())
-            .put("peak", thread.getPeakThreadCount())
-            .put("totalStarted", thread.getTotalStartedThreadCount())
+                .put("running", thread.getThreadCount())
+                .put("daemon", thread.getDaemonThreadCount())
+                .put("peak", thread.getPeakThreadCount())
+                .put("totalStarted", thread.getTotalStartedThreadCount())
         );
         
         var compilation = ManagementFactory.getCompilationMXBean();
         root.put("compilation", new JsonObject()
-            .put("name", compilation.getName())
-            .put("totalTime", compilation.getTotalCompilationTime())
+                .put("name", compilation.getName())
+                .put("totalTime", compilation.getTotalCompilationTime())
         );
         
         var memoryBean = ManagementFactory.getMemoryMXBean();
         root.put("memory", new JsonObject()
-            .put("pendingFinalization", memoryBean.getObjectPendingFinalizationCount())
-            .put("heap", toJson(memoryBean.getHeapMemoryUsage()))
-            .put("nonHeap", toJson(memoryBean.getNonHeapMemoryUsage())));
+                .put("pendingFinalization", memoryBean.getObjectPendingFinalizationCount())
+                .put("heap", toJson(memoryBean.getHeapMemoryUsage()))
+                .put("nonHeap", toJson(memoryBean.getNonHeapMemoryUsage())));
         
         var gc = ManagementFactory.getGarbageCollectorMXBeans();
         root.put("gc", gc.stream().map(bean -> new JsonObject()
-            .put("name", bean.getName())
-            .put("collectionCount", bean.getCollectionCount())
-            .put("collectionTime", bean.getCollectionTime())
-            .put("pools", Arrays.stream(bean.getMemoryPoolNames())
-                .reduce(new JsonArray(), JsonArray::add, JsonArray::addAll))
+                .put("name", bean.getName())
+                .put("collectionCount", bean.getCollectionCount())
+                .put("collectionTime", bean.getCollectionTime())
+                .put("pools", Arrays.stream(bean.getMemoryPoolNames())
+                        .reduce(new JsonArray(), JsonArray::add, JsonArray::addAll))
         ).reduce(new JsonArray(), JsonArray::add, JsonArray::addAll));
         
         var pools = ManagementFactory.getMemoryPoolMXBeans();
         root.put("memoryPools", pools.stream().map(bean -> {
             var json = new JsonObject()
-                .put("name", bean.getName())
-                .put("type", bean.getType().name())
-                .put("collectionUsage", toJson(bean.getCollectionUsage()))
-                .putNull("collectionUsageThreshold")
-                .putNull("collectionUsageThresholdCount")
-                .put("peakUsage", toJson(bean.getPeakUsage()))
-                .put("usage", toJson(bean.getUsage()))
-                .putNull("usageThreshold")
-                .putNull("usageThresholdCount")
-                .put("managers", Arrays.stream(bean.getMemoryManagerNames())
-                    .reduce(new JsonArray(), JsonArray::add, JsonArray::addAll));
+                    .put("name", bean.getName())
+                    .put("type", bean.getType().name())
+                    .put("collectionUsage", toJson(bean.getCollectionUsage()))
+                    .putNull("collectionUsageThreshold")
+                    .putNull("collectionUsageThresholdCount")
+                    .put("peakUsage", toJson(bean.getPeakUsage()))
+                    .put("usage", toJson(bean.getUsage()))
+                    .putNull("usageThreshold")
+                    .putNull("usageThresholdCount")
+                    .put("managers", Arrays.stream(bean.getMemoryManagerNames())
+                            .reduce(new JsonArray(), JsonArray::add, JsonArray::addAll));
             if(bean.isCollectionUsageThresholdSupported()) {
                 json.put("collectionUsageThreshold", bean.getCollectionUsageThreshold())
-                    .put("collectionUsageThresholdCount", bean.getCollectionUsageThresholdCount());
+                        .put("collectionUsageThresholdCount", bean.getCollectionUsageThresholdCount());
             }
             if(bean.isUsageThresholdSupported()) {
                 json.put("usageThreshold", bean.getUsageThreshold())
-                    .put("usageThresholdCount", bean.getUsageThreshold());
+                        .put("usageThresholdCount", bean.getUsageThreshold());
             }
             return json;
         }).reduce(new JsonArray(), JsonArray::add, JsonArray::addAll));
         
         var managers = ManagementFactory.getMemoryManagerMXBeans();
         root.put("memoryManagers", managers.stream().map(bean -> new JsonObject()
-            .put("name", bean.getName())
-            .put("pools", Arrays.stream(bean.getMemoryPoolNames())
-                .reduce(new JsonArray(), JsonArray::add, JsonArray::addAll))
+                .put("name", bean.getName())
+                .put("pools", Arrays.stream(bean.getMemoryPoolNames())
+                        .reduce(new JsonArray(), JsonArray::add, JsonArray::addAll))
         ).reduce(new JsonArray(), JsonArray::add, JsonArray::addAll));
         
         root.put("frameStats", andesite.allPlayers().reduce(new JsonArray(), (array, player) -> {
@@ -479,20 +479,20 @@ public class RequestHandler implements AndesiteRequestHandler {
                 }
                 if(count > 0) {
                     array.add(new JsonObject()
-                        .put("user", player.userId())
-                        .put("guild", player.guildId())
-                        .put("success", success / count)
-                        .put("loss", loss / count)
+                            .put("user", player.userId())
+                            .put("guild", player.guildId())
+                            .put("success", success / count)
+                            .put("loss", loss / count)
                     );
                 }
             } else {
                 var counter = player.frameLossCounter();
                 if(counter.isDataUsable()) {
                     array.add(new JsonObject()
-                        .put("user", player.userId())
-                        .put("guild", player.guildId())
-                        .put("success", counter.lastMinuteSuccess().sum())
-                        .put("loss", counter.lastMinuteLoss().sum())
+                            .put("user", player.userId())
+                            .put("guild", player.guildId())
+                            .put("success", counter.lastMinuteSuccess().sum())
+                            .put("loss", counter.lastMinuteLoss().sum())
                     );
                 }
             }
@@ -518,18 +518,18 @@ public class RequestHandler implements AndesiteRequestHandler {
             return ints1;
         });
         root.put("players", playerStats[0])
-            .put("playingPlayers", playerStats[1])
-            .put("uptime", ManagementFactory.getRuntimeMXBean().getUptime());
+                .put("playingPlayers", playerStats[1])
+                .put("uptime", ManagementFactory.getRuntimeMXBean().getUptime());
         
         var memory = ManagementFactory.getMemoryMXBean();
         var heap = memory.getHeapMemoryUsage();
         var nonHeap = memory.getNonHeapMemoryUsage();
         root.put("memory", new JsonObject()
-            .put("free", (heap.getCommitted() - heap.getUsed()) +
-                (nonHeap.getCommitted() - nonHeap.getUsed()))
-            .put("used", heap.getUsed() + nonHeap.getUsed())
-            .put("allocated", heap.getCommitted() + nonHeap.getCommitted())
-            .put("reservable", heap.getMax() + nonHeap.getMax())
+                .put("free", (heap.getCommitted() - heap.getUsed()) +
+                        (nonHeap.getCommitted() - nonHeap.getUsed()))
+                .put("used", heap.getUsed() + nonHeap.getUsed())
+                .put("allocated", heap.getCommitted() + nonHeap.getCommitted())
+                .put("reservable", heap.getMax() + nonHeap.getMax())
         );
         
         double systemLoad = 0;
@@ -542,9 +542,9 @@ public class RequestHandler implements AndesiteRequestHandler {
             load = internalBean.getProcessCpuLoad();
         }
         root.put("cpu", new JsonObject()
-            .put("cores", os.getAvailableProcessors())
-            .put("systemLoad", systemLoad)
-            .put("lavalinkLoad", load)
+                .put("cores", os.getAvailableProcessors())
+                .put("systemLoad", systemLoad)
+                .put("lavalinkLoad", load)
         );
         
         var frameStats = new int[3];
@@ -584,7 +584,7 @@ public class RequestHandler implements AndesiteRequestHandler {
         int totalLost = frameStats[2];
         
         int totalDeficit = players * FrameLossCounter.EXPECTED_PACKET_COUNT_PER_MIN
-            - (totalSent + totalLost);
+                - (totalSent + totalLost);
         
         // We can't divide by 0
         if(players != 0) {

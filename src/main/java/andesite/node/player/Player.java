@@ -55,8 +55,8 @@ public class Player implements AndesitePlayer {
         this.audioPlayer.addListener(event -> emitters.values().forEach(e -> e.onEvent(event)));
         this.audioPlayer.addListener(frameLossTracker);
         this.fastProvider = andesite.config().getBoolean("send-system.non-allocating", false) ?
-            new NonAllocatingProvider(audioPlayer) :
-            new AllocatingProvider(audioPlayer);
+                new NonAllocatingProvider(audioPlayer) :
+                new AllocatingProvider(audioPlayer);
         this.realProvider = fastProvider;
         this.updateTimerId = andesite.vertx().setPeriodic(5000, __ -> {
             if(audioPlayer.getPlayingTrack() == null) return;
@@ -123,18 +123,18 @@ public class Player implements AndesitePlayer {
             mixerStats.put(k, p.encodeState());
         }));
         return new JsonObject()
-            .put("time", String.valueOf(Instant.now().toEpochMilli()))
-            .put("position", audioPlayer.getPlayingTrack() == null ? null : audioPlayer.getPlayingTrack().getPosition())
-            .put("paused", audioPlayer.isPaused())
-            .put("volume", audioPlayer.getVolume())
-            .put("filters", filterConfig.encode())
-            .put("mixer", mixerStats)
-            .put("mixerEnabled", m.isPresent() && m.get() == realProvider)
-            .put("frame", new JsonObject()
-                .put("loss", frameLossTracker.lastMinuteLoss().sum())
-                .put("success", frameLossTracker.lastMinuteSuccess().sum())
-                .put("usable", frameLossTracker.isDataUsable())
-            );
+                .put("time", String.valueOf(Instant.now().toEpochMilli()))
+                .put("position", audioPlayer.getPlayingTrack() == null ? null : audioPlayer.getPlayingTrack().getPosition())
+                .put("paused", audioPlayer.isPaused())
+                .put("volume", audioPlayer.getVolume())
+                .put("filters", filterConfig.encode())
+                .put("mixer", mixerStats)
+                .put("mixerEnabled", m.isPresent() && m.get() == realProvider)
+                .put("frame", new JsonObject()
+                        .put("loss", frameLossTracker.lastMinuteLoss().sum())
+                        .put("success", frameLossTracker.lastMinuteSuccess().sum())
+                        .put("usable", frameLossTracker.isDataUsable())
+                );
     }
     
     @Nonnull
@@ -229,7 +229,7 @@ public class Player implements AndesitePlayer {
     public void close() {
         realProvider = fastProvider; //ensures we won't call the opus encoder in track mixer after releasing
         mixer.getIfPresent()
-            .ifPresent(TrackMixer::close);
+                .ifPresent(TrackMixer::close);
         audioPlayer.destroy();
         andesite.vertx().cancelTimer(updateTimerId);
         andesite.vertx().cancelTimer(cleanupTimerId);

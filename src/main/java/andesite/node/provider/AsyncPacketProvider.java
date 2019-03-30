@@ -23,8 +23,8 @@ class AsyncPacketProvider implements IPacketProvider {
         this.queue = new ArrayBlockingQueue<>(backlog);
         
         taskRef.updateAndGet(__ -> CommonAsync.WORKER_POOL.submit(new ProvideForkJoinTask(
-            () -> this.packetProvider.getNextPacketRaw(this.talking.get()),
-            this.queue
+                () -> this.packetProvider.getNextPacketRaw(this.talking.get()),
+                this.queue
         )));
     }
     

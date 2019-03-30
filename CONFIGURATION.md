@@ -80,7 +80,8 @@ Example:
 \* When running on architectures not supported by [jda-nas](https://github.com/sedmelluq/jda-nas), such as
 ARM or Darwin devices, you must use either `jda` or `nio` for the send system. For production, nio is preferred
 as it doesn't spawn a thread per voice connection. The default is changed to nio when running on unsupported
-architectures.
+architectures. Note that **lavaplayer has no arm natives**, so you may encounter errors on some tracks. Most
+youtube tracks won't have issues, but YMMV.
 
 ### Singyeong DSN Format
 

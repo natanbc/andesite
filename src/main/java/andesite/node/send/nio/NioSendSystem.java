@@ -27,7 +27,7 @@ public class NioSendSystem implements IAudioSendSystem {
         this.packetProvider = packetProvider;
         try {
             this.channel = DatagramChannel.open()
-                .setOption(StandardSocketOptions.SO_REUSEADDR, true);
+                    .setOption(StandardSocketOptions.SO_REUSEADDR, true);
         } catch(IOException e) {
             throw new IllegalStateException("Unable to create UDP channel", e);
         }

@@ -28,10 +28,10 @@ class PrometheusUtils {
     
     static void configureMetrics(@Nonnull NodeState state) {
         var players = Gauge.build()
-            .namespace("andesite")
-            .name("players")
-            .help("Number of players alive at a given point")
-            .register();
+                .namespace("andesite")
+                .name("players")
+                .help("Number of players alive at a given point")
+                .register();
         
         state.dispatcher().register(new AndesiteEventListener() {
             @Override

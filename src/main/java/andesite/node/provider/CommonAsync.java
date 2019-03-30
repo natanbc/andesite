@@ -22,16 +22,16 @@ public class CommonAsync {
     private static ForkJoinPool createPool() {
         AtomicInteger threadNumber = new AtomicInteger();
         return new ForkJoinPool(
-            Runtime.getRuntime().availableProcessors(),
-            pool -> {
-                var thread = new ForkJoinWorkerThread(pool) {};
-                thread.setDaemon(true);
-                thread.setPriority((Thread.NORM_PRIORITY + Thread.MIN_PRIORITY) / 2);
-                thread.setName("async-packet-provider-thread-" + (threadNumber.incrementAndGet()));
-                return thread;
-            },
-            null,
-            true
+                Runtime.getRuntime().availableProcessors(),
+                pool -> {
+                    var thread = new ForkJoinWorkerThread(pool) {};
+                    thread.setDaemon(true);
+                    thread.setPriority((Thread.NORM_PRIORITY + Thread.MIN_PRIORITY) / 2);
+                    thread.setName("async-packet-provider-thread-" + (threadNumber.incrementAndGet()));
+                    return thread;
+                },
+                null,
+                true
         );
     }
 }

@@ -53,14 +53,14 @@ public class Andesite implements NodeState {
         return t;
     }));
     private static final Map<String, Supplier<AudioSourceManager>> SOURCE_MANAGERS = Map.of(
-        "bandcamp", BandcampAudioSourceManager::new,
-        "beam", BeamAudioSourceManager::new,
-        "http", HttpAudioSourceManager::new,
-        "local", LocalAudioSourceManager::new,
-        "soundcloud", SoundCloudAudioSourceManager::new,
-        "twitch", TwitchStreamAudioSourceManager::new,
-        "vimeo", VimeoAudioSourceManager::new,
-        "youtube", YoutubeAudioSourceManager::new
+            "bandcamp", BandcampAudioSourceManager::new,
+            "beam", BeamAudioSourceManager::new,
+            "http", HttpAudioSourceManager::new,
+            "local", LocalAudioSourceManager::new,
+            "soundcloud", SoundCloudAudioSourceManager::new,
+            "twitch", TwitchStreamAudioSourceManager::new,
+            "vimeo", VimeoAudioSourceManager::new,
+            "youtube", YoutubeAudioSourceManager::new
     );
     private static final Set<String> DISABLED_BY_DEFAULT = Set.of("http", "local");
     
@@ -100,11 +100,11 @@ public class Andesite implements NodeState {
         pluginManager.configurePlayerManager(playerManager);
         pluginManager.configurePlayerManager(pcmPlayerManager);
         this.enabledSources = SOURCE_MANAGERS.keySet().stream()
-            .filter(key -> config.getBoolean("source." + key, !DISABLED_BY_DEFAULT.contains(key)))
-            .peek(key -> playerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
-            .peek(key -> pcmPlayerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
-            .collect(Collectors.toSet());
-    
+                .filter(key -> config.getBoolean("source." + key, !DISABLED_BY_DEFAULT.contains(key)))
+                .peek(key -> playerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
+                .peek(key -> pcmPlayerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
+                .collect(Collectors.toSet());
+        
         configureYt(playerManager, config);
         configureYt(pcmPlayerManager, config);
         
@@ -255,6 +255,7 @@ public class Andesite implements NodeState {
     @Nonnull
     @CheckReturnValue
     private AudioHandler createAudioHandler(@Nonnull Config config) {
+        //noinspection SwitchStatementWithTooFewBranches
         switch(config.get("audio-handler", "magma")) {
             case "magma":
                 return new MagmaHandler(this);
@@ -280,15 +281,15 @@ public class Andesite implements NodeState {
         Init.postInit(andesite);
         //NOTE: use the bitwise or operator, as it forces evaluation of all elements
         if(!(RestHandler.setup(andesite)
-            | SingyeongHandler.setup(andesite)
-            | andesite.pluginManager().startListeners())) {
+                | SingyeongHandler.setup(andesite)
+                | andesite.pluginManager().startListeners())) {
             log.error("No handlers enabled, aborting");
             System.exit(-1);
         }
         log.info("Handlers: REST {}, WebSocket {}, Singyeong {}",
-            config.getBoolean("transport.http.rest", true) ? "enabled" : "disabled",
-            config.getBoolean("transport.http.ws", true) ? "enabled" : "disabled",
-            config.getBoolean("transport.singyeong.enabled", false) ? "enabled" : "disabled"
+                config.getBoolean("transport.http.rest", true) ? "enabled" : "disabled",
+                config.getBoolean("transport.http.ws", true) ? "enabled" : "disabled",
+                config.getBoolean("transport.singyeong.enabled", false) ? "enabled" : "disabled"
         );
         log.info("Timescale {}", FilterUtil.TIMESCALE_AVAILABLE ? "available" : "unavailable");
     }

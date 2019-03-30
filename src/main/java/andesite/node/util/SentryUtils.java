@@ -58,21 +58,21 @@ class SentryUtils {
                                           @Nullable String reason, boolean byRemote) {
                 if(byRemote) {
                     client.sendEvent(new EventBuilder()
-                        .withLevel(Event.Level.WARNING)
-                        .withMessage("Websocket closed by server")
-                        .withExtra("code", closeCode)
-                        .withExtra("reason", reason)
-                        .withExtra("user", userId)
-                        .withExtra("guild", guildId)
+                            .withLevel(Event.Level.WARNING)
+                            .withMessage("Websocket closed by server")
+                            .withExtra("code", closeCode)
+                            .withExtra("reason", reason)
+                            .withExtra("user", userId)
+                            .withExtra("guild", guildId)
                     );
                 } else {
                     client.sendEvent(new EventBuilder()
-                        .withLevel(Event.Level.INFO)
-                        .withMessage("Websocket closed by client")
-                        .withExtra("code", closeCode)
-                        .withExtra("reason", reason)
-                        .withExtra("user", userId)
-                        .withExtra("guild", guildId)
+                            .withLevel(Event.Level.INFO)
+                            .withMessage("Websocket closed by client")
+                            .withExtra("code", closeCode)
+                            .withExtra("reason", reason)
+                            .withExtra("user", userId)
+                            .withExtra("guild", guildId)
                     );
                 }
             }

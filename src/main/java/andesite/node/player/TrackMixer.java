@@ -21,8 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TrackMixer implements AndesiteTrackMixer {
     private final Map<String, Player> players = new ConcurrentHashMap<>();
     private final ShortBuffer mixBuffer = ByteBuffer.allocateDirect(StandardAudioDataFormats.DISCORD_PCM_S16_BE.maximumChunkSize())
-        .order(ByteOrder.nativeOrder())
-        .asShortBuffer();
+            .order(ByteOrder.nativeOrder())
+            .asShortBuffer();
     private final ByteBuffer outputBuffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize());
     
     private final AudioPlayerManager playerManager;
@@ -116,7 +116,7 @@ public class TrackMixer implements AndesiteTrackMixer {
     
     private static class Player implements MixerPlayer {
         private final ByteBuffer buffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_PCM_S16_BE.maximumChunkSize())
-            .order(ByteOrder.BIG_ENDIAN);
+                .order(ByteOrder.BIG_ENDIAN);
         private final MutableAudioFrame frame = new MutableAudioFrame();
         private final FrameLossTracker frameLossTracker = new FrameLossTracker();
         private final FilterChainConfiguration filterConfig = new FilterChainConfiguration();
@@ -190,16 +190,16 @@ public class TrackMixer implements AndesiteTrackMixer {
         public JsonObject encodeState() {
             var track = player.getPlayingTrack();
             return new JsonObject()
-                .put("time", String.valueOf(Instant.now().toEpochMilli()))
-                .put("position", track == null ? null : track.getPosition())
-                .put("paused", player.isPaused())
-                .put("volume", player.getVolume())
-                .put("filters", filterConfig.encode())
-                .put("frame", new JsonObject()
-                    .put("loss", frameLossTracker.lastMinuteLoss().sum())
-                    .put("success", frameLossTracker.lastMinuteSuccess().sum())
-                    .put("usable", frameLossTracker.isDataUsable())
-                );
+                    .put("time", String.valueOf(Instant.now().toEpochMilli()))
+                    .put("position", track == null ? null : track.getPosition())
+                    .put("paused", player.isPaused())
+                    .put("volume", player.getVolume())
+                    .put("filters", filterConfig.encode())
+                    .put("frame", new JsonObject()
+                            .put("loss", frameLossTracker.lastMinuteLoss().sum())
+                            .put("success", frameLossTracker.lastMinuteSuccess().sum())
+                            .put("usable", frameLossTracker.isDataUsable())
+                    );
         }
         
         @Nonnull

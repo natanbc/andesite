@@ -13,7 +13,7 @@ import java.lang.management.ManagementFactory;
 public class Init {
     public static void preInit(Config config) {
         ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(
-            Level.valueOf(config.get("log-level", "INFO").toUpperCase())
+                Level.valueOf(config.get("log-level", "INFO").toUpperCase())
         );
         if(config.getBoolean("prometheus.enabled", false)) {
             PrometheusUtils.setup();
@@ -21,7 +21,7 @@ public class Init {
             for(var gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
                 if(gcBean instanceof NotificationEmitter) {
                     ((NotificationEmitter) gcBean)
-                        .addNotificationListener(listener, null, gcBean);
+                            .addNotificationListener(listener, null, gcBean);
                 }
             }
         }

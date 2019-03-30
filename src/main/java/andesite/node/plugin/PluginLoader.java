@@ -88,8 +88,8 @@ public abstract class PluginLoader extends ClassLoader {
             }
             var bytes = is.readAllBytes();
             return defineClass(name, bytes, 0, bytes.length,
-                new ProtectionDomain(new CodeSource(baseUrl(),
-                    (CodeSigner[]) null), new Permissions()));
+                    new ProtectionDomain(new CodeSource(baseUrl(),
+                            (CodeSigner[]) null), new Permissions()));
         } catch(IOException e) {
             throw new ClassNotFoundException(name, e);
         }

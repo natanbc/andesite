@@ -26,8 +26,8 @@ public class AsyncPacketProviderFactory implements IAudioSendFactory {
         
         AsyncPacketProvider provider = new AsyncPacketProvider(packetProvider, backlog, taskRef);
         return new AsyncAudioSendSystemWrapper(
-            this.factory.createSendSystem(provider),
-            taskRef
+                this.factory.createSendSystem(provider),
+                taskRef
         );
     }
 }

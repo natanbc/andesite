@@ -38,11 +38,11 @@ public class MagmaHandler implements AudioHandler {
             if(event instanceof WebSocketClosed) {
                 var e = (WebSocketClosed) event;
                 andesite.dispatcher().onWebSocketClosed(
-                    e.getMember().getUserId(),
-                    e.getMember().getGuildId(),
-                    e.getCloseCode(),
-                    e.getReason(),
-                    e.isByRemote()
+                        e.getMember().getUserId(),
+                        e.getMember().getGuildId(),
+                        e.getCloseCode(),
+                        e.getReason(),
+                        e.isByRemote()
                 );
             }
         });
@@ -55,11 +55,11 @@ public class MagmaHandler implements AudioHandler {
             return;
         }
         magma.setSendHandler(
-            MagmaMember.builder()
-                .userId(userId)
-                .guildId(guildId)
-                .build(),
-            provider == null ? null : new MagmaSendHandler(provider, byteArrayProvider)
+                MagmaMember.builder()
+                        .userId(userId)
+                        .guildId(guildId)
+                        .build(),
+                provider == null ? null : new MagmaSendHandler(provider, byteArrayProvider)
         );
         if(old != null) {
             old.close();
@@ -71,15 +71,15 @@ public class MagmaHandler implements AudioHandler {
                                   @Nonnull String sessionId, @Nonnull String endpoint,
                                   @Nonnull String token) {
         magma.provideVoiceServerUpdate(
-            MagmaMember.builder()
-                .userId(userId)
-                .guildId(guildId)
-                .build(),
-            MagmaServerUpdate.builder()
-                .sessionId(sessionId)
-                .endpoint(endpoint)
-                .token(token)
-                .build()
+                MagmaMember.builder()
+                        .userId(userId)
+                        .guildId(guildId)
+                        .build(),
+                MagmaServerUpdate.builder()
+                        .sessionId(sessionId)
+                        .endpoint(endpoint)
+                        .token(token)
+                        .build()
         );
     }
     
@@ -105,7 +105,7 @@ public class MagmaHandler implements AudioHandler {
             case "nas":
                 if(!hasNas) {
                     throw new IllegalArgumentException("NAS is unsupported in this environment. " +
-                        "Please choose a different send system.");
+                            "Please choose a different send system.");
                 }
                 factory = new NativeAudioSendFactory(config.getInt("send-system.nas-buffer", 400));
                 break;
@@ -122,8 +122,8 @@ public class MagmaHandler implements AudioHandler {
             factory = new AsyncPacketProviderFactory(factory);
         }
         log.info("Send system: {}, async provider {}",
-            config.get("send-system.type", "nas"),
-            config.getBoolean("send-system.async", true) ? "enabled" : "disabled"
+                config.get("send-system.type", "nas"),
+                config.getBoolean("send-system.async", true) ? "enabled" : "disabled"
         );
         return factory;
     }
@@ -145,14 +145,14 @@ public class MagmaHandler implements AudioHandler {
                 break;
             case "reuse-existing":
                 provider = ByteArrayProvider.reuseExisting(
-                    StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize()
+                        StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize()
                 );
                 break;
             default:
                 throw new IllegalStateException("No provider " + config.get("magma.array-provider"));
         }
         log.info("Array provider: {}",
-            config.get("magma.array-provider", "create-new")
+                config.get("magma.array-provider", "create-new")
         );
         return provider;
     }

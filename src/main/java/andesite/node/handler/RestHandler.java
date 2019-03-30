@@ -47,18 +47,18 @@ public class RestHandler {
         router.route().failureHandler(context -> {
             log.error("Error in HTTP handler", context.failure());
             context.response()
-                .setStatusCode(500)
-                .setStatusMessage("Internal server error")
-                .putHeader("Content-Type", "application/json")
-                .end(RequestUtils.encodeFailure(context).toBuffer());
+                    .setStatusCode(500)
+                    .setStatusMessage("Internal server error")
+                    .putHeader("Content-Type", "application/json")
+                    .end(RequestUtils.encodeFailure(context).toBuffer());
         });
         
         //setup headers
         router.route().handler(context -> {
             log.debug("Received request {} {} from {}",
-                context.request().method(),
-                context.normalisedPath(),
-                context.request().remoteAddress()
+                    context.request().method(),
+                    context.normalisedPath(),
+                    context.request().remoteAddress()
             );
             context.response().putHeader("Andesite-Version", Version.VERSION);
             context.response().putHeader("Andesite-Version-Major", Version.VERSION_MAJOR);
@@ -89,15 +89,15 @@ public class RestHandler {
                 var writer = new StringWriter();
                 try {
                     TextFormat.write004(writer, CollectorRegistry.defaultRegistry.filteredMetricFamilySamples(
-                        Set.copyOf(context.queryParam("name[]"))
+                            Set.copyOf(context.queryParam("name[]"))
                     ));
                 } catch(IOException e) {
                     context.fail(e);
                     return;
                 }
                 context.response()
-                    .putHeader("Content-Type", TextFormat.CONTENT_TYPE_004)
-                    .end(writer.toString());
+                        .putHeader("Content-Type", TextFormat.CONTENT_TYPE_004)
+                        .end(writer.toString());
             });
         }
         
@@ -110,7 +110,7 @@ public class RestHandler {
             }
             context.next();
         });
-    
+        
         //read bodies
         router.route().handler(new MemoryBodyHandler(65536)); /* 64KiB max body size */
         
@@ -118,11 +118,11 @@ public class RestHandler {
             trackRoutes(andesite, router);
             
             router.get("/stats").handler(context -> context.response().end(
-                andesite.requestHandler().nodeStats().toBuffer()
+                    andesite.requestHandler().nodeStats().toBuffer()
             ));
             
             router.get("/stats/lavalink").handler(context -> context.response().end(
-                andesite.requestHandler().nodeStatsForLavalink().toBuffer()
+                    andesite.requestHandler().nodeStatsForLavalink().toBuffer()
             ));
         }
         
@@ -158,7 +158,7 @@ public class RestHandler {
             
             router.post("/player/:guild_id/play").handler(context -> {
                 var res = andesite.requestHandler().play(context.get("user-id"), context.pathParam("guild_id"),
-                    context.getBodyAsJson());
+                        context.getBodyAsJson());
                 sendResponse(context, res);
             });
             
@@ -169,37 +169,37 @@ public class RestHandler {
             
             router.patch("/player/:guild_id/mixer").handler(context -> {
                 var res = andesite.requestHandler().mixer(context.get("user-id"), context.pathParam("guild_id"),
-                    context.getBodyAsJson());
+                        context.getBodyAsJson());
                 sendResponse(context, res);
             });
             
             router.patch("/player/:guild_id/filters").handler(context -> {
                 var res = andesite.requestHandler().filters(context.get("user-id"), context.pathParam("guild_id"),
-                    context.getBodyAsJson());
+                        context.getBodyAsJson());
                 sendResponse(context, res);
             });
             
             router.patch("/player/:guild_id/pause").handler(context -> {
                 var res = andesite.requestHandler().pause(context.get("user-id"), context.pathParam("guild_id"),
-                    context.getBodyAsJson());
+                        context.getBodyAsJson());
                 sendResponse(context, res);
             });
             
             router.patch("/player/:guild_id/seek").handler(context -> {
                 var res = andesite.requestHandler().seek(context.get("user-id"), context.pathParam("guild_id"),
-                    context.getBodyAsJson());
+                        context.getBodyAsJson());
                 sendResponse(context, res);
             });
             
             router.patch("/player/:guild_id/volume").handler(context -> {
                 var res = andesite.requestHandler().volume(context.get("user-id"), context.pathParam("guild_id"),
-                    context.getBodyAsJson());
+                        context.getBodyAsJson());
                 sendResponse(context, res);
             });
             
             router.patch("/player/:guild_id").handler(context -> {
                 var res = andesite.requestHandler().update(context.get("user-id"), context.pathParam("guild_id"),
-                    context.getBodyAsJson());
+                        context.getBodyAsJson());
                 sendResponse(context, res);
             });
             
@@ -217,16 +217,16 @@ public class RestHandler {
         
         var latch = new CountDownLatch(1);
         andesite.vertx().createHttpServer()
-            .requestHandler(router)
-            .listen(port, result -> {
-                if(result.failed()) {
-                    log.error("Error starting HTTP server", result.cause());
-                    System.exit(-1);
-                } else {
-                    log.info("HTTP server started successfully");
-                    latch.countDown();
-                }
-            });
+                .requestHandler(router)
+                .listen(port, result -> {
+                    if(result.failed()) {
+                        log.error("Error starting HTTP server", result.cause());
+                        System.exit(-1);
+                    } else {
+                        log.info("HTTP server started successfully");
+                        latch.countDown();
+                    }
+                });
         try {
             latch.await();
         } catch(InterruptedException e) {
@@ -254,21 +254,21 @@ public class RestHandler {
             var identifier = identifiers.get(0);
             log.debug("Resolving tracks for {}", identifier);
             state.requestHandler().resolveTracks(identifier)
-                .thenAccept(json -> context.response().end(json.toBuffer()))
-                .exceptionally(e -> {
-                    if(e instanceof FriendlyException) {
-                        context.response().end(
-                            new JsonObject()
-                                .put("loadType", "LOAD_FAILED")
-                                .put("cause", RequestUtils.encodeThrowable(context, e))
-                                .put("severity", ((FriendlyException) e).severity.name())
-                                .toBuffer()
-                        );
-                    } else {
-                        context.fail(e);
-                    }
-                    return null;
-                });
+                    .thenAccept(json -> context.response().end(json.toBuffer()))
+                    .exceptionally(e -> {
+                        if(e instanceof FriendlyException) {
+                            context.response().end(
+                                    new JsonObject()
+                                            .put("loadType", "LOAD_FAILED")
+                                            .put("cause", RequestUtils.encodeThrowable(context, e))
+                                            .put("severity", ((FriendlyException) e).severity.name())
+                                            .toBuffer()
+                            );
+                        } else {
+                            context.fail(e);
+                        }
+                        return null;
+                    });
         });
         
         router.get("/decodetrack").handler(context -> {
@@ -306,7 +306,7 @@ public class RestHandler {
                 var track = trackInfo(state, (String) v);
                 if(track == null) {
                     track = new JsonObject()
-                        .put("error", "Unable to decode track. Is the source manager enabled?");
+                            .put("error", "Unable to decode track. Is the source manager enabled?");
                 }
                 response.add(track);
             });
@@ -326,12 +326,12 @@ public class RestHandler {
     
     private static void error(@Nonnull RoutingContext context, @Nonnegative int code, @Nonnull String message) {
         context.response()
-            .setStatusCode(code).setStatusMessage(message)
-            .putHeader("Content-Type", "application/json")
-            .end(new JsonObject()
-                .put("code", code)
-                .put("message", message)
-                .toBuffer()
-            );
+                .setStatusCode(code).setStatusMessage(message)
+                .putHeader("Content-Type", "application/json")
+                .end(new JsonObject()
+                        .put("code", code)
+                        .put("message", message)
+                        .toBuffer()
+                );
     }
 }

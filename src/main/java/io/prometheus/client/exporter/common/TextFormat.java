@@ -1,10 +1,10 @@
 package io.prometheus.client.exporter.common;
 
+import io.prometheus.client.Collector;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Enumeration;
-
-import io.prometheus.client.Collector;
 
 //copied from io.prometheus:simpleclient_httpserver:0.5.0
 public class TextFormat {
@@ -12,7 +12,7 @@ public class TextFormat {
      * Content-type for text version 0.0.4.
      */
     public final static String CONTENT_TYPE_004 = "text/plain; version=0.0.4; charset=utf-8";
-
+    
     /**
      * Write out the text version 0.0.4 of the given MetricFamilySamples.
      */
@@ -26,18 +26,18 @@ public class TextFormat {
             writer.write(' ');
             writeEscapedHelp(writer, metricFamilySamples.help);
             writer.write('\n');
-
+            
             writer.write("# TYPE ");
             writer.write(metricFamilySamples.name);
             writer.write(' ');
             writer.write(typeString(metricFamilySamples.type));
             writer.write('\n');
-
-            for (Collector.MetricFamilySamples.Sample sample: metricFamilySamples.samples) {
+            
+            for(Collector.MetricFamilySamples.Sample sample : metricFamilySamples.samples) {
                 writer.write(sample.name);
-                if (sample.labelNames.size() > 0) {
+                if(sample.labelNames.size() > 0) {
                     writer.write('{');
-                    for (int i = 0; i < sample.labelNames.size(); ++i) {
+                    for(int i = 0; i < sample.labelNames.size(); ++i) {
                         writer.write(sample.labelNames.get(i));
                         writer.write("=\"");
                         writeEscapedLabelValue(writer, sample.labelValues.get(i));
@@ -47,7 +47,7 @@ public class TextFormat {
                 }
                 writer.write(' ');
                 writer.write(Collector.doubleToGoString(sample.value));
-                if (sample.timestampMs != null){
+                if(sample.timestampMs != null) {
                     writer.write(' ');
                     writer.write(sample.timestampMs.toString());
                 }
@@ -55,11 +55,11 @@ public class TextFormat {
             }
         }
     }
-
+    
     private static void writeEscapedHelp(Writer writer, String s) throws IOException {
-        for (int i = 0; i < s.length(); i++) {
+        for(int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
-            switch (c) {
+            switch(c) {
                 case '\\':
                     writer.append("\\\\");
                     break;
@@ -71,11 +71,11 @@ public class TextFormat {
             }
         }
     }
-
+    
     private static void writeEscapedLabelValue(Writer writer, String s) throws IOException {
-        for (int i = 0; i < s.length(); i++) {
+        for(int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
-            switch (c) {
+            switch(c) {
                 case '\\':
                     writer.append("\\\\");
                     break;
@@ -90,9 +90,9 @@ public class TextFormat {
             }
         }
     }
-
+    
     private static String typeString(Collector.Type t) {
-        switch (t) {
+        switch(t) {
             case GAUGE:
                 return "gauge";
             case COUNTER:
