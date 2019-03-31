@@ -8,7 +8,7 @@ on the #andesite channel.
 # Features
 
 - [lavadsp](https://github.com/natanbc/lavadsp) filter support
-- ARM and Darwin (Mac) support
+- Darwin (Mac) and partial ARM support
 - [Plugin](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md) support
 - [Debug](https://github.com/natanbc/andesite-node/blob/master/DEBUGGING.md) tooling
 - Available over REST, WebSocket or [singyeong](https://github.com/queer/singyeong)
