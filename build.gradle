@@ -24,8 +24,8 @@ ext {
     jdaNasVersion =     '1.0.6'
     singyeongVersion =  '829d574'
     logbackVersion =    '1.2.3'
-    sentryVersion =     '1.7.15'
-    prometheusVersion = '0.5.0'
+    sentryVersion =     '1.7.22'
+    prometheusVersion = '0.6.0'
     jsr305Version =     '3.0.2'
     
     jattachVersion =    'v1.5'
