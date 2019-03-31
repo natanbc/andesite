@@ -255,12 +255,13 @@ public class Andesite implements NodeState {
     @Nonnull
     @CheckReturnValue
     private AudioHandler createAudioHandler(@Nonnull Config config) {
+        var handlerName = config.get("audio-handler", "magma");
         //noinspection SwitchStatementWithTooFewBranches
-        switch(config.get("audio-handler", "magma")) {
+        switch(handlerName) {
             case "magma":
                 return new MagmaHandler(this);
             default:
-                throw new IllegalArgumentException("No audio handler with type " + config.get("audio-handler"));
+                return pluginManager.loadHandler(AudioHandler.class, handlerName);
         }
     }
     

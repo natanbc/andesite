@@ -90,3 +90,11 @@ dependencies {
 ```
 
 The `Plugin` interface defines the callbacks andesite will call after loading your plugin.
+
+## Custom Audio Handlers
+
+Plugins may provide custom `AudioHandler`s by providing a class that implements the interface.
+The class must have a public constructor accepting a single `NodeState` argument.
+
+To use a custom handler, the `audio-handler` setting must be the fully qualified class name
+of the handler.

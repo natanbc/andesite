@@ -281,15 +281,7 @@ public class RequestHandler implements AndesiteRequestHandler {
     @Override
     public CompletionStage<JsonObject> resolveTracks(@Nonnull String identifier) {
         var future = new CompletableFuture<JsonObject>();
-        var isUrl = true;
-        try {
-            new URL(identifier);
-        } catch(MalformedURLException e) {
-            isUrl = false;
-        }
-        var isSearch = identifier.startsWith("ytsearch:") || identifier.startsWith("scsearch:");
-        andesite.audioPlayerManager().loadItem(isUrl || isSearch ? identifier :
-                        identifier.startsWith("raw:") ? identifier.substring(4) : "ytsearch:" + identifier,
+        andesite.audioPlayerManager().loadItem(resolveIdentifier(identifier),
                 new AudioLoadResultHandler() {
                     @Override
                     public void trackLoaded(AudioTrack track) {
@@ -327,6 +319,23 @@ public class RequestHandler implements AndesiteRequestHandler {
                     }
                 });
         return future;
+    }
+    
+    @Nonnull
+    @CheckReturnValue
+    private String resolveIdentifier(@Nonnull String identifier) {
+        try {
+            new URL(identifier);
+            return identifier;
+        } catch(MalformedURLException ignored) {
+        }
+        if(identifier.startsWith("ytsearch:") || identifier.startsWith("scsearch:")) {
+            return identifier;
+        }
+        if(identifier.startsWith("raw:")) {
+            return identifier.substring(4);
+        }
+        return andesite.config().getBoolean("auto-ytsearch") ? "ytsearch:" + identifier : identifier;
     }
     
     @Nonnull

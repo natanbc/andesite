@@ -46,7 +46,8 @@ Example:
 | password | string | password to use for http/websocket access. No filtering is done if null | null |
 | debug-password | string | password to use for debug routes. If missing or null, the regular password is used instead. | null |
 | log-level | string | lowest level to log | INFO |
-| audio-handler | string | audio handler implementation to use. currently only `magma` is supported | magma |
+| audio-handler | string | audio handler implementation to use. by default, only `magma` is supported. Plugins may [add more implementations](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md#custom-audio-handlers), in which case the fully qualified class name must be used | magma |
+| auto-ytsearch | boolean | whether or not andesite should automatically prepend `ytsearch:` to identifiers that don't match known prefixes when loading tracks | true |
 | magma.array-provider | string | either `create-new` or `reuse-existing`. reuse-existing is more efficient, but only works with specific JVMs. Don't complain if it crashes. If it doesn't crash, it's most likely safe to use | create-new |
 | lavalink.ws-path | string | route to run the lavalink websocket on. | /lavalink |
 | send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | `nas` on supported environments, `nio` otherwise |
