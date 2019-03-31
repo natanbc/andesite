@@ -335,7 +335,7 @@ public class RequestHandler implements AndesiteRequestHandler {
         if(identifier.startsWith("raw:")) {
             return identifier.substring(4);
         }
-        return andesite.config().getBoolean("auto-ytsearch") ? "ytsearch:" + identifier : identifier;
+        return andesite.config().getBoolean("auto-ytsearch", true) ? "ytsearch:" + identifier : identifier;
     }
     
     @Nonnull
