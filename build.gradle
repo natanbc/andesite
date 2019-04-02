@@ -5,7 +5,7 @@ plugins {
 	id 'com.palantir.docker' version '0.21.0'
 }
 
-def versionObj = new Version(major: 0, minor: 16, revision: 1)
+def versionObj = new Version(major: 0, minor: 16, revision: 2)
 
 allprojects {
     group 'com.github.natanbc'
