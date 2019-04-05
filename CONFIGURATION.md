@@ -50,9 +50,6 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | magma.send-system.async | boolean | whether or not to use jda-async-packet-provider to wrap the send system | true |
 | magma.send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |
 
-| jfr.enabled | boolean | whether or not to enable [JFR debug routes](https://github.com/natanbc/andesite-node/blob/master/DEBUGGING.md) | true |
-
-
 \* When running on architectures not supported by [jda-nas](https://github.com/sedmelluq/jda-nas), such as
 ARM or Darwin devices, you must use either `jda` or `nio` for the send system. For production, nio is preferred
 as it doesn't spawn a thread per voice connection. The default is changed to nio when running on unsupported
