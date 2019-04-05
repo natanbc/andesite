@@ -5,8 +5,8 @@ Andesite can be configured from 2 sources, from highest to lowest priority
 - A HOCON file named `application.conf` in the application working directory
 - System environment variables (doesn't support arrays)
 
-All keys must be prefixed with `andesite.`. When using a HOCON file, they can be put inside a
-block named `andesite`.
+All andesite keys must be prefixed with `andesite.`. When using a HOCON file, they can be put inside a
+block named `andesite`. Plugins may choose to use a different prefix.
 
 An example config can be found [here](https://github.com/natanbc/andesite-node/blob/master/application.conf.example)
 
