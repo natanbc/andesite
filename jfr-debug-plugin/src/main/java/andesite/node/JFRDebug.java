@@ -28,10 +28,10 @@ public class JFRDebug implements Plugin {
         var r = Router.router(state.vertx());
         
         r.route().handler(c -> {
-            var config = state.config();
-            var password = config.get("debug-password");
+            var config = state.config().getConfig("andesite");
+            var password = config.hasPath("debug-password") ? config.getString("debug-password") : null;
             if(password == null) {
-                password = config.get("password");
+                password = config.hasPath("password") ? config.getString("password") : null;
             }
             if(password != null && !password.equals(RequestUtils.findPassword(c))) {
                 error(c, 401, "Unauthorized");

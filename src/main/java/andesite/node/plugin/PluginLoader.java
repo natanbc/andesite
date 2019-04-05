@@ -25,6 +25,18 @@ import java.util.List;
 public abstract class PluginLoader extends ClassLoader {
     private static final Logger log = LoggerFactory.getLogger(PluginLoader.class);
     
+    public boolean hasFile(@Nonnull String path) {
+        try {
+            var is = openFile(path);
+            if(is != null) {
+                is.close();
+                return true;
+            }
+        } catch(IOException ignored) {
+        }
+        return false;
+    }
+    
     @Nullable
     @CheckReturnValue
     public abstract InputStream openFile(@Nonnull String path) throws IOException;

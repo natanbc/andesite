@@ -28,18 +28,18 @@ public class RestHandler {
     private static final Logger log = LoggerFactory.getLogger(RestHandler.class);
     
     public static boolean setup(@Nonnull Andesite andesite) {
-        var config = andesite.config();
-        
-        var enableRest = config.getBoolean("transport.http.rest", true);
-        var enableWs = config.getBoolean("transport.http.ws", true);
-        var enablePrometheus = config.getBoolean("prometheus.enabled", false);
+        var config = andesite.config().getConfig("andesite");
+    
+        var enableRest = config.getBoolean("transport.http.rest");
+        var enableWs = config.getBoolean("transport.http.ws");
+        var enablePrometheus = config.getBoolean("prometheus.enabled");
         
         if(!enableRest && !enableWs && !enablePrometheus && !andesite.pluginManager().requiresRouter()) {
             return false;
         }
-        
-        var nodeRegion = config.get("node.region", "unknown");
-        var nodeId = config.get("node.id", "unknown");
+    
+        var nodeRegion = config.getString("node.region");
+        var nodeId = config.getString("node.id");
         
         var router = Router.router(andesite.vertx());
         
@@ -85,7 +85,7 @@ public class RestHandler {
         andesite.pluginManager().configureRouter(router);
         
         if(enablePrometheus) {
-            router.get(config.get("prometheus.path", "/metrics")).handler(context -> {
+            router.get(config.getString("prometheus.path")).handler(context -> {
                 var writer = new StringWriter();
                 try {
                     TextFormat.write004(writer, CollectorRegistry.defaultRegistry.filteredMetricFamilySamples(
@@ -103,7 +103,7 @@ public class RestHandler {
         
         //verify authentication
         router.route().handler(context -> {
-            var password = andesite.config().get("password");
+            var password = config.hasPath("password") ? config.getString("password") : null;
             if(password != null && !password.equals(RequestUtils.findPassword(context))) {
                 error(context, 401, "Unauthorized");
                 return;
@@ -210,8 +210,8 @@ public class RestHandler {
         }
         
         router.route().handler(context -> error(context, 404, "Not found"));
-        
-        var port = andesite.config().getInt("transport.http.port", 5000);
+    
+        var port = config.getInt("transport.http.port");
         
         log.info("Starting HTTP server on port {}", port);
         

@@ -2,34 +2,33 @@ package andesite.node.util;
 
 import andesite.node.NodeState;
 import andesite.node.Version;
-import andesite.node.config.Config;
 import andesite.node.event.AndesiteEventListener;
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.filter.ThresholdFilter;
+import com.typesafe.config.Config;
 import io.sentry.Sentry;
 import io.sentry.SentryClient;
 import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
 import io.sentry.logback.SentryAppender;
-import io.sentry.util.Util;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 class SentryUtils {
     private static final String SENTRY_APPENDER_NAME = "SENTRY";
     private static SentryClient client;
     
     static void setup(Config config) {
-        var client = Sentry.init(config.get("sentry.dsn"));
+        var client = Sentry.init(config.getString("sentry.dsn"));
         client.setRelease(Version.VERSION);
-        var tags = config.get("sentry.tags");
-        if(tags != null) {
-            client.setTags(Util.parseTags(tags));
-        }
+        client.setTags(parseTags(config.getStringList("sentry.tags")));
         SentryUtils.client = client;
         var loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
         var root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
@@ -41,7 +40,7 @@ class SentryUtils {
             sentryAppender.start();
             
             var warningsOrAboveFilter = new ThresholdFilter();
-            warningsOrAboveFilter.setLevel(config.get("sentry.log-level", Level.WARN.levelStr).toUpperCase());
+            warningsOrAboveFilter.setLevel(config.getString("sentry.log-level").toUpperCase());
             warningsOrAboveFilter.start();
             sentryAppender.addFilter(warningsOrAboveFilter);
             
@@ -77,5 +76,19 @@ class SentryUtils {
                 }
             }
         });
+    }
+    
+    @Nonnull
+    @CheckReturnValue
+    private static Map<String, String> parseTags(@Nonnull List<String> tags) {
+        var map = new HashMap<String, String>();
+        for(var tag : tags) {
+            var split = tag.split(":", 2);
+            if(split.length != 2) {
+                throw new IllegalArgumentException("Invalid tags entry: " + tag);
+            }
+            map.put(split[0], split[1]);
+        }
+        return map;
     }
 }

@@ -36,6 +36,9 @@ javadoc {
 }
 
 dependencies {
+    //Config
+    api "com.typesafe:config:$configVersion"
+    
     //REST, WebSocket, etc
     api "io.vertx:vertx-web:$vertxWebVersion"
 

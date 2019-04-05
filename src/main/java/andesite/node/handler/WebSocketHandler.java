@@ -35,7 +35,7 @@ public class WebSocketHandler {
     public static void setup(@Nonnull Andesite andesite, @Nonnull Router router) {
         router.get("/websocket").handler(handler(andesite, false));
         router.get(
-                andesite.config().get("lavalink.ws-path", "/lavalink")
+                andesite.config().getString("andesite.lavalink.ws-path")
         ).handler(handler(andesite, true));
     }
     

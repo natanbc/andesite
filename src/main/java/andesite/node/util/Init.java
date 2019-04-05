@@ -1,9 +1,9 @@
 package andesite.node.util;
 
 import andesite.node.NodeState;
-import andesite.node.config.Config;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import com.typesafe.config.Config;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
@@ -13,9 +13,9 @@ import java.lang.management.ManagementFactory;
 public class Init {
     public static void preInit(Config config) {
         ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(
-                Level.valueOf(config.get("log-level", "INFO").toUpperCase())
+                Level.valueOf(config.getString("log-level").toUpperCase())
         );
-        if(config.getBoolean("prometheus.enabled", false)) {
+        if(config.getBoolean("prometheus.enabled")) {
             PrometheusUtils.setup();
             var listener = new GCListener();
             for(var gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
@@ -25,16 +25,16 @@ public class Init {
                 }
             }
         }
-        if(config.get("sentry.dsn") != null) {
+        if(config.getBoolean("sentry.enabled")) {
             SentryUtils.setup(config);
         }
     }
     
     public static void postInit(@Nonnull NodeState state) {
-        if(state.config().getBoolean("prometheus.enabled", false)) {
+        if(state.config().getBoolean("andesite.prometheus.enabled")) {
             PrometheusUtils.configureMetrics(state);
         }
-        if(state.config().get("sentry.dsn") != null) {
+        if(state.config().getBoolean("andesite.sentry.enabled")) {
             SentryUtils.configureWarns(state);
         }
     }

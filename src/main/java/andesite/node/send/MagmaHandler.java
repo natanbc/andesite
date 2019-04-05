@@ -1,7 +1,6 @@
 package andesite.node.send;
 
 import andesite.node.Andesite;
-import andesite.node.config.Config;
 import andesite.node.provider.AsyncPacketProviderFactory;
 import andesite.node.send.jdaa.JDASendFactory;
 import andesite.node.send.nio.NioSendFactory;
@@ -9,6 +8,7 @@ import andesite.node.util.ByteArrayProvider;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import com.sedmelluq.discord.lavaplayer.udpqueue.natives.UdpQueueManager;
+import com.typesafe.config.Config;
 import net.dv8tion.jda.core.audio.AudioSendHandler;
 import net.dv8tion.jda.core.audio.factory.IAudioSendFactory;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ public class MagmaHandler implements AudioHandler {
     public MagmaHandler(Andesite andesite) {
         var factory = createSendFactory(andesite);
         this.magma = MagmaApi.of(__ -> factory);
-        this.byteArrayProvider = createArrayProvider(andesite.config());
+        this.byteArrayProvider = createArrayProvider(andesite.config().getConfig("andesite.magma"));
         magma.getEventStream().subscribe(event -> {
             if(event instanceof WebSocketClosed) {
                 var e = (WebSocketClosed) event;
@@ -98,16 +98,18 @@ public class MagmaHandler implements AudioHandler {
     }
     
     private static IAudioSendFactory createSendFactory(Andesite andesite) {
-        var config = andesite.config();
+        var config = andesite.config().getConfig("andesite.magma");
         IAudioSendFactory factory;
         var hasNas = isNasSupported();
-        switch(config.get("send-system.type", hasNas ? "nas" : "nio")) {
+        var hasConfig = config.hasPath("send-system.type");
+        var sendSystem = hasConfig ? config.getString("send-system.type") : hasNas ? "nas" : "nio";
+        switch(sendSystem) {
             case "nas":
                 if(!hasNas) {
                     throw new IllegalArgumentException("NAS is unsupported in this environment. " +
                             "Please choose a different send system.");
                 }
-                factory = new NativeAudioSendFactory(config.getInt("send-system.nas-buffer", 400));
+                factory = new NativeAudioSendFactory(config.getInt("send-system.nas-buffer"));
                 break;
             case "jda":
                 factory = new JDASendFactory();
@@ -116,14 +118,14 @@ public class MagmaHandler implements AudioHandler {
                 factory = new NioSendFactory(andesite.vertx());
                 break;
             default:
-                throw new IllegalArgumentException("No send system with type " + config.get("send-system.type"));
+                throw new IllegalArgumentException("No send system with type " + config.getString("send-system.type"));
         }
-        if(config.getBoolean("send-system.async", true)) {
+        if(config.getBoolean("send-system.async")) {
             factory = new AsyncPacketProviderFactory(factory);
         }
         log.info("Send system: {}, async provider {}",
-                config.get("send-system.type", "nas"),
-                config.getBoolean("send-system.async", true) ? "enabled" : "disabled"
+                sendSystem,
+                config.getBoolean("send-system.async") ? "enabled" : "disabled"
         );
         return factory;
     }
@@ -139,7 +141,7 @@ public class MagmaHandler implements AudioHandler {
     
     private static ByteArrayProvider createArrayProvider(Config config) {
         ByteArrayProvider provider;
-        switch(config.get("magma.array-provider", "create-new")) {
+        switch(config.getString("array-provider")) {
             case "create-new":
                 provider = ByteArrayProvider.createNew();
                 break;
@@ -149,19 +151,17 @@ public class MagmaHandler implements AudioHandler {
                 );
                 break;
             default:
-                throw new IllegalStateException("No provider " + config.get("magma.array-provider"));
+                throw new IllegalStateException("No provider " + config.getString("array-provider"));
         }
-        log.info("Array provider: {}",
-                config.get("magma.array-provider", "create-new")
-        );
+        log.info("Array provider: {}", config.getString("array-provider"));
         return provider;
     }
     
     private static class MagmaSendHandler implements AudioSendHandler {
         private final AudioProvider provider;
         private final ByteArrayProvider arrayProvider;
-        
-        public MagmaSendHandler(@Nonnull AudioProvider provider, @Nonnull ByteArrayProvider arrayProvider) {
+    
+        MagmaSendHandler(@Nonnull AudioProvider provider, @Nonnull ByteArrayProvider arrayProvider) {
             this.provider = provider;
             this.arrayProvider = arrayProvider;
         }

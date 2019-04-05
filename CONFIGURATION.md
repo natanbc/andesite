@@ -1,72 +1,41 @@
 # Configuration
 
-Andesite can be configured from 3 sources
+Andesite can be configured from 2 sources, from highest to lowest priority
 
-- System environment variables
-- JVM system properties
-- A JSON file named `config.json`¹ in the application working directory
+- A HOCON file named `application.conf` in the application working directory
+- System environment variables (doesn't support arrays)
 
-Keys are loaded by default in the order `file, system properties, environment variables`²
+All keys must be prefixed with `andesite.`. When using a HOCON file, they can be put inside a
+block named `andesite`.
 
-
-¹ This name can be changed with the `config-file` setting (file is ignored when reading this setting).
-
-² This order can be changed with the `andesite.config.load-order` JVM system property, as a comma separated list of
-the sources to use (valid sources are `file`, `props` and `env`).
-
-## System properties
-
-System properties are read from the `andesite.<name>` JVM system property.
-
-Examples:
-
-| setting | system property |
-|---------|-----------------|
-| x | andesite.x |
-| x.y | andesite.x.y |
-| x.y-z | andesite.x.y-z |
-
-## Environment variables
-
-Environment variables are read from the `ANDESITE_<name, uppercase, dots and slashes replaced with underscores>` variable.
-
-Example:
-
-| setting | system property |
-|---------|-----------------|
-| x | ANDESITE_X |
-| x.y | ANDESITE_X_Y |
-| x.y-z | ANDESITE_X_Y_Z |
+An example config can be found [here](https://github.com/natanbc/andesite-node/blob/master/application.conf.example)
 
 # Settings
 
 | key | type | description | default |
 |-----|------|-------------|---------|
-| extra-plugins | string | comma separated list of paths to load plugins from, besides the default path | null |
+| extra-plugins | string[] | array of paths to load plugins from, besides the default path | [] |
 | password | string | password to use for http/websocket access. No filtering is done if null | null |
 | debug-password | string | password to use for debug routes. If missing or null, the regular password is used instead. | null |
 | log-level | string | lowest level to log | INFO |
-| audio-handler | string | audio handler implementation to use. by default, only `magma` is supported. Plugins may [add more implementations](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md#custom-audio-handlers), in which case the fully qualified class name must be used | magma |
 | auto-ytsearch | boolean | whether or not andesite should automatically prepend `ytsearch:` to identifiers that don't match known prefixes when loading tracks | true |
-| magma.array-provider | string | either `create-new` or `reuse-existing`. reuse-existing is more efficient, but only works with specific JVMs. Don't complain if it crashes. If it doesn't crash, it's most likely safe to use | create-new |
-| lavalink.ws-path | string | route to run the lavalink websocket on. | /lavalink |
-| send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | `nas` on supported environments, `nio` otherwise |
-| send-system.async | boolean | whether or not to use jda-async-packet-provider to wrap the send system | true |
-| send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |
-| send-system.non-allocating | boolean | whether or not to use the non allocating frame buffer | false |
-| jfr.enabled | boolean | whether or not to enable [JFR debug routes](https://github.com/natanbc/andesite-node/blob/master/DEBUGGING.md) | true |
+| audio-handler | string | audio handler implementation to use. by default, only `magma` is supported. Plugins may [add more implementations](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md#custom-audio-handlers), in which case the fully qualified class name must be used | magma |
 | node.region | string | region of the node | "unknown" |
 | node.id | string | id of the node | "unknown" |
-| prometheus.enabled | boolean | whether or not to enable prometheus metrics | false |
-| prometheus.path | string | path to collect prometheus metrics, uses the http port | /metrics |
-| sentry.dsn | string | sentry dsn to report errors | null |
-| sentry.tags | string | comma separated list of `key:value` pairs for sentry tags | null |
-| sentry.log-level | string | lowest level to send to sentry | WARN |
 | transport.http.port | integer | port to run the http/websocket server | 5000 |
 | transport.http.rest | boolean | whether or not to enable the http api | true |
 | transport.http.ws | boolean | whether or not to enable the websocket api | true |
 | transport.singyeong.enabled | boolean | whether or not to enable the singyeong api | false |
 | transport.singyeong.dsn | string | singyeong [dsn](#singyeong-dsn-format) for connecting | null |
+| prometheus.enabled | boolean | whether or not to enable prometheus metrics | false |
+| prometheus.path | string | path to collect prometheus metrics, uses the http port | /metrics |
+| sentry.enabled | boolean | whether or not to enable sentry | false |
+| sentry.dsn | string | sentry dsn to report errors | null |
+| sentry.tags | string | comma separated list of `key:value` pairs for sentry tags | null |
+| sentry.log-level | string | lowest level to send to sentry | WARN |
+| lavaplayer.non-allocating | boolean | whether or not to use the non allocating frame buffer | true |
+| lavaplayer.youtube.max-playlist-page-count | maximum number of pages loaded from one playlist. There are 100 tracks per page. | 6 |
+| lavaplayer.youtube.mix-loader-max-pool-size | maximum number of threads used by the mix loader pool | 10 |
 | source.bandcamp | boolean | whether or not to enable playing and resolving tracks from bandcamp | true |
 | source.beam | boolean | whether or not to enable playing and resolving tracks from beam | true |
 | source.http | boolean | whether or not to enable playing and resolving tracks from http urls | **false** |
@@ -75,8 +44,14 @@ Example:
 | source.twitch | boolean | whether or not to enable playing and resolving tracks from twitch | true |
 | source.vimeo | boolean | whether or not to enable playing and resolving tracks from vimeo | true |
 | source.youtube | boolean | whether or not to enable playing and resolving tracks from youtube | true |
-| youtube.max-playlist-page-count | maximum number of pages loaded from one playlist. There are 100 tracks per page. | 6 |
-| youtube.mix-loader-max-pool-size | maximum number of threads used by the mix loader pool | 10 |
+| lavalink.ws-path | string | route to run the lavalink websocket on. | / |
+| magma.array-provider | string | either `create-new` or `reuse-existing`. reuse-existing is more efficient, but only works with specific JVMs. Don't complain if it crashes. If it doesn't crash, it's most likely safe to use | create-new |
+| magma.send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | `nas` on supported environments, `nio` otherwise |
+| magma.send-system.async | boolean | whether or not to use jda-async-packet-provider to wrap the send system | true |
+| magma.send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |
+
+| jfr.enabled | boolean | whether or not to enable [JFR debug routes](https://github.com/natanbc/andesite-node/blob/master/DEBUGGING.md) | true |
+
 
 \* When running on architectures not supported by [jda-nas](https://github.com/sedmelluq/jda-nas), such as
 ARM or Darwin devices, you must use either `jda` or `nio` for the send system. For production, nio is preferred

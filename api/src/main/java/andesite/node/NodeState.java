@@ -1,11 +1,11 @@
 package andesite.node;
 
-import andesite.node.config.Config;
 import andesite.node.event.EventDispatcher;
 import andesite.node.handler.AndesiteRequestHandler;
 import andesite.node.player.AndesitePlayer;
 import andesite.node.send.AudioHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.typesafe.config.Config;
 import io.vertx.core.Vertx;
 
 import javax.annotation.CheckReturnValue;
@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 public interface NodeState {
     /**
      * Config instance used by the node. Plugins should read configurations from this object,
-     * which handles reading from the sources enabled by the user.
+     * which loads from the appropriate sources.
      *
      * @return The node configuration.
      */

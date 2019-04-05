@@ -22,15 +22,15 @@ public class SingyeongHandler {
     private static final Logger log = LoggerFactory.getLogger(SingyeongHandler.class);
     
     public static boolean setup(@Nonnull Andesite andesite) {
-        var config = andesite.config();
-        var enabled = config.getBoolean("transport.singyeong.enabled", false);
+        var config = andesite.config().getConfig("andesite");
+        var enabled = config.getBoolean("transport.singyeong.enabled");
         if(!enabled) {
             return false;
         }
-        var nodeRegion = config.get("node.region", "unknown");
-        var nodeId = config.get("node.id", "unknown");
-        
-        var dsn = config.require("transport.singyeong.dsn");
+        var nodeRegion = config.getString("node.region");
+        var nodeId = config.getString("node.id");
+    
+        var dsn = config.getString("transport.singyeong.dsn");
         
         log.info("Connecting to singyeong with dsn {}", dsn);
         

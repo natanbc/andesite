@@ -1,6 +1,5 @@
 package andesite.node;
 
-import andesite.node.config.Config;
 import andesite.node.event.EventBuffer;
 import andesite.node.event.EventDispatcherImpl;
 import andesite.node.handler.RequestHandler;
@@ -14,6 +13,7 @@ import andesite.node.util.ConfigUtil;
 import andesite.node.util.FilterUtil;
 import andesite.node.util.Init;
 import andesite.node.util.LazyInit;
+import com.github.natanbc.nativeloader.NativeLibLoader;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -27,6 +27,7 @@ import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceMan
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
+import com.typesafe.config.Config;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,12 +73,13 @@ public class Andesite implements NodeState {
     private final AudioPlayerManager pcmPlayerManager = new DefaultAudioPlayerManager();
     private final EventDispatcherImpl dispatcher = new EventDispatcherImpl(this);
     private final Vertx vertx;
-    private final Config config;
+    private final Config rootConfig;
     private final AudioHandler audioHandler;
     private final RequestHandler handler;
     private final Set<String> enabledSources;
     
-    private Andesite(@Nonnull Vertx vertx, @Nonnull Config config) throws IOException {
+    private Andesite(@Nonnull Vertx vertx, @Nonnull Config rootConfig) throws IOException {
+        var config = rootConfig.getConfig("andesite");
         var plugins = new File("plugins").listFiles();
         if(plugins != null) {
             for(var f : plugins) {
@@ -85,22 +87,25 @@ public class Andesite implements NodeState {
                 pluginManager.load(f);
             }
         }
-        var extraPluginLocations = config.get("extra-plugins");
-        if(extraPluginLocations != null) {
-            for(var f : extraPluginLocations.split(",")) {
-                log.info("Loading plugins from {}", f);
-                pluginManager.load(new File(f));
-            }
+        var extraPluginLocations = config.getStringList("extra-plugins");
+        for(var f : extraPluginLocations) {
+            log.info("Loading plugins from {}", f);
+            pluginManager.load(new File(f));
         }
         this.vertx = vertx;
-        this.config = config;
+        this.rootConfig = pluginManager.applyPluginDefaults(rootConfig);
         this.audioHandler = createAudioHandler(config);
         this.handler = new RequestHandler(this);
         pluginManager.init();
         pluginManager.configurePlayerManager(playerManager);
         pluginManager.configurePlayerManager(pcmPlayerManager);
         this.enabledSources = SOURCE_MANAGERS.keySet().stream()
-                .filter(key -> config.getBoolean("source." + key, !DISABLED_BY_DEFAULT.contains(key)))
+                .filter(key -> {
+                    if(config.hasPath("source." + key)) {
+                        return config.getBoolean("source." + key);
+                    }
+                    return !DISABLED_BY_DEFAULT.contains(key);
+                })
                 .peek(key -> playerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
                 .peek(key -> pcmPlayerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
                 .collect(Collectors.toSet());
@@ -112,7 +117,7 @@ public class Andesite implements NodeState {
         //we need to set the cleanup to basically never run so mixer players aren't destroyed without need.
         playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
         playerManager.getConfiguration().setFilterHotSwapEnabled(true);
-        if(config.getBoolean("send-system.non-allocating", false)) {
+        if(config.getBoolean("lavaplayer.non-allocating")) {
             playerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
         }
         pcmPlayerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
@@ -155,7 +160,7 @@ public class Andesite implements NodeState {
     @CheckReturnValue
     @Override
     public Config config() {
-        return config;
+        return rootConfig;
     }
     
     @Nonnull
@@ -255,7 +260,7 @@ public class Andesite implements NodeState {
     @Nonnull
     @CheckReturnValue
     private AudioHandler createAudioHandler(@Nonnull Config config) {
-        var handlerName = config.get("audio-handler", "magma");
+        var handlerName = config.getString("audio-handler");
         //noinspection SwitchStatementWithTooFewBranches
         switch(handlerName) {
             case "magma":
@@ -270,15 +275,16 @@ public class Andesite implements NodeState {
         if(yt == null) {
             return;
         }
-        yt.setPlaylistPageCount(config.getInt("youtube.max-playlist-page-count", 6));
-        yt.setMixLoaderMaximumPoolSize(config.getInt("youtube.mix-loader-max-pool-size", 10));
+        yt.setPlaylistPageCount(config.getInt("lavaplayer.youtube.max-playlist-page-count"));
+        yt.setMixLoaderMaximumPoolSize(config.getInt("lavaplayer.youtube.mix-loader-max-pool-size"));
     }
     
     public static void main(String[] args) throws IOException {
+        log.info("System info: {}", NativeLibLoader.loadSystemInfo());
         log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
-        var config = ConfigUtil.load();
-        Init.preInit(config);
-        var andesite = new Andesite(Vertx.vertx(), config);
+    
+        var andesite = createAndesite();
+        var config = andesite.config().getConfig("andesite");
         Init.postInit(andesite);
         //NOTE: use the bitwise or operator, as it forces evaluation of all elements
         if(!(RestHandler.setup(andesite)
@@ -288,10 +294,19 @@ public class Andesite implements NodeState {
             System.exit(-1);
         }
         log.info("Handlers: REST {}, WebSocket {}, Singyeong {}",
-                config.getBoolean("transport.http.rest", true) ? "enabled" : "disabled",
-                config.getBoolean("transport.http.ws", true) ? "enabled" : "disabled",
-                config.getBoolean("transport.singyeong.enabled", false) ? "enabled" : "disabled"
+                config.getBoolean("transport.http.rest") ? "enabled" : "disabled",
+                config.getBoolean("transport.http.ws") ? "enabled" : "disabled",
+                config.getBoolean("transport.singyeong.enabled") ? "enabled" : "disabled"
         );
         log.info("Timescale {}", FilterUtil.TIMESCALE_AVAILABLE ? "available" : "unavailable");
+    }
+    
+    @Nonnull
+    @CheckReturnValue
+    private static Andesite createAndesite() throws IOException {
+        var rootConfig = ConfigUtil.load();
+        var config = rootConfig.getConfig("andesite");
+        Init.preInit(config);
+        return new Andesite(Vertx.vertx(), rootConfig);
     }
 }

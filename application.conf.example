@@ -1,0 +1,74 @@
+andesite {
+  extra-plugins = []
+  password = null
+  debug-password = null
+  log-level = INFO
+  auto-ytsearch = true
+  audio-handler = magma
+
+  node {
+    region = unknown
+    id = unknown
+  }
+
+  transport {
+    http {
+      rest = true
+      ws = true
+
+      port = 5000
+    }
+    singyeong {
+      enabled = false
+      dsn = "singyeong://andesite@localhost:9876"
+    }
+  }
+
+  prometheus {
+    enabled = false
+    path = /metrics
+  }
+
+  sentry {
+    enabled = false
+    dsn = null
+    tags = []
+    log-level = WARN
+  }
+
+  lavaplayer {
+    non-allocating = true
+    youtube {
+      max-playlist-page-count = 6
+      mix-loader-max-pool-size = 10
+    }
+  }
+
+  source {
+    bandcamp = true,
+    beam = true,
+    http = false,
+    local = false,
+    soundcloud = true,
+    twitch = true,
+    vimeo = true,
+    youtube = true
+  }
+
+  lavalink {
+    ws-path = /
+  }
+
+  magma {
+    # CHANGE AT YOUR OWN RISK
+    array-provider = create-new
+
+    send-system {
+      type = nas
+      async = true
+
+      # Unused if type != nas
+      nas-buffer = 400
+    }
+  }
+}

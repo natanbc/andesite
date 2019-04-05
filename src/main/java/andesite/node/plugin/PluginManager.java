@@ -4,6 +4,8 @@ import andesite.node.NodeState;
 import andesite.node.Plugin;
 import andesite.node.handler.WebSocketState;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import gg.amy.singyeong.Dispatch;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -73,6 +75,15 @@ public class PluginManager {
         for(var plugin : p) {
             loadedPlugins.add(plugin.getClass().getName());
         }
+    }
+    
+    public Config applyPluginDefaults(@Nonnull Config config) {
+        for(var l : loaders) {
+            if(l.hasFile("reference.conf")) {
+                config = config.withFallback(ConfigFactory.parseResources(l, "reference.conf"));
+            }
+        }
+        return config;
     }
     
     public void init() {
