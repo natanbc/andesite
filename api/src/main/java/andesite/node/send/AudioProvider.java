@@ -1,5 +1,7 @@
 package andesite.node.send;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 
 /**
@@ -15,6 +17,7 @@ public interface AudioProvider extends AutoCloseable {
      *
      * @return Whether or not an audio frame was loaded.
      */
+    @CheckReturnValue
     boolean canProvide();
     
     /**
@@ -22,6 +25,8 @@ public interface AudioProvider extends AutoCloseable {
      *
      * @return Buffer containing the frame's data.
      */
+    @Nonnull
+    @CheckReturnValue
     ByteBuffer provide();
     
     /**

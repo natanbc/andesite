@@ -130,27 +130,34 @@ public class WebSocketHandler {
             andesite.dispatcher().register(listener);
             ws.closeHandler(__ -> handleClose());
         }
-        
+    
+        @CheckReturnValue
+        @Nonnull
         @Override
         public String user() {
             return user;
         }
-        
+    
+        @CheckReturnValue
+        @Nonnull
         @Override
         public ServerWebSocket ws() {
             return ws;
         }
-        
+    
+        @CheckReturnValue
+        @Nonnull
         @Override
         public String connectionId() {
-            return String.valueOf(connectionId);
+            return Long.toString(connectionId);
         }
-        
+    
+        @CheckReturnValue
         @Override
         public boolean lavalink() {
             return lavalink;
         }
-        
+    
         @CheckReturnValue
         @Override
         @SuppressWarnings("unchecked")

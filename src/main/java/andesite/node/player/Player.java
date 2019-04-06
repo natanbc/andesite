@@ -200,6 +200,7 @@ public class Player implements AndesitePlayer {
         }
     }
     
+    @CheckReturnValue
     @Override
     public boolean canProvide() {
         lastUse = System.nanoTime();
@@ -220,6 +221,8 @@ public class Player implements AndesitePlayer {
         return r;
     }
     
+    @CheckReturnValue
+    @Nonnull
     @Override
     public ByteBuffer provide() {
         return realProvider.provide();

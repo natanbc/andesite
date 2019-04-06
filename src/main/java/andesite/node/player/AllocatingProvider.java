@@ -4,8 +4,9 @@ import andesite.node.send.AudioProvider;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
-import com.sedmelluq.discord.lavaplayer.track.playback.ImmutableAudioFrame;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 
 class AllocatingProvider implements AudioProvider {
@@ -17,24 +18,17 @@ class AllocatingProvider implements AudioProvider {
         this.player = player;
     }
     
+    @CheckReturnValue
     @Override
     public boolean canProvide() {
         return (lastFrame = player.provide()) != null;
     }
     
+    @CheckReturnValue
+    @Nonnull
     @Override
     public ByteBuffer provide() {
-        //the correct way would be lastFrame.getData(buffer.array(), 0);
-        //but due to a bug in lavaplayer, the offset argument is used as
-        //the length of the data to copy
-        
-        //instanceof check just to be safe, the bug is only present
-        //in ImmutableAudioFrame
-        if(lastFrame instanceof ImmutableAudioFrame) {
-            lastFrame.getData(buffer.array(), lastFrame.getDataLength());
-        } else {
-            lastFrame.getData(buffer.array(), 0);
-        }
+        lastFrame.getData(buffer.array(), 0);
         return buffer.position(0).limit(lastFrame.getDataLength());
     }
     

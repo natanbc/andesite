@@ -13,6 +13,8 @@ public interface WebSocketState {
      *
      * @return The user id.
      */
+    @Nonnull
+    @CheckReturnValue
     String user();
     
     /**
@@ -21,6 +23,8 @@ public interface WebSocketState {
      *
      * @return The websocket connection.
      */
+    @Nonnull
+    @CheckReturnValue
     ServerWebSocket ws();
     
     /**
@@ -28,6 +32,8 @@ public interface WebSocketState {
      *
      * @return The id of this connection.
      */
+    @Nonnull
+    @CheckReturnValue
     String connectionId();
     
     /**
@@ -37,6 +43,7 @@ public interface WebSocketState {
      *
      * @return Whether or not this connection is lavalink compatible.
      */
+    @CheckReturnValue
     boolean lavalink();
     
     /**

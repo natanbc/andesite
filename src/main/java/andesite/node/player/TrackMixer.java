@@ -63,6 +63,7 @@ public class TrackMixer implements AndesiteTrackMixer {
         }
     }
     
+    @CheckReturnValue
     @Override
     public boolean canProvide() {
         var v = false;
@@ -79,6 +80,8 @@ public class TrackMixer implements AndesiteTrackMixer {
         return v;
     }
     
+    @CheckReturnValue
+    @Nonnull
     @Override
     public ByteBuffer provide() {
         var buffer = mixBuffer; //avoid getfield opcode

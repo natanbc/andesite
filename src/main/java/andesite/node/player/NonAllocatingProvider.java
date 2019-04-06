@@ -5,6 +5,8 @@ import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
@@ -37,12 +39,15 @@ class NonAllocatingProvider implements AudioProvider {
         frame.setBuffer(buffer);
     }
     
+    @CheckReturnValue
     @Override
     public boolean canProvide() {
         buffer.clear();
         return player.provide(frame);
     }
     
+    @CheckReturnValue
+    @Nonnull
     @Override
     public ByteBuffer provide() {
         if(INTERNAL_BUFFER_GETTER.apply(frame) != buffer) {
