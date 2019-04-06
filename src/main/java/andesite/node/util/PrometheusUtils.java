@@ -5,12 +5,16 @@ import andesite.node.event.AndesiteEventListener;
 import andesite.node.player.AndesitePlayer;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import io.prometheus.client.Collector;
+import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.hotspot.DefaultExports;
 import io.prometheus.client.logback.InstrumentedAppender;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.lang.management.ManagementFactory;
+import java.util.List;
 
 class PrometheusUtils {
     static void setup() {
@@ -27,6 +31,8 @@ class PrometheusUtils {
     }
     
     static void configureMetrics(@Nonnull NodeState state) {
+        CollectorRegistry.defaultRegistry.register(new UptimeCollector());
+        
         var players = Gauge.build()
                 .namespace("andesite")
                 .name("players")
@@ -46,5 +52,19 @@ class PrometheusUtils {
                 players.dec();
             }
         });
+    }
+    
+    private static class UptimeCollector extends Collector {
+        private final Gauge gauge = Gauge.build()
+                .namespace("andesite")
+                .name("uptime")
+                .help("Uptime of the andesite JVM")
+                .create();
+        
+        @Override
+        public List<MetricFamilySamples> collect() {
+            gauge.set(ManagementFactory.getRuntimeMXBean().getUptime() / 1000.0);
+            return gauge.collect();
+        }
     }
 }
