@@ -1,14 +1,29 @@
 package andesite.node.handler;
 
+import andesite.node.util.metadata.MetadataEntry;
+import andesite.node.util.metadata.NamePartJoiner;
 import io.vertx.core.json.JsonObject;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
 public interface AndesiteRequestHandler {
+    /**
+     * Returns a map of the metadata fields to their values. The keys
+     * will be formatted based on the provided {@link NamePartJoiner}.
+     *
+     * @param joiner Formatter for the map keys.
+     *
+     * @return The metadata map.
+     */
+    @Nonnull
+    @CheckReturnValue
+    Map<String, MetadataEntry> metadataFields(@Nonnull NamePartJoiner joiner);
+    
     /**
      * Provides a voice server update. The provided json object must be a valid
      * voice update payload.

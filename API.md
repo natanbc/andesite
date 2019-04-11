@@ -65,11 +65,15 @@ are returned.
 ## WebSocket
 
 - The regular websocket is available on the `/websocket` route.
-- A (mostly*) lavalink compatible websocket is available by default on the `/lavalink` route. 
+- A (mostly*) lavalink compatible websocket is available by default on the `/` route. 
 
 All payloads must be valid json objects. If parsing fails, the socket is closed with code 4001.
+Both text and binary frames are accepted, as long as the data is valid UTF 8.
 
-All payloads must have `op` and `guildId` keys, which must be strings.
+All payloads must have an `op` key, which must be a string. This restriction does not apply to
+custom handling of payloads done by plugins.
+
+Responses from the server will always contain an `op` 
 
 Payloads can override the `User-Id` header by providing an `userId` field. This override is
 valid only for that payload. All responses will have an `userId` field containing either the
@@ -101,18 +105,59 @@ are discarded and buffering will stop. To get the missed events, clients must re
 header containing the value returned by the `Andesite-Connection-Id` received earlier. All IDs are single use and
 reconnects must save the new ID returned. To disable buffering, simply send an `event-buffer` payload with timeout of 0.
 
-Upon connecting, andesite will send an object containing the connection id. This can be used
-to read it when the response headers are not exposed (eg vert.x websocket client).
-
-```json
-{
-    "op": "connection-id",
-    "id": "the id goes here"
-}
-```
-
 All commands that directly interact with players (updating it, changing it's state, etc) send a player update
 as a response.
+
+Events that may be sent by the websocket are:
+
+* Connection ID (`connection-id` op, not sent on lavalink compat)
+
+| key | type | description |
+|-----|------|-------------|
+| id | string | ID of the connection |
+
+* Metadata (`metadata` op, not sent on lavalink compat)
+
+| key | type | description |
+|-----|------|-------------|
+| data | object | map of metadata key to value. Values may be integers, strings or arrays of strings |
+
+* Player Update (`player-update` op, `playerUpdate` on lavalink compat)
+
+| key | type | description |
+|-----|------|-------------|
+| userId | string | ID of the user that owns the player |
+| guildId | string | ID of the guild that owns the player |
+| state | [player](#player) | State of the player |
+
+* Event (`event` op)
+
+| key | type | description |
+|-----|------|-------------|
+| type | string | One of TrackStartEvent, TrackEndEvent, TrackExceptionEvent, TrackStuckEvent, WebSocketClosedEvent |
+| userId | string | ID of the user affected by this event |
+| guildId | string | ID of the guild affected by this event |
+
+Additional event-specific data is also included:
+
+  * reason (string), code (integer), byRemote (boolean) for WebSocketClosedEvent
+  * track (string) for TrackStartEvent
+  * track (string), reason (string), mayStartNext (boolean) for TrackEndEvent
+  * track (string), error (string), exception(short [error](#error)) for TrackExceptionEvent
+  * track (string), thresholdMs (integer) for TrackStuckEvent
+
+* Pong (`pong` op)
+
+| key | type | description |
+|-----|------|-------------|
+| userId | string | default user ID for this connection, provided on the ws handshake |
+
+* Stats (`stats` op)
+
+| key | type | description |
+|-----|------|-------------|
+| userId | string | default user ID for this connection, provided on the ws handshake |
+| stats | object | map containing the node stats |
 
 \* Lavalink resumes are not supported.
 
@@ -154,12 +199,13 @@ All payloads sent via singyeong are equal to those sent via [web socket](#websoc
 an `userId` key.
 
 Responses to commands are sent based on the `response-app`, `response-nonce` and `response-query`
-fields. The defaults are the sender's app id, the command nonce and an empty query, respectively.
+fields. `response-nonce` and `response-query` default to the command nonce and an empty query, respectively.
 
 When sending a `play` op, you can set the `receiver` and `query` fields to route the events sent by the player.
 They default to the application id sending the event and an empty query, respectively.
 
 Setting the `noreply` field to `true` will prevent a response from being sent (events are still sent).
+Sending a null or absent `response-app` has the same effect.
 
 # Entities
 

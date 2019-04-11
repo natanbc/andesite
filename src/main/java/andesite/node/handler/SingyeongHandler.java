@@ -2,9 +2,10 @@ package andesite.node.handler;
 
 import andesite.node.Andesite;
 import andesite.node.NodeState;
-import andesite.node.Version;
 import andesite.node.event.AndesiteEventListener;
 import andesite.node.player.AndesitePlayer;
+import andesite.node.util.metadata.MetadataType;
+import andesite.node.util.metadata.NamePartJoiner;
 import gg.amy.singyeong.Dispatch;
 import gg.amy.singyeong.QueryBuilder;
 import gg.amy.singyeong.SingyeongClient;
@@ -14,6 +15,7 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -148,7 +150,7 @@ public class SingyeongHandler {
                     break;
                 }
                 case "ping": {
-                    sendResponse(client, event, payload.copy().put("op", "pong"));
+                    sendResponse(client, event, payload.put("op", "pong"));
                     break;
                 }
             }
@@ -157,18 +159,9 @@ public class SingyeongHandler {
         
         client.connect()
                 .thenRun(() -> {
-                    client.updateMetadata("andesite-version", SingyeongType.STRING, Version.VERSION);
-                    client.updateMetadata("andesite-version-major", SingyeongType.STRING, Version.VERSION_MAJOR);
-                    client.updateMetadata("andesite-version-minor", SingyeongType.STRING, Version.VERSION_MINOR);
-                    client.updateMetadata("andesite-version-revision", SingyeongType.STRING, Version.VERSION_REVISION);
-                    client.updateMetadata("andesite-version-commit", SingyeongType.STRING, Version.COMMIT);
-                    client.updateMetadata("andesite-region", SingyeongType.STRING, nodeRegion);
-                    client.updateMetadata("andesite-id", SingyeongType.STRING, nodeId);
-                    client.updateMetadata("andesite-enabled-sources", SingyeongType.LIST,
-                            andesite.enabledSources().stream().reduce(new JsonArray(), JsonArray::add, JsonArray::addAll));
-                    client.updateMetadata("andesite-loaded-plugins", SingyeongType.LIST,
-                            andesite.pluginManager().loadedPlugins().stream()
-                                    .reduce(new JsonArray(), JsonArray::add, JsonArray::addAll));
+                    andesite.requestHandler().metadataFields(NamePartJoiner.DASHED).forEach((k, v) ->
+                            client.updateMetadata(k, toSingyeong(v.type()), v.rawValue())
+                    );
                     client.updateMetadata("andesite-connections", SingyeongType.LIST, new JsonArray());
                     log.info("Singyeong connection established");
                 })
@@ -193,12 +186,31 @@ public class SingyeongHandler {
                                      @Nullable JsonObject payload) {
         if(payload == null) return;
         var data = dispatch.data();
-        if(data.getBoolean("noreply", false)) return;
+        if(data.getString("response-app") == null || data.getBoolean("noreply", false)) {
+            return;
+        }
         client.send(
-                data.getString("response-app", dispatch.sender()),
+                data.getString("response-app"),
                 data.getString("response-nonce", dispatch.nonce()),
                 data.getJsonArray("response-query", new QueryBuilder().build()),
                 payload.put("userId", data.getString("userId"))
         );
+    }
+    
+    @Nonnull
+    @CheckReturnValue
+    private static SingyeongType toSingyeong(@Nonnull MetadataType type) {
+        switch(type) {
+            case STRING:
+                return SingyeongType.STRING;
+            case INTEGER:
+                return SingyeongType.INTEGER;
+            case STRING_LIST:
+                return SingyeongType.LIST;
+            case VERSION:
+                return SingyeongType.VERSION;
+            default:
+                throw new AssertionError();
+        }
     }
 }

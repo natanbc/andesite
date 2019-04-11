@@ -2,7 +2,7 @@
 
 Standalone, [mostly](#lavalink-compatibility) lavalink compatible audio sending node.
 
-Support for andesite can be found in the [catnip guild](https://discord.gg/PVzMmea), 
+Support for andesite can be found in the [amyware server](https://discord.gg/PVzMmea), 
 on the #andesite channel.
 
 # Features

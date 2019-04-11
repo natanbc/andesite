@@ -4,9 +4,12 @@ import andesite.node.Andesite;
 import andesite.node.NodeState;
 import andesite.node.event.AndesiteEventListener;
 import andesite.node.player.Player;
+import andesite.node.util.metadata.MetadataEntry;
+import andesite.node.util.metadata.NamePartJoiner;
 import io.vertx.core.Handler;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.http.WebSocketFrame;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -68,19 +71,45 @@ public class WebSocketHandler {
                     } catch(Exception ignored) {
                     }
                 }
-                ws.writeTextMessage(new JsonObject()
-                        .put("op", "connection-id")
-                        //making it a string allows a future change of the
-                        //id format without breaking clients - the actual
-                        //format is opaque to them.
-                        .put("id", String.valueOf(id))
-                        .encode()
-                );
+                if(!lavalinkConnection) {
+                    ws.writeTextMessage(new JsonObject()
+                            .put("op", "connection-id")
+                            //making it a string allows a future change of the
+                            //id format without breaking clients - the actual
+                            //format is opaque to them.
+                            .put("id", String.valueOf(id))
+                            .encode()
+                    );
+                    var metadata = new JsonObject();
+                    andesite.requestHandler().metadataFields(NamePartJoiner.LOWER_CAMEL_CASE).forEach((k, v) ->
+                            metadata.put(k, toJson(v))
+                    );
+                    ws.writeTextMessage(new JsonObject()
+                            .put("op", "metadata")
+                            .put("data", metadata)
+                            .encode()
+                    );
+                }
                 ws.frameHandler(new FrameHandler(andesite, userId, ws, id, lavalinkConnection));
             } else {
                 context.next();
             }
         };
+    }
+    
+    @Nonnull
+    @CheckReturnValue
+    private static Object toJson(@Nonnull MetadataEntry entry) {
+        switch(entry.type()) {
+            case INTEGER:
+            case STRING:
+            case VERSION:
+                return entry.rawValue();
+            case STRING_LIST:
+                return new JsonArray(entry.asStringList());
+            default:
+                throw new AssertionError();
+        }
     }
     
     private static class FrameHandler implements Handler<WebSocketFrame>, WebSocketState {
@@ -238,7 +267,7 @@ public class WebSocketHandler {
                 case "get-stats": {
                     ws.writeFinalTextFrame(new JsonObject()
                             .put("op", "stats")
-                            .put("userId", user)
+                            .put("userId", this.user)
                             .put("stats", andesite.requestHandler().nodeStats())
                             .encode()
                     );
@@ -314,7 +343,7 @@ public class WebSocketHandler {
                     break;
                 }
                 case "ping": {
-                    ws.writeFinalTextFrame(payload.copy().put("userId", user).put("op", "pong").encode());
+                    ws.writeFinalTextFrame(payload.put("userId", this.user).put("op", "pong").encode());
                     break;
                 }
             }

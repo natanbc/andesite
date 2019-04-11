@@ -2,9 +2,9 @@ package andesite.node.handler;
 
 import andesite.node.Andesite;
 import andesite.node.NodeState;
-import andesite.node.Version;
 import andesite.node.util.MemoryBodyHandler;
 import andesite.node.util.RequestUtils;
+import andesite.node.util.metadata.NamePartJoiner;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.common.TextFormat;
@@ -60,15 +60,9 @@ public class RestHandler {
                     context.normalisedPath(),
                     context.request().remoteAddress()
             );
-            context.response().putHeader("Andesite-Version", Version.VERSION);
-            context.response().putHeader("Andesite-Version-Major", Version.VERSION_MAJOR);
-            context.response().putHeader("Andesite-Version-Minor", Version.VERSION_MINOR);
-            context.response().putHeader("Andesite-Version-Revision", Version.VERSION_REVISION);
-            context.response().putHeader("Andesite-Version-Commit", Version.COMMIT);
-            context.response().putHeader("Andesite-Node-Region", nodeRegion);
-            context.response().putHeader("Andesite-Node-Id", nodeId);
-            context.response().putHeader("Andesite-Enabled-Sources", String.join(",", andesite.enabledSources()));
-            context.response().putHeader("Andesite-Loaded-Plugins", String.join(",", andesite.pluginManager().loadedPlugins()));
+            andesite.requestHandler().metadataFields(NamePartJoiner.HTTP_HEADER).forEach((k, v) ->
+                    context.response().putHeader("Andesite-" + k, v.toString())
+            );
             if(context.request().getHeader("upgrade") == null) {
                 context.response().putHeader("Content-Type", "application/json");
             }

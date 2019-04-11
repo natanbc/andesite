@@ -1,9 +1,12 @@
 package andesite.node.handler;
 
 import andesite.node.Andesite;
+import andesite.node.Version;
 import andesite.node.player.BasePlayer;
 import andesite.node.player.FrameLossCounter;
 import andesite.node.util.RequestUtils;
+import andesite.node.util.metadata.MetadataEntry;
+import andesite.node.util.metadata.NamePartJoiner;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
@@ -22,13 +25,29 @@ import java.lang.management.MemoryUsage;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class RequestHandler implements AndesiteRequestHandler {
-    private static final Class<?> INTERNAL_BEAN_CLASS;
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
+    private static final Map<List<String>, Function<Andesite, MetadataEntry>> METADATA_FIELDS = Map.of(
+            List.of("version"), __ -> MetadataEntry.version(Version.VERSION),
+            List.of("version", "major"), __ -> MetadataEntry.string(Version.VERSION_MAJOR),
+            List.of("version", "minor"), __ -> MetadataEntry.string(Version.VERSION_MINOR),
+            List.of("version", "revision"), __ -> MetadataEntry.string(Version.VERSION_REVISION),
+            List.of("version", "commit"), __ -> MetadataEntry.string(Version.COMMIT),
+            List.of("version", "build"), __ -> MetadataEntry.integer(Version.BUILD_NUMBER),
+            List.of("node", "region"), andesite -> MetadataEntry.string(andesite.config().getString("andesite.node.region")),
+            List.of("node", "id"), andesite -> MetadataEntry.string(andesite.config().getString("andesite.node.id")),
+            List.of("enabled", "sources"), andesite -> MetadataEntry.stringList(andesite.enabledSources()),
+            List.of("loaded", "plugins"), andesite -> MetadataEntry.stringList(andesite.pluginManager().loadedPlugins())
+    );
+    private static final Class<?> INTERNAL_BEAN_CLASS;
     
     private final Andesite andesite;
     
@@ -45,6 +64,15 @@ public class RequestHandler implements AndesiteRequestHandler {
     
     public RequestHandler(@Nonnull Andesite andesite) {
         this.andesite = andesite;
+    }
+    
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public Map<String, MetadataEntry> metadataFields(@Nonnull NamePartJoiner joiner) {
+        return METADATA_FIELDS.entrySet().stream().collect(
+                Collectors.toMap(e -> joiner.join(e.getKey()), e -> e.getValue().apply(andesite))
+        );
     }
     
     @Override

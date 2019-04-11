@@ -121,7 +121,7 @@ public class PluginManager {
     
     public boolean requiresRouter() {
         for(var p : plugins) {
-            log.debug("Checkinf ig plugin {} requires router", p);
+            log.debug("Checking if plugin {} requires router", p);
             if(p.requiresRouter()) {
                 return true;
             }
