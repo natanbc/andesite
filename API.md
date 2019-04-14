@@ -6,6 +6,27 @@ Connections can be made over three methods:
 - WebSocket
 - [Singyeong](https://github.com/queer/singyeong)
 
+## Metadata
+
+Andesite metadata is exposed by all default connection methods.
+
+The current values are
+
+| name | type | description |
+|------|------|-------------|
+| version | string | version of the node |
+| version-major | string | major version of the node |
+| version-minor | string | minor version of the node |
+| version-revision | string | revision version of the node |
+| version-commit | string | commit hash of the node |
+| version-build | integer | build number provided by the CI |
+| node-region | string | [region](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) defined in the config |
+| node-id | string | [id](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) defined in the config |
+| enabled-sources | list of strings | list of sources [enabled](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) in the config |
+| loaded-plugins | list of strings | list of [plugins](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md) loaded |
+
+Connection methods may choose to format these in a more idiomatic format.
+
 ## HTTP
 
 All requests must have an `Authorization` header or `password` query param
@@ -14,24 +35,14 @@ to players, including the [WebSocket](#websocket) routes, must have an
 `User-Id` header or `user-id` query param with the bot's id. For both of
 them, the header takes priority.
 
-All responses have the following headers:
-
-| name | value |
-|------|-------|
-| Andesite-Version | version of the node |
-| Andesite-Version-Major | major version of the node |
-| Andesite-Version-Minor | minor version of the node |
-| Andesite-Version-Revision | revision version of the node |
-| Andesite-Version-Commit | commit hash of the node |
-| Andesite-Node-Region | [node region](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) defined in the config |
-| Andesite-Node-Id | [node ID](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) defined in the config |
-| Andesite-Enabled-Sources | comma separated list of [sources](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) enabled in the config |
-| Andesite-Loaded-Plugins | comma separated list of [plugins](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md) loaded |
-
 If an error happens, an [error](#error) object is returned. Since these objects can get quite big, it's possible
 to enable a shorter version, which does not send stack frames, by providing a header named `Andesite-Short-Errors`
 or a query param named `shortErrors`. Their values can be anything, as long as they are present shorter error messages
-are returned. 
+are returned.
+
+Node metadata is exposed in response headers as dash (`-`) separated `Title Case`
+identifiers, prepended with `Andesite-`, eg `version-major` becomes `Andesite-Version-Major`.
+Lists have their values joined by a string, eg `[a, b]` becomes `a,b`.
 
 \* If the password isn't defined or is null this header may be omitted.
 
@@ -66,6 +77,13 @@ are returned.
 
 - The regular websocket is available on the `/websocket` route.
 - A (mostly*) lavalink compatible websocket is available by default on the `/` route. 
+
+Websocket authorization is the same as HTTP, as has the same metadata sent in the response.
+
+Additionally, the `metadata` payload sent on connection start provides the metadata
+for clients which don't have access to the handshake response headers. The values are
+sent with unmodified keys, and the appropriate json types. Lists are converted into arrays,
+other values are sent as-is.
 
 All payloads must be valid json objects. If parsing fails, the socket is closed with code 4001.
 Both text and binary frames are accepted, as long as the data is valid UTF 8.
@@ -182,21 +200,14 @@ After the connection is established, the API is identical to
 
 ## Singyeong
 
-Andesite adds the following metadata values:
+Metadata fields are provided with their keys prefixed by `andesite-`, eg `version-major`
+becomes `andesite-version-major`. The types are sent with the analogous singyeong types,
+with the exception of `version`, which is sent with the `VERSION` type. There's also an
+additional field, `andesite-players`, which contains a list of `userid:guildid` pairs handled
+by the process.
 
-- andesite-version: version of the node
-- andesite-version-major: major version of the node
-- andesite-version-minor: minor version of the node
-- andesite-version-revision: revision version of the node
-- andesite-version-commit: commit hash of the node
-- andesite-region: [region](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) defined in the config
-- andesite-id: [id](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) defined in the config
-- andesite-enabled-sources: list of sources [enabled](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) in the config
-- andesite-loaded-plugins: list of [plugins](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md) loaded
-- andesite-players: `userid:guildid` list of the players being handled by this node
-
-All payloads sent via singyeong are equal to those sent via [web socket](#websocket), except they also require
-an `userId` key.
+All payloads sent via singyeong are equal to those sent via [web socket](#websocket), except they
+also require an `userId` key.
 
 Responses to commands are sent based on the `response-app`, `response-nonce` and `response-query`
 fields. `response-nonce` and `response-query` default to the command nonce and an empty query, respectively.

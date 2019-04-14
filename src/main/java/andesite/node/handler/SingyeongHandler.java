@@ -160,7 +160,7 @@ public class SingyeongHandler {
         client.connect()
                 .thenRun(() -> {
                     andesite.requestHandler().metadataFields(NamePartJoiner.DASHED).forEach((k, v) ->
-                            client.updateMetadata(k, toSingyeong(v.type()), v.rawValue())
+                            client.updateMetadata("andesite-" + k, toSingyeong(v.type()), v.rawValue())
                     );
                     client.updateMetadata("andesite-connections", SingyeongType.LIST, new JsonArray());
                     log.info("Singyeong connection established");
