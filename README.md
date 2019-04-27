@@ -32,10 +32,9 @@ See [CONFIGURATION.md](https://github.com/natanbc/andesite-node/blob/master/CONF
 
 # Clients
 
-Currently there are no Andesite specific clients, but most lavalink 3.x
-clients should work, although missing support for andesite specific features.
-
+- [AndeClient](https://github.com/arudiscord/andeclient) - Java 11+
 - [Create your own](https://github.com/natanbc/andesite-node/blob/master/API.md)
+- Most lavalink 3.x clients should be compatible
 
 # Lavalink Compatibility
 
