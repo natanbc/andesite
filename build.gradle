@@ -20,7 +20,7 @@ ext {
     configVersion =     '1.3.3'
     vertxWebVersion =   '3.7.0'
     magmaVersion =      '0.8.3'
-    lavaplayerVersion = '1.3.16'
+    lavaplayerVersion = '1.3.17'
     lavadspVersion =    '0.5.2'
     jdaNasVersion =     '1.0.6'
     singyeongVersion =  '7c8ce56'
