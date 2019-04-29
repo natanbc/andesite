@@ -124,6 +124,9 @@ public class Andesite implements NodeState {
         pcmPlayerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_PCM_S16_BE);
         pcmPlayerManager.getConfiguration().setFilterHotSwapEnabled(true);
         pcmPlayerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
+    
+        playerManager.setFrameBufferDuration(config.getInt("lavaplayer.frame-buffer-duration"));
+        pcmPlayerManager.setFrameBufferDuration(config.getInt("lavaplayer.frame-buffer-duration"));
     }
     
     @Nonnull

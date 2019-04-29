@@ -33,6 +33,7 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | sentry.dsn | string | sentry dsn to report errors | null |
 | sentry.tags | string | comma separated list of `key:value` pairs for sentry tags | null |
 | sentry.log-level | string | lowest level to send to sentry | WARN |
+| lavaplayer.frame-buffer-duration | integer | duration of the frame buffer, in milliseconds. changes in filters/volume take at least this time to start applying | 5000 |
 | lavaplayer.non-allocating | boolean | whether or not to use the non allocating frame buffer | true |
 | lavaplayer.youtube.max-playlist-page-count | maximum number of pages loaded from one playlist. There are 100 tracks per page. | 6 |
 | lavaplayer.youtube.mix-loader-max-pool-size | maximum number of threads used by the mix loader pool | 10 |
