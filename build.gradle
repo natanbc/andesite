@@ -85,6 +85,7 @@ dependencies {
 
 docker {
     name "natanbc/andesite:${versionObj}"
+    tag 'latest', 'natanbc/andesite:latest'
     files "build/libs/andesite-node-${versionObj}-all.jar",
             project(':jattach-debug-plugin').getTasksByName('jar', false).outputs,
             project(':jfr-debug-plugin').getTasksByName('jar', false).outputs
@@ -111,6 +112,12 @@ buildAll.dependsOn ':jattach-debug-plugin:jar'
 buildAll.dependsOn ':jfr-debug-plugin:jar'
 buildAll.dependsOn ':api:jar'
 buildAll.dependsOn ':api:javadoc'
+
+task ci {
+    dependsOn buildAll
+    dependsOn tasks.docker
+    dependsOn dockerTag
+}
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 

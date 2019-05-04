@@ -46,4 +46,4 @@ deploy:
 
 script:
 - chmod +x gradlew
-- ./gradlew buildAll docker
+- ./gradlew ci
