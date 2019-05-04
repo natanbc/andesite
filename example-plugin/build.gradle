@@ -3,6 +3,7 @@ plugins {
 }
 
 sourceCompatibility = 11
+targetCompatibility = 11
 
 repositories {
     jcenter()
