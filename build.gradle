@@ -247,9 +247,14 @@ static def getCommitHash() {
 }
 
 static def getBranchName() {
-    def p = Runtime.getRuntime().exec("git rev-parse --symbolic-full-name --abbrev-ref HEAD")
+    def p = Runtime.getRuntime().exec(
+            ["git", "branch", "-a", "--no-color", "--format", "%(refname)", "--contains", getCommitHash()].toArray(new String[0])
+    )
     p.waitFor()
-    p.getIn().text.trim()
+    def output = p.getIn().text.trim()
+    def prefix = "refs/heads/"
+    def branch = output.split("\n").find { it.startsWith(prefix) }
+    branch.substring(prefix.length())
 }
 
 def getBuildNumber() {

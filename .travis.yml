@@ -39,8 +39,9 @@ deploy:
     github-token: $GITHUB_TOKEN
     on:
       branch: master
+  - provider: script
+    script: bash docker_push.sh
 
 script:
 - chmod +x gradlew
 - env "TAG=$TRAVIS_TAG" ./gradlew ci
-- bash docker_push.sh
