@@ -8,9 +8,12 @@ import andesite.node.util.RequestUtils;
 import andesite.node.util.metadata.MetadataEntry;
 import andesite.node.util.metadata.NamePartJoiner;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayer;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import com.sedmelluq.discord.lavaplayer.track.TrackMarker;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -29,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -48,6 +52,7 @@ public class RequestHandler implements AndesiteRequestHandler {
             List.of("loaded", "plugins"), andesite -> MetadataEntry.stringList(andesite.pluginManager().loadedPlugins())
     );
     private static final Class<?> INTERNAL_BEAN_CLASS;
+    private static final BiConsumer<AudioPlayer, AudioTrackEndReason> STOP_PLAYER_WITH_REASON;
     
     private final Andesite andesite;
     
@@ -58,6 +63,19 @@ public class RequestHandler implements AndesiteRequestHandler {
         } catch(Exception e) {
             c = null;
             log.error("Unable to load internal OperatingSystemMXBean class. CPU usage info unavailable");
+        }
+        try {
+            var method = DefaultAudioPlayer.class.getDeclaredMethod("stopWithReason", AudioTrackEndReason.class);
+            method.setAccessible(true);
+            STOP_PLAYER_WITH_REASON = (player, reason) -> {
+                try {
+                    method.invoke(player, reason);
+                } catch(Exception e) {
+                    throw new AssertionError(e);
+                }
+            };
+        } catch(NoSuchMethodException e) {
+            throw new AssertionError(e);
         }
         INTERNAL_BEAN_CLASS = c;
     }
@@ -132,17 +150,7 @@ public class RequestHandler implements AndesiteRequestHandler {
         if(track != null && start != 0) {
             track.setPosition(start);
         }
-        var end = asLong(payload.getValue("end", payload.getValue("endTime")), 0);
-        if(track != null && end != 0) {
-            track.setMarker(new TrackMarker(end, state -> {
-                switch(state) {
-                    case REACHED:
-                    case BYPASSED:
-                    case LATE:
-                        player.audioPlayer().stopTrack();
-                }
-            }));
-        }
+        setEndMarker(player.audioPlayer(), track, payload);
         
         player.audioPlayer().setPaused(payload.getBoolean("pause", player.audioPlayer().isPaused()));
         player.audioPlayer().setVolume(payload.getInteger("volume", player.audioPlayer().getVolume()));
@@ -193,17 +201,7 @@ public class RequestHandler implements AndesiteRequestHandler {
             } else {
                 track = p.getPlayingTrack();
             }
-            var end = asLong(config.getValue("end", config.getValue("endTime")), 0);
-            if(track != null && end != 0) {
-                track.setMarker(new TrackMarker(end, state -> {
-                    switch(state) {
-                        case REACHED:
-                        case BYPASSED:
-                        case LATE:
-                            mixerPlayer.audioPlayer().stopTrack();
-                    }
-                }));
-            }
+            setEndMarker(mixerPlayer.audioPlayer(), track, config);
             if(config.containsKey("filters")) {
                 updateFilters(mixerPlayer, config.getJsonObject("filters"));
             }
@@ -710,5 +708,19 @@ public class RequestHandler implements AndesiteRequestHandler {
             return Long.parseLong((String) value);
         }
         throw new IllegalArgumentException("Unable to convert " + value.getClass() + " to a long");
+    }
+    
+    private static void setEndMarker(AudioPlayer player, AudioTrack track, JsonObject object) {
+        var end = asLong(object.getValue("end", object.getValue("endTime")), 0);
+        if(track != null && end != 0) {
+            track.setMarker(new TrackMarker(end, state -> {
+                switch(state) {
+                    case REACHED:
+                    case BYPASSED:
+                    case LATE:
+                        STOP_PLAYER_WITH_REASON.accept(player, AudioTrackEndReason.FINISHED);
+                }
+            }));
+        }
     }
 }

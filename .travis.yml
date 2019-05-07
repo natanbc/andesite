@@ -30,10 +30,6 @@ deploy:
     on:
       tags: true
   - provider: script
-    script: bash docker_push.sh
-    on:
-      tags: true
-  - provider: script
     script: bash -c 'chmod +x gradlew && ./gradlew api:bintrayUpload'
     on:
       tags: true
@@ -46,4 +42,5 @@ deploy:
 
 script:
 - chmod +x gradlew
-- ./gradlew ci
+- env "TAG=$TRAVIS_TAG" ./gradlew ci
+- bash docker_push.sh
