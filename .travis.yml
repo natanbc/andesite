@@ -8,6 +8,11 @@ jdk:
 services:
   - docker
 
+env:
+  global:
+    # get all the branches referencing this commit
+    - REAL_BRANCH=$(git ls-remote origin | sed -n "\|$TRAVIS_COMMIT\s\+refs/heads/|{s///p}")
+
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/

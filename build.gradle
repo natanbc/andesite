@@ -85,7 +85,10 @@ dependencies {
 
 docker {
     name "natanbc/andesite:${getCommitHash()}"
-    tag 'latest-current-branch', "natanbc/andesite:${getBranchName()}"
+    def branch = getBranchName()
+    if(branch != null) {
+        tag 'latest-current-branch', "natanbc/andesite:${branch}"
+    }
     //only set latest tag for releases, so `docker pull natanbc/andesite`
     //pulls the latest stable version
     if(!System.getenv("TAG")?.trim()?.isEmpty()) {
@@ -247,14 +250,11 @@ static def getCommitHash() {
 }
 
 static def getBranchName() {
-    def p = Runtime.getRuntime().exec(
-            ["git", "branch", "-a", "--no-color", "--format", "%(refname)", "--contains", getCommitHash()].toArray(new String[0])
-    )
-    p.waitFor()
-    def output = p.getIn().text.trim()
-    def prefix = "refs/heads/"
-    def branch = output.split("\n").find { it.startsWith(prefix) }
-    branch.substring(prefix.length())
+    def b = System.getenv("REAL_BRANCH")
+    if(b == null) {
+        return null
+    }
+    b.split("\n")[0]
 }
 
 def getBuildNumber() {
