@@ -29,8 +29,6 @@ public class SingyeongHandler {
         if(!enabled) {
             return false;
         }
-        var nodeRegion = config.getString("node.region");
-        var nodeId = config.getString("node.id");
     
         var dsn = config.getString("transport.singyeong.dsn");
         

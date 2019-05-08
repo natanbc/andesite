@@ -22,6 +22,7 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | audio-handler | string | audio handler implementation to use. by default, only `magma` is supported. Plugins may [add more implementations](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md#custom-audio-handlers), in which case the fully qualified class name must be used | magma |
 | node.region | string | region of the node | "unknown" |
 | node.id | string | id of the node | "unknown" |
+| transport.http.bind-address | string | address to bind the http/websocket server. 0.0.0.0 means all network interfaces on the machine | 0.0.0.0 |
 | transport.http.port | integer | port to run the http/websocket server | 5000 |
 | transport.http.rest | boolean | whether or not to enable the http api | true |
 | transport.http.ws | boolean | whether or not to enable the websocket api | true |

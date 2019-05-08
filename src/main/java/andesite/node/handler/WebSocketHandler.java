@@ -6,6 +6,7 @@ import andesite.node.event.AndesiteEventListener;
 import andesite.node.player.Player;
 import andesite.node.util.metadata.MetadataEntry;
 import andesite.node.util.metadata.NamePartJoiner;
+import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.core.http.WebSocketFrame;
@@ -119,6 +120,7 @@ public class WebSocketHandler {
         private final ServerWebSocket ws;
         private final long connectionId;
         private final boolean lavalink;
+        private final Context context;
         private final Long timerId;
         private final Set<Player> subscriptions = ConcurrentHashMap.newKeySet();
         private final AndesiteEventListener listener = new AndesiteEventListener() {
@@ -146,6 +148,7 @@ public class WebSocketHandler {
             this.ws = ws;
             this.connectionId = connectionId;
             this.lavalink = lavalink;
+            this.context = andesite.vertx().getOrCreateContext();
             if(lavalink) {
                 this.timerId = andesite.vertx().setPeriodic(30_000, __ -> {
                     var stats = andesite.requestHandler().nodeStatsForLavalink();
@@ -301,7 +304,8 @@ public class WebSocketHandler {
                                     json = transformPayloadForLavalink(json);
                                 }
                                 if(json == null) return;
-                                ws.writeFinalTextFrame(json.encode());
+                                var s = json.encode();
+                                context.runOnContext(__ -> ws.writeFinalTextFrame(s));
                             });
                     subscriptions.add(andesite.getPlayer(user, guild));
                     var json = andesite.requestHandler().play(user, guild, payload);

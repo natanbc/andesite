@@ -96,7 +96,7 @@ public class PluginManager {
                 )) {
                     var reference = ConfigFactory.parseReader(reader);
                     log.debug("Loaded reference.conf from {}: {}", l, reference.root().render());
-                    config = config.withFallback(reference);
+                    config = config.withFallback(reference.resolveWith(config));
                 } catch(IOException e) {
                     throw new IllegalStateException("reference.conf exists but cannot be read", e);
                 }

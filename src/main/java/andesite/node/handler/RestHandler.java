@@ -37,9 +37,6 @@ public class RestHandler {
         if(!enableRest && !enableWs && !enablePrometheus && !andesite.pluginManager().requiresRouter()) {
             return false;
         }
-    
-        var nodeRegion = config.getString("node.region");
-        var nodeId = config.getString("node.id");
         
         var router = Router.router(andesite.vertx());
         
@@ -205,14 +202,15 @@ public class RestHandler {
         
         router.route().handler(context -> error(context, 404, "Not found"));
     
+        var address = config.getString("transport.http.bind-address");
         var port = config.getInt("transport.http.port");
-        
-        log.info("Starting HTTP server on port {}", port);
+    
+        log.info("Starting HTTP server on port {}:{}", address, port);
         
         var latch = new CountDownLatch(1);
         andesite.vertx().createHttpServer()
                 .requestHandler(router)
-                .listen(port, result -> {
+                .listen(port, address, result -> {
                     if(result.failed()) {
                         log.error("Error starting HTTP server", result.cause());
                         System.exit(-1);
