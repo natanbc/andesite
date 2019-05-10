@@ -97,7 +97,8 @@ docker {
     }
     files "build/libs/andesite-node-${versionObj}-all.jar",
             project(':jattach-debug-plugin').getTasksByName('jar', false).outputs,
-            project(':jfr-debug-plugin').getTasksByName('jar', false).outputs
+            project(':jfr-debug-plugin').getTasksByName('jar', false).outputs,
+            "jlink.sh"
     buildArgs([
         version: versionObj.toString(),
         jattachVersion: jattachVersion
