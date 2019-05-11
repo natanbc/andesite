@@ -7,4 +7,4 @@ echo "$DEPS"
 
 MODULE_LIST=$(echo "$DEPS" | tr -d ' ' | tr '\n' ',' | sed -e 's/,$//')
 
-jlink --no-man-pages --no-header-files --add-modules $MODULE_LIST --output jrt
+jlink --compress=2 --no-man-pages --no-header-files --add-modules $MODULE_LIST --output jrt
