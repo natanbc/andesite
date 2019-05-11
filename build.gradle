@@ -91,7 +91,7 @@ docker {
     }
     //only set latest tag for releases, so `docker pull natanbc/andesite`
     //pulls the latest stable version
-    if(!System.getenv("TAG")?.trim()?.isEmpty()) {
+    if(System.getenv("TAG") != null && !System.getenv("TAG").trim().isEmpty()) {
         tag 'versioned', "natanbc/andesite:${versionObj}"
         tag 'latest', 'natanbc/andesite:latest'
     }
