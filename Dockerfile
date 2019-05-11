@@ -9,6 +9,8 @@ COPY andesite-node-${version}-all.jar andesite.jar
 COPY jattach-debug-plugin-${version}.jar plugins/jattach-debug.jar
 COPY jfr-debug-plugin-${version}.jar plugins/jfr-debug.jar
 
+ENV ADDITIONAL_MODULES=jdk.crypto.ec
+
 RUN ["bash", "jlink.sh", "andesite.jar", "plugins/jattach-debug.jar", "plugins/jfr-debug.jar"]
 
 FROM frolvlad/alpine-glibc:alpine-3.9
