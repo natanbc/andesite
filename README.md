@@ -33,6 +33,7 @@ See [CONFIGURATION.md](https://github.com/natanbc/andesite-node/blob/master/CONF
 # Clients
 
 - [AndeClient](https://github.com/arudiscord/andeclient) - Java 11+
+- [andesite.py](https://github.com/gieseladev/andesite.py) - Python
 - [Create your own](https://github.com/natanbc/andesite-node/blob/master/API.md)
 - Most lavalink 3.x clients should be compatible
 
