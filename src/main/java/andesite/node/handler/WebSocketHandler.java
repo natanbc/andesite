@@ -21,6 +21,7 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -123,7 +124,7 @@ public class WebSocketHandler {
         private final Context context;
         private final Long timerId;
         private final Set<Player> subscriptions = ConcurrentHashMap.newKeySet();
-        private final Set<Object> rcvdIds = ConcurrentHashMap.newKeySet();
+        private final Set<Object> rcvdIds = new HashSet<>();
         private final AndesiteEventListener listener = new AndesiteEventListener() {
             @Override
             public void onWebSocketClosed(@Nonnull NodeState state, @Nonnull String userId,
