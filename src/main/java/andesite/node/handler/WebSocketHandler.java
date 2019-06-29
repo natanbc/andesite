@@ -372,9 +372,7 @@ public class WebSocketHandler {
                 }
                 case "clear-rcvd-ids": {
                     JsonArray ids = payload.getJsonArray("ids");
-                    for (int i = 0; i < ids.size(); i++) {
-                        rcvdIds.remove(ids.getValue(i));
-                    }
+                    ids.forEach(rcvdIds::remove);
                     break;
                 }
             }
