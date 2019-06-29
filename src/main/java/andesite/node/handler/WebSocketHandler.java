@@ -123,6 +123,7 @@ public class WebSocketHandler {
         private final Context context;
         private final Long timerId;
         private final Set<Player> subscriptions = ConcurrentHashMap.newKeySet();
+        private final Set<Object> rcvdIds = ConcurrentHashMap.newKeySet();
         private final AndesiteEventListener listener = new AndesiteEventListener() {
             @Override
             public void onWebSocketClosed(@Nonnull NodeState state, @Nonnull String userId,
@@ -257,6 +258,10 @@ public class WebSocketHandler {
                     return;
                 }
             }
+            var rcvd = payload.getValue("rcvd", null);
+            if (rcvd != null) {
+                rcvdIds.add(rcvd);
+            }
             switch(op) {
                 case "voice-server-update":
                 case "voiceUpdate": {
@@ -348,6 +353,19 @@ public class WebSocketHandler {
                 }
                 case "ping": {
                     ws.writeFinalTextFrame(payload.put("userId", this.user).put("op", "pong").encode());
+                    break;
+                }
+                case "get-rcvd-ids": {
+                    var ids = new JsonArray();
+                    rcvdIds.forEach(ids::add);
+                    ws.writeFinalTextFrame(payload.put("ids", ids).put("op", "rcvd-ids").encode());
+                    break;
+                }
+                case "clear-rcvd-ids": {
+                    JsonArray ids = payload.getJsonArray("ids");
+                    for (int i = 0; i < ids.size(); i++) {
+                        rcvdIds.remove(ids.getValue(i));
+                    }
                     break;
                 }
             }
