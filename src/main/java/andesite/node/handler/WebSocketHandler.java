@@ -210,6 +210,11 @@ public class WebSocketHandler {
             if(timeout != 0) {
                 var buffer = andesite.createEventBuffer(connectionId);
                 subscriptions.forEach(p -> p.setListener(buffer, buffer::offer));
+                if (!rcvdIds.isEmpty()) {
+                    var ids = new JsonArray();
+                    rcvdIds.forEach(ids::add);
+                    buffer.offer(new JsonObject().put("cleared", true).put("ids", ids).put("op", "rcvd-ids"));
+                }
                 andesite.vertx().setTimer(timeout, __ -> {
                     subscriptions.forEach(p -> p.eventListeners().remove(buffer));
                     andesite.removeEventBuffer(connectionId);
@@ -358,7 +363,11 @@ public class WebSocketHandler {
                 case "get-rcvd-ids": {
                     var ids = new JsonArray();
                     rcvdIds.forEach(ids::add);
-                    ws.writeFinalTextFrame(payload.put("ids", ids).put("op", "rcvd-ids").encode());
+                    boolean cleared = payload.getBoolean("clear", false);
+                    if (cleared) {
+                        rcvdIds.clear();
+                    }
+                    ws.writeFinalTextFrame(payload.put("ids", ids).put("cleared", cleared).put("op", "rcvd-ids").encode());
                     break;
                 }
                 case "clear-rcvd-ids": {
