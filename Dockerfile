@@ -9,7 +9,7 @@ COPY andesite-node-${version}-all.jar andesite.jar
 COPY jattach-debug-plugin-${version}.jar plugins/jattach-debug.jar
 COPY jfr-debug-plugin-${version}.jar plugins/jfr-debug.jar
 
-ENV ADDITIONAL_MODULES=jdk.crypto.ec
+ENV ADDITIONAL_MODULES=jdk.crypto.ec,jdk.crypto.cryptoki
 
 RUN ["bash", "jlink.sh", "andesite.jar", "plugins/jattach-debug.jar", "plugins/jfr-debug.jar"]
 
@@ -33,4 +33,4 @@ RUN chmod +x /bin/jattach
 
 COPY --from=builder /andesite /andesite
 
-CMD ["jrt/bin/java", "-jar", "andesite.jar"]
+CMD ["jrt/bin/java", "-Djdk.tls.client.protocols=TLSv1,TLSv1.1,TLSv1.2", "-jar", "andesite.jar"]

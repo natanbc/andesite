@@ -86,7 +86,7 @@ dependencies {
 docker {
     name "natanbc/andesite:${getCommitHash()}"
     def branch = getBranchName()
-    if(branch != null) {
+    if(branch != null && !branch.trim().isEmpty()) {
         tag 'latest-current-branch', "natanbc/andesite:${branch}"
     }
     //only set latest tag for releases, so `docker pull natanbc/andesite`
