@@ -283,7 +283,11 @@ public class Andesite implements NodeState {
     }
     
     public static void main(String[] args) throws IOException {
-        log.info("System info: {}", NativeLibLoader.loadSystemInfo());
+        try {
+            log.info("System info: {}", NativeLibLoader.loadSystemInfo());
+        } catch(UnsatisfiedLinkError e) {
+            log.warn("Unable to load system info. This is not an error", e);
+        }
         log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
     
         var andesite = createAndesite();

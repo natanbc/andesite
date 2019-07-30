@@ -47,7 +47,6 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | source.vimeo | boolean | whether or not to enable playing and resolving tracks from vimeo | true |
 | source.youtube | boolean | whether or not to enable playing and resolving tracks from youtube | true |
 | lavalink.ws-path | string | route to run the lavalink websocket on. | / |
-| magma.array-provider | string | either `create-new` or `reuse-existing`. reuse-existing is more efficient, but only works with specific JVMs. Don't complain if it crashes. If it doesn't crash, it's most likely safe to use | create-new |
 | magma.send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | `nas` on supported environments, `nio` otherwise |
 | magma.send-system.async | boolean | whether or not to use jda-async-packet-provider to wrap the send system | true |
 | magma.send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |

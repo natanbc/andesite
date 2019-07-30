@@ -2,7 +2,7 @@ package andesite.node;
 
 import andesite.node.handler.WebSocketState;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-import gg.amy.singyeong.Dispatch;
+import gg.amy.singyeong.data.Dispatch;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;

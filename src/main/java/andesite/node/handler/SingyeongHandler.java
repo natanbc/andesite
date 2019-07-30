@@ -6,10 +6,11 @@ import andesite.node.event.AndesiteEventListener;
 import andesite.node.player.AndesitePlayer;
 import andesite.node.util.metadata.MetadataType;
 import andesite.node.util.metadata.NamePartJoiner;
-import gg.amy.singyeong.Dispatch;
-import gg.amy.singyeong.QueryBuilder;
 import gg.amy.singyeong.SingyeongClient;
-import gg.amy.singyeong.SingyeongType;
+import gg.amy.singyeong.client.SingyeongType;
+import gg.amy.singyeong.client.query.Query;
+import gg.amy.singyeong.client.query.QueryBuilder;
+import gg.amy.singyeong.data.Dispatch;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
@@ -18,9 +19,12 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 public class SingyeongHandler {
+    private static final Query EMPTY_QUERY = new QueryBuilder().build();
     private static final Logger log = LoggerFactory.getLogger(SingyeongHandler.class);
     
     public static boolean setup(@Nonnull Andesite andesite) {
@@ -110,9 +114,11 @@ public class SingyeongHandler {
                     break;
                 }
                 case "play": {
-                    var receiver = payload.getString("receiver", event.sender());
-                    var query = payload.getJsonArray("query", new QueryBuilder().build());
-                    andesite.requestHandler().subscribe(user, guild, key, json -> client.send(receiver, query, json));
+                    var query = createQuery(payload.getJsonObject("query"), () -> new QueryBuilder()
+                            .target(event.sender())
+                            .build()
+                    );
+                    andesite.requestHandler().subscribe(user, guild, key, json -> client.send(query, json));
                     var json = andesite.requestHandler().play(user, guild, payload);
                     sendPlayerUpdate(client, event, json);
                     break;
@@ -184,15 +190,52 @@ public class SingyeongHandler {
                                      @Nullable JsonObject payload) {
         if(payload == null) return;
         var data = dispatch.data();
-        if(data.getString("response-app") == null || data.getBoolean("noreply", false)) {
+        if(data.getValue("response-query") == null || data.getBoolean("noreply", false)) {
             return;
         }
         client.send(
-                data.getString("response-app"),
+                createQuery(data.getJsonObject("response-query"), () -> EMPTY_QUERY),
                 data.getString("response-nonce", dispatch.nonce()),
-                data.getJsonArray("response-query", new QueryBuilder().build()),
                 payload.put("userId", data.getString("userId"))
         );
+    }
+    
+    @Nonnull
+    @CheckReturnValue
+    private static Query createQuery(@Nullable JsonObject json, @Nonnull Supplier<Query> defaultQuery) {
+        if(json == null) {
+            return defaultQuery.get();
+        }
+        var builder = new QueryBuilder();
+        var opsRaw = json.getJsonArray("ops");
+        if(opsRaw != null) {
+            var ops = new ArrayList<JsonObject>();
+            for(var v : opsRaw) {
+                if(!(v instanceof JsonObject)) {
+                    throw new IllegalArgumentException("All ops must be json objects!");
+                }
+                ops.add((JsonObject) v);
+            }
+            builder.withOps(ops);
+        }
+        var targetRaw = json.getValue("target");
+        if(targetRaw instanceof String) {
+            builder.target((String) targetRaw);
+        } else if(targetRaw instanceof JsonArray) {
+            var list = new ArrayList<String>();
+            for(var v : (JsonArray) targetRaw) {
+                if(!(v instanceof String)) {
+                    throw new IllegalArgumentException("All targets must be strings");
+                }
+                list.add((String) v);
+            }
+            builder.target(list);
+        }
+        return builder
+                .optional(json.getBoolean("optional", false))
+                .hashKey(json.getString("key"))
+                .restricted(json.getBoolean("restricted", false))
+                .build();
     }
     
     @Nonnull

@@ -1,7 +1,7 @@
 package andesite.node.provider;
 
-import net.dv8tion.jda.core.audio.factory.IPacketProvider;
-import net.dv8tion.jda.core.audio.hooks.ConnectionStatus;
+import net.dv8tion.jda.api.audio.factory.IPacketProvider;
+import net.dv8tion.jda.api.audio.hooks.ConnectionStatus;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;

@@ -209,14 +209,14 @@ by the process.
 All payloads sent via singyeong are equal to those sent via [web socket](#websocket), except they
 also require an `userId` key.
 
-Responses to commands are sent based on the `response-app`, `response-nonce` and `response-query`
-fields. `response-nonce` and `response-query` default to the command nonce and an empty query, respectively.
+Responses to commands are sent based on the `response-nonce` and `response-query` fields.
+They default to the command nonce and an empty query, respectively.
 
-When sending a `play` op, you can set the `receiver` and `query` fields to route the events sent by the player.
-They default to the application id sending the event and an empty query, respectively.
+When sending a `play` op, you can set the `query` field to route the events sent by the player. It defaults to
+an empty query for the sender application id.
 
 Setting the `noreply` field to `true` will prevent a response from being sent (events are still sent).
-Sending a null or absent `response-app` has the same effect.
+Sending a null or absent `response-query` has the same effect.
 
 # Entities
 

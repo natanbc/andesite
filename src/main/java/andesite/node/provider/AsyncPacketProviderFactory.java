@@ -1,8 +1,8 @@
 package andesite.node.provider;
 
-import net.dv8tion.jda.core.audio.factory.IAudioSendFactory;
-import net.dv8tion.jda.core.audio.factory.IAudioSendSystem;
-import net.dv8tion.jda.core.audio.factory.IPacketProvider;
+import net.dv8tion.jda.api.audio.factory.IAudioSendFactory;
+import net.dv8tion.jda.api.audio.factory.IAudioSendSystem;
+import net.dv8tion.jda.api.audio.factory.IPacketProvider;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;

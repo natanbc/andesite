@@ -62,9 +62,6 @@ andesite {
   }
 
   magma {
-    # CHANGE AT YOUR OWN RISK
-    array-provider = create-new
-
     send-system {
       type = nas
       async = true

@@ -4,13 +4,10 @@ import andesite.node.Andesite;
 import andesite.node.provider.AsyncPacketProviderFactory;
 import andesite.node.send.jdaa.JDASendFactory;
 import andesite.node.send.nio.NioSendFactory;
-import andesite.node.util.ByteArrayProvider;
-import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import com.sedmelluq.discord.lavaplayer.udpqueue.natives.UdpQueueManager;
-import com.typesafe.config.Config;
-import net.dv8tion.jda.core.audio.AudioSendHandler;
-import net.dv8tion.jda.core.audio.factory.IAudioSendFactory;
+import net.dv8tion.jda.api.audio.AudioSendHandler;
+import net.dv8tion.jda.api.audio.factory.IAudioSendFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import space.npstr.magma.MagmaApi;
@@ -20,6 +17,7 @@ import space.npstr.magma.events.api.WebSocketClosed;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,12 +26,10 @@ public class MagmaHandler implements AudioHandler {
     
     private final Map<String, Map<String, AudioProvider>> providers = new ConcurrentHashMap<>();
     private final MagmaApi magma;
-    private final ByteArrayProvider byteArrayProvider;
     
     public MagmaHandler(Andesite andesite) {
         var factory = createSendFactory(andesite);
         this.magma = MagmaApi.of(__ -> factory);
-        this.byteArrayProvider = createArrayProvider(andesite.config().getConfig("andesite.magma"));
         magma.getEventStream().subscribe(event -> {
             if(event instanceof WebSocketClosed) {
                 var e = (WebSocketClosed) event;
@@ -59,7 +55,7 @@ public class MagmaHandler implements AudioHandler {
                         .userId(userId)
                         .guildId(guildId)
                         .build(),
-                provider == null ? null : new MagmaSendHandler(provider, byteArrayProvider)
+                provider == null ? null : new MagmaSendHandler(provider)
         );
         if(old != null) {
             old.close();
@@ -139,31 +135,11 @@ public class MagmaHandler implements AudioHandler {
         }
     }
     
-    private static ByteArrayProvider createArrayProvider(Config config) {
-        ByteArrayProvider provider;
-        switch(config.getString("array-provider")) {
-            case "create-new":
-                provider = ByteArrayProvider.createNew();
-                break;
-            case "reuse-existing":
-                provider = ByteArrayProvider.reuseExisting(
-                        StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize()
-                );
-                break;
-            default:
-                throw new IllegalStateException("No provider " + config.getString("array-provider"));
-        }
-        log.info("Array provider: {}", config.getString("array-provider"));
-        return provider;
-    }
-    
     private static class MagmaSendHandler implements AudioSendHandler {
         private final AudioProvider provider;
-        private final ByteArrayProvider arrayProvider;
     
-        MagmaSendHandler(@Nonnull AudioProvider provider, @Nonnull ByteArrayProvider arrayProvider) {
+        MagmaSendHandler(@Nonnull AudioProvider provider) {
             this.provider = provider;
-            this.arrayProvider = arrayProvider;
         }
         
         @Override
@@ -173,13 +149,8 @@ public class MagmaHandler implements AudioHandler {
         
         @Nonnull
         @Override
-        public byte[] provide20MsAudio() {
-            var buffer = provider.provide();
-            var pos = buffer.position();
-            var array = arrayProvider.provide(buffer.remaining());
-            buffer.get(array);
-            buffer.position(pos);
-            return array;
+        public ByteBuffer provide20MsAudio() {
+            return provider.provide();
         }
         
         @Override
