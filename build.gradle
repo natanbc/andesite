@@ -5,7 +5,7 @@ plugins {
 	id 'com.palantir.docker' version '0.22.1'
 }
 
-def versionObj = new Version(major: 0, minor: 18, revision: 2)
+def versionObj = new Version(major: 0, minor: 18, revision: 3)
 
 sourceCompatibility = 11
 targetCompatibility = 11
