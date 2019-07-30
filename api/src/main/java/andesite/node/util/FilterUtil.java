@@ -14,7 +14,7 @@ public class FilterUtil {
         try {
             load.run();
             return true;
-        } catch(UnsatisfiedLinkError error) {
+        } catch(Throwable error) {
             return false;
         }
     }
