@@ -285,8 +285,12 @@ public class Andesite implements NodeState {
     public static void main(String[] args) throws IOException {
         try {
             log.info("System info: {}", NativeLibLoader.loadSystemInfo());
-        } catch(UnsatisfiedLinkError e) {
-            log.warn("Unable to load system info. This is not an error", e);
+        } catch(Throwable t) {
+            String message = "Unable to load system info.";
+            if(t instanceof UnsatisfiedLinkError || (t instanceof RuntimeException && t.getCause() instanceof UnsatisfiedLinkError)) {
+                message += " This is not an error.";
+            }
+            log.warn(message, t);
         }
         log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
     
