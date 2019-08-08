@@ -61,7 +61,7 @@ public class PluginManager {
         try {
             var c = findClass(name);
             if(!type.isAssignableFrom(c)) {
-                throw new IllegalArgumentException("Class " + name + " not found on any plugins");
+                throw new IllegalArgumentException("Class " + name + " is not a subtype of " + type.getName());
             }
             return c.asSubclass(type).getConstructor(NodeState.class).newInstance(state);
         } catch(ClassNotFoundException e) {
