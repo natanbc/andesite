@@ -5,7 +5,7 @@ plugins {
 	id 'com.palantir.docker' version '0.22.1'
 }
 
-def versionObj = new Version(major: 0, minor: 18, revision: 7)
+def versionObj = new Version(major: 0, minor: 18, revision: 8)
 
 sourceCompatibility = 11
 targetCompatibility = 11
@@ -21,7 +21,7 @@ ext {
     jdaNasVersion =         '1.1.0'
     jsr305Version =         '3.0.2'
     koeVersion =            '454cfec'
-    lavaplayerVersion =     '1.3.19'
+    lavaplayerVersion =     '1.3.20'
     lavadspVersion =        '0.5.2'
     logbackVersion =        '1.2.3'
     magmaVersion =          '0.10.0'
