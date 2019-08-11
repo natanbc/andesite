@@ -70,7 +70,6 @@ public class NioSendSystem implements IAudioSendSystem {
         sentPacket = buffer != null;
         if(sentPacket) {
             try {
-                buffer.flip();
                 channel.send(buffer, packetProvider.getSocketAddress());
             } catch(IOException e) {
                 log.error("Error sending udp packet", e);

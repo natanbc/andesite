@@ -5,7 +5,7 @@ plugins {
 	id 'com.palantir.docker' version '0.22.1'
 }
 
-def versionObj = new Version(major: 0, minor: 18, revision: 8)
+def versionObj = new Version(major: 0, minor: 18, revision: 9)
 
 sourceCompatibility = 11
 targetCompatibility = 11
@@ -24,7 +24,7 @@ ext {
     lavaplayerVersion =     '1.3.20'
     lavadspVersion =        '0.5.2'
     logbackVersion =        '1.2.3'
-    magmaVersion =          '0.10.0'
+    magmaVersion =          '0.10.4'
     nativeLoaderVersion =   '0.3.0' 
     prometheusVersion =     '0.6.0'
     sentryVersion =         '1.7.25'

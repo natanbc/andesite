@@ -1,7 +1,6 @@
 package andesite.node.send;
 
 import andesite.node.Andesite;
-import andesite.node.provider.AsyncPacketProviderFactory;
 import andesite.node.send.jdaa.JDASendFactory;
 import andesite.node.send.nio.NioSendFactory;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
@@ -116,12 +115,12 @@ public class MagmaHandler implements AudioHandler {
             default:
                 throw new IllegalArgumentException("No send system with type " + config.getString("send-system.type"));
         }
-        if(config.getBoolean("send-system.async")) {
-            factory = new AsyncPacketProviderFactory(factory);
-        }
-        log.info("Send system: {}, async provider {}",
-                sendSystem,
-                config.getBoolean("send-system.async") ? "enabled" : "disabled"
+//        if(config.getBoolean("send-system.async")) {
+//            factory = new AsyncPacketProviderFactory(factory);
+//        }
+        log.info("Send system: {}",
+                sendSystem
+//                config.getBoolean("send-system.async") ? "enabled" : "disabled"
         );
         return factory;
     }

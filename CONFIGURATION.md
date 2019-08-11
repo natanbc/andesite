@@ -48,7 +48,6 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | source.youtube | boolean | whether or not to enable playing and resolving tracks from youtube | true |
 | lavalink.ws-path | string | route to run the lavalink websocket on. | / |
 | magma.send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | `nas` on supported environments, `nio` otherwise |
-| magma.send-system.async | boolean | whether or not to use jda-async-packet-provider to wrap the send system | true |
 | magma.send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |
 
 \* When running on architectures not supported by [jda-nas](https://github.com/sedmelluq/jda-nas), such as
