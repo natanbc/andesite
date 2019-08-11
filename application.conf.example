@@ -64,7 +64,6 @@ andesite {
   magma {
     send-system {
       type = nas
-      async = true
 
       # Unused if type != nas
       nas-buffer = 400
