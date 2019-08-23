@@ -29,7 +29,7 @@ ext {
     prometheusVersion =     '0.6.0'
     sentryVersion =         '1.7.25'
     singyeongVersion =      '8de14db'
-    vertxWebVersion =       '3.8.0'
+    vertxWebVersion =       '3.8.1'
     
     jattachVersion =        'v1.5'
     //@formatter:on
