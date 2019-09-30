@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MagmaHandler implements AudioHandler {
     private static final Logger log = LoggerFactory.getLogger(MagmaHandler.class);
     
-    private final Map<String, Map<String, AudioProvider>> providers = new ConcurrentHashMap<>();
+    private final Map<Long, Map<Long, AudioProvider>> providers = new ConcurrentHashMap<>();
     private final MagmaApi magma;
     
     public MagmaHandler(Andesite andesite) {
@@ -45,7 +45,13 @@ public class MagmaHandler implements AudioHandler {
     
     @Override
     public void setProvider(@Nonnull String userId, @Nonnull String guildId, @Nullable AudioProvider provider) {
-        var old = providers.computeIfAbsent(userId, __ -> new ConcurrentHashMap<>()).put(guildId, provider);
+        var map = providers.computeIfAbsent(Long.parseUnsignedLong(userId), __ -> new ConcurrentHashMap<>());
+        AudioProvider old;
+        if(provider == null) {
+            old = map.remove(Long.parseUnsignedLong(guildId));
+        } else {
+            old = map.put(Long.parseUnsignedLong(guildId), provider);
+        }
         if(old == provider) {
             return;
         }
@@ -81,9 +87,9 @@ public class MagmaHandler implements AudioHandler {
     @Override
     public void closeConnection(@Nonnull String userId, @Nonnull String guildId) {
         var m = MagmaMember.builder().userId(userId).guildId(guildId).build();
-        var map = providers.get(userId);
+        var map = providers.get(Long.parseUnsignedLong(userId));
         if(map != null) {
-            var provider = map.remove(guildId);
+            var provider = map.remove(Long.parseUnsignedLong(guildId));
             if(provider != null) {
                 provider.close();
             }

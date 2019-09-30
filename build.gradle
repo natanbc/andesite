@@ -20,7 +20,7 @@ ext {
     configVersion =         '1.3.4'
     jdaNasVersion =         '1.1.0'
     jsr305Version =         '3.0.2'
-    koeVersion =            '454cfec'
+    koeVersion =            '44404913d4'
     lavaplayerVersion =     '1.3.21'
     lavadspVersion =        '0.5.2'
     logbackVersion =        '1.2.3'
@@ -56,7 +56,7 @@ dependencies {
     compile "club.minnced:magma:$magmaVersion"
 
     //Audio sending
-    //compile "moe.kyokobot:koe:$koeVersion"
+    compile "moe.kyokobot.koe:core:$koeVersion"
 
     //Audio player
     compile "com.sedmelluq:lavaplayer:$lavaplayerVersion"

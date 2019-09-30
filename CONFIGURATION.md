@@ -19,7 +19,7 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | debug-password | string | password to use for debug routes. If missing or null, the regular password is used instead. | null |
 | log-level | string | lowest level to log | INFO |
 | auto-ytsearch | boolean | whether or not andesite should automatically prepend `ytsearch:` to identifiers that don't match known prefixes when loading tracks | true |
-| audio-handler | string | audio handler implementation to use. by default, only `magma` is supported. Plugins may [add more implementations](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md#custom-audio-handlers), in which case the fully qualified class name must be used | magma |
+| audio-handler | string | audio handler implementation to use. by default, `magma` and `koe` are supported. Plugins may [add more implementations](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md#custom-audio-handlers), in which case the fully qualified class name must be used | magma |
 | node.region | string | region of the node | "unknown" |
 | node.id | string | id of the node | "unknown" |
 | transport.http.bind-address | string | address to bind the http/websocket server. 0.0.0.0 means all network interfaces on the machine | 0.0.0.0 |
@@ -49,6 +49,9 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | lavalink.ws-path | string | route to run the lavalink websocket on. | / |
 | magma.send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | `nas` on supported environments, `nio` otherwise |
 | magma.send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |
+| koe.event-loop-type | string | type of event loop to use. Valid options are `epoll` and `nio` | epoll if supported (aka on linux) |
+| koe.byte-buffer-allocator | string | type of byte buffer allocator to use. Valid options are `pooled` and `unpooled` | pooled |
+| koe.high-priority | boolean | whether or not packets should be marked as high priority | true |
 
 \* When running on architectures not supported by [jda-nas](https://github.com/sedmelluq/jda-nas), such as
 ARM or Darwin devices, you must use either `jda` or `nio` for the send system. For production, nio is preferred
