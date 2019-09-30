@@ -13,6 +13,7 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import moe.kyokobot.koe.Koe;
 import moe.kyokobot.koe.KoeClient;
+import moe.kyokobot.koe.KoeEventAdapter;
 import moe.kyokobot.koe.KoeOptions;
 import moe.kyokobot.koe.audio.AudioFrameProvider;
 import moe.kyokobot.koe.codec.Codec;
@@ -29,15 +30,17 @@ public class KoeHandler implements AudioHandler {
     private static final Logger log = LoggerFactory.getLogger(KoeHandler.class);
     
     private final Map<Long, ClientState> providers = new ConcurrentHashMap<>();
+    private final Andesite andesite;
     private final Koe koe;
     
     public KoeHandler(Andesite andesite) {
+        this.andesite = andesite;
         this.koe = Koe.koe(createKoeOptions(andesite));
     }
     
     @Override
     public void setProvider(@Nonnull String userId, @Nonnull String guildId, @Nullable AudioProvider provider) {
-        var state = providers.computeIfAbsent(Long.parseUnsignedLong(userId), id -> new ClientState(koe.newClient(id)));
+        var state = providers.computeIfAbsent(Long.parseUnsignedLong(userId), id -> new ClientState(andesite, koe.newClient(id)));
         AudioProvider old;
         if(provider == null) {
             old = state.remove(Long.parseUnsignedLong(guildId));
@@ -124,21 +127,38 @@ public class KoeHandler implements AudioHandler {
     
     private static class ClientState {
         private final Map<Long, AudioProvider> providerMap = new ConcurrentHashMap<>();
+        private final Andesite andesite;
         private final KoeClient client;
-        
-        private ClientState(KoeClient client) {this.client = client;}
-        
-        public AudioProvider remove(long id) {
-            client.destroyConnection(id);
-            return providerMap.remove(id);
+    
+        private ClientState(Andesite andesite, KoeClient client) {
+            this.andesite = andesite;
+            this.client = client;
         }
-        
-        public AudioProvider put(long id, AudioProvider provider) {
-            return providerMap.put(id, provider);
+    
+        public AudioProvider remove(long guildId) {
+            client.destroyConnection(guildId);
+            return providerMap.remove(guildId);
         }
-        
-        public void update(long id, AudioProvider provider) {
-            client.createConnection(id).setAudioSender(new AudioFrameProvider() {
+    
+        public AudioProvider put(long guildId, AudioProvider provider) {
+            return providerMap.put(guildId, provider);
+        }
+    
+        public void update(long guildId, AudioProvider provider) {
+            var conn = client.createConnection(guildId);
+            conn.registerListener(new KoeEventAdapter() {
+                @Override
+                public void gatewayClosed(int code, String reason) {
+                    andesite.dispatcher().onWebSocketClosed(
+                            Long.toUnsignedString(client.getClientId()),
+                            Long.toUnsignedString(guildId),
+                            code,
+                            reason,
+                            true
+                    );
+                }
+            });
+            conn.setAudioSender(new AudioFrameProvider() {
                 @Override
                 public boolean canSendFrame() {
                     return provider.canProvide();
@@ -150,13 +170,13 @@ public class KoeHandler implements AudioHandler {
                 }
             });
         }
-        
-        public void close(long id) {
-            var provider = providerMap.remove(id);
+    
+        public void close(long guildId) {
+            var provider = providerMap.remove(guildId);
             if(provider != null) {
                 provider.close();
             }
-            client.destroyConnection(id);
+            client.destroyConnection(guildId);
         }
     }
 }
