@@ -27,7 +27,7 @@ ext {
     magmaVersion =          '0.10.4'
     nativeLoaderVersion =   '0.3.0' 
     prometheusVersion =     '0.7.0'
-    sentryVersion =         '1.7.27'
+    sentryVersion =         '1.7.28'
     singyeongVersion =      '8de14db'
     vertxWebVersion =       '3.8.1'
     
