@@ -53,7 +53,7 @@ Lists have their values joined by a string, eg `[a, b]` becomes `a,b`.
 | POST /player/voice-server-update | provides a voice server update event | |
 | GET /player/:guild_id | returns the state of the player for that guild | x |
 | POST /player/:guild_id/play | plays a track on the guild. Body must be a valid [play](#play) payload | x |
-| POST /player/:guild_id | stops playing audio on the guild. | x |
+| POST /player/:guild_id/stop | stops playing audio on the guild. | x |
 | PATCH /player/:guild_id/mixer | configures the mixer for the guild. Body must be a valid [mixer update](#mixer-update) payload | x |
 | PATCH /player/:guild_id/filters | configures the audio filters for the guild. Body must be a valid [filter update](#filter-update) payload | x |
 | PATCH /player/:guild_id/pause | update pause state of the player. Body must be a valid [pause](#pause) payload | x |
