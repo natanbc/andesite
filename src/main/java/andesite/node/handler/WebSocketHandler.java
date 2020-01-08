@@ -21,6 +21,7 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -123,6 +124,7 @@ public class WebSocketHandler {
         private final Context context;
         private final Long timerId;
         private final Set<Player> subscriptions = ConcurrentHashMap.newKeySet();
+        private final Set<Object> rcvdIds = new HashSet<>();
         private final AndesiteEventListener listener = new AndesiteEventListener() {
             @Override
             public void onWebSocketClosed(@Nonnull NodeState state, @Nonnull String userId,
@@ -209,6 +211,11 @@ public class WebSocketHandler {
             if(timeout != 0) {
                 var buffer = andesite.createEventBuffer(connectionId);
                 subscriptions.forEach(p -> p.setListener(buffer, buffer::offer));
+                if (!rcvdIds.isEmpty()) {
+                    var ids = new JsonArray();
+                    rcvdIds.forEach(ids::add);
+                    buffer.offer(new JsonObject().put("cleared", true).put("ids", ids).put("op", "rcvd-ids"));
+                }
                 andesite.vertx().setTimer(timeout, __ -> {
                     subscriptions.forEach(p -> p.eventListeners().remove(buffer));
                     andesite.removeEventBuffer(connectionId);
@@ -256,6 +263,10 @@ public class WebSocketHandler {
                     ws.close((short) 4002, "Null guild id provided");
                     return;
                 }
+            }
+            var rcvd = payload.getValue("rcvd", null);
+            if (rcvd != null) {
+                rcvdIds.add(rcvd);
             }
             switch(op) {
                 case "voice-server-update":
@@ -348,6 +359,21 @@ public class WebSocketHandler {
                 }
                 case "ping": {
                     ws.writeFinalTextFrame(payload.put("userId", this.user).put("op", "pong").encode());
+                    break;
+                }
+                case "get-rcvd-ids": {
+                    var ids = new JsonArray();
+                    rcvdIds.forEach(ids::add);
+                    boolean cleared = payload.getBoolean("clear", false);
+                    if (cleared) {
+                        rcvdIds.clear();
+                    }
+                    ws.writeFinalTextFrame(payload.put("ids", ids).put("cleared", cleared).put("op", "rcvd-ids").encode());
+                    break;
+                }
+                case "clear-rcvd-ids": {
+                    JsonArray ids = payload.getJsonArray("ids");
+                    ids.forEach(rcvdIds::remove);
                     break;
                 }
             }
