@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'com.github.johnrengelman.shadow' version '4.0.4'
-	id 'com.palantir.docker' version '0.22.1'
+	id 'com.palantir.docker' version '0.24.0'
 }
 
 def versionObj = new Version(major: 0, minor: 18, revision: 9)
