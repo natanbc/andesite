@@ -21,7 +21,7 @@ ext {
     jdaNasVersion =         '1.1.0'
     jsr305Version =         '3.0.2'
     koeVersion =            '454cfec'
-    lavaplayerVersion =     '1.3.27'
+    lavaplayerVersion =     '1.3.38'
     lavadspVersion =        '0.5.2'
     logbackVersion =        '1.2.3'
     magmaVersion =          '0.10.4'
