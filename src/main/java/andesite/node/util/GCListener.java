@@ -20,14 +20,14 @@ public class GCListener implements NotificationListener {
             .labelNames("action", "cause", "name")
             .buckets(0.025, 0.050, 0.100, 0.200, 0.400, 0.800, 1.600)
             .register();
-    
+
     @Override
     public void handleNotification(Notification notification, Object handback) {
-        if(GARBAGE_COLLECTION_NOTIFICATION.equals(notification.getType())) {
+        if (GARBAGE_COLLECTION_NOTIFICATION.equals(notification.getType())) {
             GarbageCollectionNotificationInfo notificationInfo = from((CompositeData) notification.getUserData());
             GcInfo info = notificationInfo.getGcInfo();
-            
-            if(info != null && !"No GC".equals(notificationInfo.getGcCause())) {
+
+            if (info != null && !"No GC".equals(notificationInfo.getGcCause())) {
                 GC_PAUSES.labels(
                         notificationInfo.getGcAction(),
                         notificationInfo.getGcCause(),

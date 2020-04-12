@@ -19,7 +19,7 @@ public interface AudioProvider extends AutoCloseable {
      */
     @CheckReturnValue
     boolean canProvide();
-    
+
     /**
      * Returns the data for the latest frame.
      *
@@ -28,7 +28,7 @@ public interface AudioProvider extends AutoCloseable {
     @Nonnull
     @CheckReturnValue
     ByteBuffer provide();
-    
+
     /**
      * Runs any cleanup actions. Called when this provider is removed with
      * {@link AudioHandler#setProvider(String, String, AudioProvider)} or

@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 
 public class Player implements AndesitePlayer {
     private static final Logger log = LoggerFactory.getLogger(Player.class);
-    
+
     private final FrameLossTracker frameLossTracker = new FrameLossTracker();
     private final Map<Object, EventEmitter> emitters = new ConcurrentHashMap<>();
     private final FilterChainConfiguration filterConfig = new FilterChainConfiguration();
@@ -34,7 +34,7 @@ public class Player implements AndesitePlayer {
     private final AudioPlayer audioPlayer;
     private final long updateTimerId;
     private final long cleanupTimerId;
-    
+
     /**
      * This is called fast because it avoids reencoding audio when the source is opus,
      * unlike TrackMixer.
@@ -42,9 +42,9 @@ public class Player implements AndesitePlayer {
     private final AudioProvider fastProvider;
     private volatile AudioProvider realProvider;
     private volatile AudioProvider switchWhenReady;
-    
+
     private long lastUse;
-    
+
     public Player(@Nonnull Andesite andesite, @Nonnull String guildId, @Nonnull String userId) {
         this.andesite = andesite;
         this.audioPlayerManager = andesite.audioPlayerManager();
@@ -59,60 +59,69 @@ public class Player implements AndesitePlayer {
                 new AllocatingProvider(audioPlayer);
         this.realProvider = fastProvider;
         this.updateTimerId = andesite.vertx().setPeriodic(5000, __ -> {
-            if(audioPlayer.getPlayingTrack() == null) return;
+            if (audioPlayer.getPlayingTrack() == null) return;
             emitters.values().forEach(EventEmitter::sendPlayerUpdate);
         });
         this.cleanupTimerId = andesite.vertx().setPeriodic(30_000, __ -> {
             var now = System.nanoTime();
             var regularPlaying = audioPlayer.getPlayingTrack() != null && !audioPlayer.isPaused();
             var mixerPlaying = mixer.isPresent() && anyPlaying(mixer.get().players().values());
-            if((regularPlaying || mixerPlaying) && now > lastUse + TimeUnit.SECONDS.toNanos(60)) {
+            if ((regularPlaying || mixerPlaying) && now > lastUse + TimeUnit.SECONDS.toNanos(60)) {
                 andesite.requestHandler().destroy(userId, guildId);
             }
         });
     }
-    
+
+    private static boolean anyPlaying(Iterable<MixerPlayer> iterable) {
+        for (var p : iterable) {
+            if (p.audioPlayer().getPlayingTrack() != null && !p.audioPlayer().isPaused()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     @Nonnull
     @CheckReturnValue
     public NodeState node() {
         return andesite;
     }
-    
+
     @Override
     @Nonnull
     @CheckReturnValue
     public String userId() {
         return userId;
     }
-    
+
     @Override
     @Nonnull
     @CheckReturnValue
     public String guildId() {
         return guildId;
     }
-    
+
     @Nonnull
     @Override
     public FrameLossCounter frameLossCounter() {
         return frameLossTracker;
     }
-    
+
     @Override
     @Nonnull
     @CheckReturnValue
     public FilterChainConfiguration filterConfig() {
         return filterConfig;
     }
-    
+
     @Override
     @Nonnull
     @CheckReturnValue
     public AudioPlayer audioPlayer() {
         return audioPlayer;
     }
-    
+
     @Override
     @Nonnull
     @CheckReturnValue
@@ -136,75 +145,75 @@ public class Player implements AndesitePlayer {
                         .put("usable", frameLossTracker.isDataUsable())
                 );
     }
-    
+
     @Nonnull
     @CheckReturnValue
     public AudioPlayerManager audioPlayerManager() {
         return audioPlayerManager;
     }
-    
+
     @Nonnull
     @CheckReturnValue
     public Map<Object, EventEmitter> eventListeners() {
         return emitters;
     }
-    
+
     public void setListener(@Nonnull Object key, @Nonnull Consumer<JsonObject> sink) {
         emitters.put(key, new EventEmitter(this, sink));
     }
-    
+
     @CheckReturnValue
     public boolean isPlaying() {
         return audioPlayer.getPlayingTrack() != null && !audioPlayer.isPaused();
     }
-    
+
     @Override
     @Nonnull
     public TrackMixer mixer() {
         return mixer.get();
     }
-    
+
     @CheckReturnValue
     @Nonnull
     @Override
     public MixerState mixerState() {
-        if(mixer.isPresent()) {
+        if (mixer.isPresent()) {
             var m = mixer.get();
-            if(switchWhenReady == m) {
+            if (switchWhenReady == m) {
                 return MixerState.ENABLING;
             }
-            if(realProvider == m) {
+            if (realProvider == m) {
                 return MixerState.ENABLED;
             }
         }
-        if(realProvider == fastProvider) {
+        if (realProvider == fastProvider) {
             return MixerState.DISABLED;
         }
-        if(switchWhenReady == fastProvider) {
+        if (switchWhenReady == fastProvider) {
             return MixerState.DISABLING;
         }
         throw new AssertionError("This state should be impossible");
     }
-    
+
     @Override
     public void switchToMixer() {
-        if(realProvider != mixer.get()) {
+        if (realProvider != mixer.get()) {
             switchWhenReady = mixer.get();
         }
     }
-    
+
     @Override
     public void switchToSingle() {
-        if(realProvider != fastProvider) {
+        if (realProvider != fastProvider) {
             switchWhenReady = fastProvider;
         }
     }
-    
+
     @CheckReturnValue
     @Override
     public boolean canProvide() {
         lastUse = System.nanoTime();
-        if(switchWhenReady != null && switchWhenReady.canProvide()) {
+        if (switchWhenReady != null && switchWhenReady.canProvide()) {
             log.info("Switching send handler from {} to {} for {}@{}", realProvider, switchWhenReady, userId, guildId);
             realProvider = switchWhenReady;
             switchWhenReady = null;
@@ -213,21 +222,21 @@ public class Player implements AndesitePlayer {
             return true;
         }
         var r = realProvider.canProvide();
-        if(r) {
+        if (r) {
             frameLossTracker.onSuccess();
         } else {
             frameLossTracker.onFail();
         }
         return r;
     }
-    
+
     @CheckReturnValue
     @Nonnull
     @Override
     public ByteBuffer provide() {
         return realProvider.provide();
     }
-    
+
     @Override
     public void close() {
         realProvider = fastProvider; //ensures we won't call the opus encoder in track mixer after releasing
@@ -236,14 +245,5 @@ public class Player implements AndesitePlayer {
         audioPlayer.destroy();
         andesite.vertx().cancelTimer(updateTimerId);
         andesite.vertx().cancelTimer(cleanupTimerId);
-    }
-    
-    private static boolean anyPlaying(Iterable<MixerPlayer> iterable) {
-        for(var p : iterable) {
-            if(p.audioPlayer().getPlayingTrack() != null && !p.audioPlayer().isPaused()) {
-                return true;
-            }
-        }
-        return false;
     }
 }

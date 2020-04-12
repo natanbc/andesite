@@ -15,50 +15,50 @@ import java.util.jar.JarFile;
 public class JarPluginLoader extends PluginLoader {
     private final JarFile file;
     private final URL base;
-    
+
     public JarPluginLoader(NodeState state, File file) throws IOException {
         this.file = new JarFile(file);
         this.base = new URL("jar:file://" + file.toURI().getPath() + "!/");
         state.cleaner().register(this, cleanerCode(this.file));
     }
-    
-    @Nullable
-    @Override
-    public InputStream openFile(@Nonnull String path) throws IOException {
-        var entry = file.getEntry(path);
-        if(entry == null) {
-            return null;
-        }
-        return file.getInputStream(entry);
-    }
-    
-    @Nonnull
-    @Override
-    public URL baseUrl() {
-        return base;
-    }
-    
-    @Nullable
-    @Override
-    public URL createUrl(@Nonnull String path) {
-        if(file.getEntry(path) == null) {
-            return null;
-        }
-        try {
-            return new URL(base.toString() + (path.startsWith("/") ? path.substring(1) : path));
-        } catch(MalformedURLException e) {
-            return null;
-        }
-    }
-    
+
     @Nonnull
     @CheckReturnValue
     private static Runnable cleanerCode(@Nonnull JarFile jar) {
         return () -> {
             try {
                 jar.close();
-            } catch(IOException ignored) {
+            } catch (IOException ignored) {
             }
         };
+    }
+
+    @Nullable
+    @Override
+    public InputStream openFile(@Nonnull String path) throws IOException {
+        var entry = file.getEntry(path);
+        if (entry == null) {
+            return null;
+        }
+        return file.getInputStream(entry);
+    }
+
+    @Nonnull
+    @Override
+    public URL baseUrl() {
+        return base;
+    }
+
+    @Nullable
+    @Override
+    public URL createUrl(@Nonnull String path) {
+        if (file.getEntry(path) == null) {
+            return null;
+        }
+        try {
+            return new URL(base.toString() + (path.startsWith("/") ? path.substring(1) : path));
+        } catch (MalformedURLException e) {
+            return null;
+        }
     }
 }

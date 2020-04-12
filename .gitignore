@@ -1,0 +1,7 @@
+.gradle/
+.idea/
+api/build/
+jattach-debug-plugin/build
+jfr-debug-plugin/build
+logs/
+build/

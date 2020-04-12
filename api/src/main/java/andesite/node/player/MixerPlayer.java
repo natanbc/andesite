@@ -12,7 +12,7 @@ public interface MixerPlayer extends BasePlayer {
     @Nonnull
     @CheckReturnValue
     AndesitePlayer parentPlayer();
-    
+
     /**
      * Returns the key used for registering this player in the mixer.
      *
@@ -21,7 +21,7 @@ public interface MixerPlayer extends BasePlayer {
     @Nonnull
     @CheckReturnValue
     String key();
-    
+
     /**
      * Returns the mixer this player belongs to.
      *

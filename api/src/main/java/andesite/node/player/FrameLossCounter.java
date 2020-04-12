@@ -12,7 +12,7 @@ public interface FrameLossCounter {
      * <br><br>3000 packets with 20ms of audio each.
      */
     int EXPECTED_PACKET_COUNT_PER_MIN = (60 * 1000) / 20;
-    
+
     /**
      * Returns the amount of frames lost per second over the past minute.
      * Each entry corresponds to one second. Ideally, all values should be 0.
@@ -26,7 +26,7 @@ public interface FrameLossCounter {
     @Nonnull
     @CheckReturnValue
     ByteRingBuffer lastMinuteLoss();
-    
+
     /**
      * Returns the amount of frames sent per second over the past minute.
      * Each entry corresponds to one second. Ideally, all values should be 30.
@@ -40,7 +40,7 @@ public interface FrameLossCounter {
     @Nonnull
     @CheckReturnValue
     ByteRingBuffer lastMinuteSuccess();
-    
+
     /**
      * Returns whether or not enough data has been gathered for use.
      *

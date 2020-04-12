@@ -24,7 +24,7 @@ import java.util.Map;
 class SentryUtils {
     private static final String SENTRY_APPENDER_NAME = "SENTRY";
     private static SentryClient client;
-    
+
     static void setup(Config config) {
         var client = Sentry.init(config.getString("sentry.dsn"));
         client.setRelease(Version.VERSION);
@@ -32,30 +32,30 @@ class SentryUtils {
         SentryUtils.client = client;
         var loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
         var root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
-        
+
         var sentryAppender = (SentryAppender) root.getAppender(SENTRY_APPENDER_NAME);
-        if(sentryAppender == null) {
+        if (sentryAppender == null) {
             sentryAppender = new SentryAppender();
             sentryAppender.setName(SENTRY_APPENDER_NAME);
             sentryAppender.start();
-            
+
             var warningsOrAboveFilter = new ThresholdFilter();
             warningsOrAboveFilter.setLevel(config.getString("sentry.log-level").toUpperCase());
             warningsOrAboveFilter.start();
             sentryAppender.addFilter(warningsOrAboveFilter);
-            
+
             sentryAppender.setContext(loggerContext);
             root.addAppender(sentryAppender);
         }
     }
-    
+
     static void configureWarns(NodeState state) {
         state.dispatcher().register(new AndesiteEventListener() {
             @Override
             public void onWebSocketClosed(@Nonnull NodeState state, @Nonnull String userId,
                                           @Nonnull String guildId, int closeCode,
                                           @Nullable String reason, boolean byRemote) {
-                if(byRemote) {
+                if (byRemote) {
                     client.sendEvent(new EventBuilder()
                             .withLevel(Event.Level.WARNING)
                             .withMessage("Websocket closed by server")
@@ -77,14 +77,14 @@ class SentryUtils {
             }
         });
     }
-    
+
     @Nonnull
     @CheckReturnValue
     private static Map<String, String> parseTags(@Nonnull List<String> tags) {
         var map = new HashMap<String, String>();
-        for(var tag : tags) {
+        for (var tag : tags) {
             var split = tag.split(":", 2);
-            if(split.length != 2) {
+            if (split.length != 2) {
                 throw new IllegalArgumentException("Invalid tags entry: " + tag);
             }
             map.put(split[0], split[1]);

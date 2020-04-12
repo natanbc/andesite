@@ -24,45 +24,57 @@ import java.util.List;
 
 public abstract class PluginLoader extends ClassLoader {
     private static final Logger log = LoggerFactory.getLogger(PluginLoader.class);
-    
+
+    @Nonnull
+    @CheckReturnValue
+    public static PluginLoader create(NodeState state, File file) throws IOException {
+        if (file.isDirectory()) {
+            return new DirectoryPluginLoader(file);
+        }
+        if (file.isFile() && file.canRead() && file.getName().endsWith(".jar")) {
+            return new JarPluginLoader(state, file);
+        }
+        throw new IllegalArgumentException("Unable to load " + file + ": no suitable loader found");
+    }
+
     public boolean hasFile(@Nonnull String path) {
         try {
             var is = openFile(path);
-            if(is != null) {
+            if (is != null) {
                 is.close();
                 return true;
             }
-        } catch(IOException ignored) {
+        } catch (IOException ignored) {
         }
         return false;
     }
-    
+
     @Nullable
     @CheckReturnValue
     public abstract InputStream openFile(@Nonnull String path) throws IOException;
-    
+
     @Nonnull
     @CheckReturnValue
     public abstract URL baseUrl();
-    
+
     @Nullable
     @CheckReturnValue
     public abstract URL createUrl(@Nonnull String path);
-    
+
     @Nonnull
     @CheckReturnValue
     public List<Plugin> loadPlugins() {
         var manifest = loadManifest();
-        if(manifest == null) {
+        if (manifest == null) {
             return Collections.emptyList();
         }
         var p = manifest.getJsonArray("classes");
-        if(p == null) {
+        if (p == null) {
             throw new IllegalArgumentException("Missing 'classes' array from manifest");
         }
         var list = new ArrayList<Plugin>();
-        for(var v : p) {
-            if(!(v instanceof String)) {
+        for (var v : p) {
+            if (!(v instanceof String)) {
                 throw new IllegalArgumentException("All elements in the 'classes' array must be strings");
             }
             log.info("Loading plugin {}", v);
@@ -71,56 +83,44 @@ public abstract class PluginLoader extends ClassLoader {
                 var ctor = c.getDeclaredConstructor();
                 ctor.setAccessible(true);
                 list.add((Plugin) ctor.newInstance());
-            } catch(Exception e) {
+            } catch (Exception e) {
                 throw new IllegalStateException("Unable to load plugin " + v, e);
             }
         }
         return list;
     }
-    
+
     @Nullable
     @CheckReturnValue
     private JsonObject loadManifest() {
         try {
             var is = openFile("manifest.json");
-            if(is == null) return null;
+            if (is == null) return null;
             return new JsonObject(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-        } catch(IOException ignored) {
+        } catch (IOException ignored) {
             return null;
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new IllegalArgumentException("Malformed manifest", e);
         }
     }
-    
+
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
-        try(var is = openFile(name.replace('.', '/') + ".class")) {
-            if(is == null) {
+        try (var is = openFile(name.replace('.', '/') + ".class")) {
+            if (is == null) {
                 return super.findClass(name);
             }
             var bytes = is.readAllBytes();
             return defineClass(name, bytes, 0, bytes.length,
                     new ProtectionDomain(new CodeSource(baseUrl(),
                             (CodeSigner[]) null), new Permissions()));
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new ClassNotFoundException(name, e);
         }
     }
-    
+
     @Override
     protected URL findResource(String name) {
         return createUrl(name);
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    public static PluginLoader create(NodeState state, File file) throws IOException {
-        if(file.isDirectory()) {
-            return new DirectoryPluginLoader(file);
-        }
-        if(file.isFile() && file.canRead() && file.getName().endsWith(".jar")) {
-            return new JarPluginLoader(state, file);
-        }
-        throw new IllegalArgumentException("Unable to load " + file + ": no suitable loader found");
     }
 }

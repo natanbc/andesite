@@ -13,17 +13,17 @@ class AllocatingProvider implements AudioProvider {
     private final ByteBuffer buffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize());
     private final AudioPlayer player;
     private AudioFrame lastFrame;
-    
+
     public AllocatingProvider(AudioPlayer player) {
         this.player = player;
     }
-    
+
     @CheckReturnValue
     @Override
     public boolean canProvide() {
         return (lastFrame = player.provide()) != null;
     }
-    
+
     @CheckReturnValue
     @Nonnull
     @Override
@@ -31,7 +31,7 @@ class AllocatingProvider implements AudioProvider {
         lastFrame.getData(buffer.array(), 0);
         return buffer.position(0).limit(lastFrame.getDataLength());
     }
-    
+
     @Override
     public void close() {
         //noop

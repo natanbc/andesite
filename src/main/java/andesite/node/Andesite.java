@@ -58,13 +58,13 @@ public class Andesite implements NodeState {
             "beam", BeamAudioSourceManager::new,
             "http", HttpAudioSourceManager::new,
             "local", LocalAudioSourceManager::new,
-            "soundcloud", SoundCloudAudioSourceManager::new,
+            "soundcloud", SoundCloudAudioSourceManager::createDefault,
             "twitch", TwitchStreamAudioSourceManager::new,
             "vimeo", VimeoAudioSourceManager::new,
             "youtube", YoutubeAudioSourceManager::new
     );
     private static final Set<String> DISABLED_BY_DEFAULT = Set.of("http", "local");
-    
+
     private final PluginManager pluginManager = new PluginManager(this);
     private final AtomicLong nextBufferId = new AtomicLong();
     private final Map<Long, EventBuffer> buffers = new ConcurrentHashMap<>();
@@ -77,18 +77,18 @@ public class Andesite implements NodeState {
     private final AudioHandler audioHandler;
     private final RequestHandler handler;
     private final Set<String> enabledSources;
-    
+
     private Andesite(@Nonnull Vertx vertx, @Nonnull Config rootConfig) throws IOException {
         var config = rootConfig.getConfig("andesite");
         var plugins = new File("plugins").listFiles();
-        if(plugins != null) {
-            for(var f : plugins) {
+        if (plugins != null) {
+            for (var f : plugins) {
                 log.info("Loading plugins from {}", f);
                 pluginManager.load(f);
             }
         }
         var extraPluginLocations = config.getStringList("extra-plugins");
-        for(var f : extraPluginLocations) {
+        for (var f : extraPluginLocations) {
             log.info("Loading plugins from {}", f);
             pluginManager.load(new File(f));
         }
@@ -101,7 +101,7 @@ public class Andesite implements NodeState {
         pluginManager.configurePlayerManager(pcmPlayerManager);
         this.enabledSources = SOURCE_MANAGERS.keySet().stream()
                 .filter(key -> {
-                    if(config.hasPath("source." + key)) {
+                    if (config.hasPath("source." + key)) {
                         return config.getBoolean("source." + key);
                     }
                     return !DISABLED_BY_DEFAULT.contains(key);
@@ -109,196 +109,51 @@ public class Andesite implements NodeState {
                 .peek(key -> playerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
                 .peek(key -> pcmPlayerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
                 .collect(Collectors.toSet());
-        
+
         configureYt(playerManager, config);
         configureYt(pcmPlayerManager, config);
-        
+
         log.info("Enabled default sources: {}", enabledSources);
         //we need to set the cleanup to basically never run so mixer players aren't destroyed without need.
         playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
         playerManager.getConfiguration().setFilterHotSwapEnabled(true);
-        if(config.getBoolean("lavaplayer.non-allocating")) {
+        if (config.getBoolean("lavaplayer.non-allocating")) {
             playerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
         }
         pcmPlayerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
         pcmPlayerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_PCM_S16_BE);
         pcmPlayerManager.getConfiguration().setFilterHotSwapEnabled(true);
         pcmPlayerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
-    
+
         playerManager.setFrameBufferDuration(config.getInt("lavaplayer.frame-buffer-duration"));
         pcmPlayerManager.setFrameBufferDuration(config.getInt("lavaplayer.frame-buffer-duration"));
     }
-    
-    @Nonnull
-    @CheckReturnValue
-    public PluginManager pluginManager() {
-        return pluginManager;
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    public Set<String> enabledSources() {
-        return enabledSources;
-    }
-    
-    @CheckReturnValue
-    public long nextConnectionId() {
-        return nextBufferId.incrementAndGet();
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    public EventBuffer createEventBuffer(long id) {
-        var buffer = new EventBuffer();
-        buffers.put(id, buffer);
-        return buffer;
-    }
-    
-    @Nullable
-    public EventBuffer removeEventBuffer(long id) {
-        return buffers.remove(id);
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    @Override
-    public Config config() {
-        return rootConfig;
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    @Override
-    public Vertx vertx() {
-        return vertx;
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    @Override
-    public RequestHandler requestHandler() {
-        return handler;
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    @Override
-    public AudioPlayerManager audioPlayerManager() {
-        return playerManager;
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    @Override
-    public AudioPlayerManager pcmAudioPlayerManager() {
-        return pcmPlayerManager;
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    @Override
-    public EventDispatcherImpl dispatcher() {
-        return dispatcher;
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    @Override
-    public AudioHandler audioHandler() {
-        return audioHandler;
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    @Override
-    public Map<String, Player> playerMap(@Nonnull String userId) {
-        return players.computeIfAbsent(userId, __ -> new ConcurrentHashMap<>());
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    @Override
-    public Player getPlayer(@Nonnull String userId, @Nonnull String guildId) {
-        return playerMap(userId).computeIfAbsent(guildId, __ -> {
-            var player = new Player(this, guildId, userId);
-            dispatcher.onPlayerCreated(userId, guildId, player);
-            return player;
-        });
-    }
-    
-    @Nullable
-    @CheckReturnValue
-    @Override
-    public Player getExistingPlayer(@Nonnull String userId, @Nonnull String guildId) {
-        var map = players.get(userId);
-        return map == null ? null : map.get(guildId);
-    }
-    
-    @Nullable
-    @Override
-    public Player removePlayer(@Nonnull String userId, @Nonnull String guildId) {
-        var map = players.get(userId);
-        if(map == null) return null;
-        var player = map.remove(guildId);
-        if(player != null) {
-            dispatcher.onPlayerDestroyed(userId, guildId, player);
-        }
-        return player;
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    @Override
-    public Stream<Player> allPlayers() {
-        return players.values().stream().flatMap(m -> m.values().stream());
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    @Override
-    public Cleaner cleaner() {
-        return CLEANER.get();
-    }
-    
-    @Nonnull
-    @CheckReturnValue
-    private AudioHandler createAudioHandler(@Nonnull Config config) {
-        var handlerName = config.getString("audio-handler");
-        //noinspection SwitchStatementWithTooFewBranches
-        switch(handlerName) {
-            case "magma":
-                return new MagmaHandler(this);
-            default:
-                return pluginManager.loadHandler(AudioHandler.class, handlerName);
-        }
-    }
-    
+
     private static void configureYt(@Nonnull AudioPlayerManager manager, @Nonnull Config config) {
         var yt = manager.source(YoutubeAudioSourceManager.class);
-        if(yt == null) {
+        if (yt == null) {
             return;
         }
         yt.setPlaylistPageCount(config.getInt("lavaplayer.youtube.max-playlist-page-count"));
-        yt.setMixLoaderMaximumPoolSize(config.getInt("lavaplayer.youtube.mix-loader-max-pool-size"));
     }
-    
+
     public static void main(String[] args) throws IOException {
         try {
             log.info("System info: {}", NativeLibLoader.loadSystemInfo());
-        } catch(Throwable t) {
+        } catch (Throwable t) {
             String message = "Unable to load system info.";
-            if(t instanceof UnsatisfiedLinkError || (t instanceof RuntimeException && t.getCause() instanceof UnsatisfiedLinkError)) {
+            if (t instanceof UnsatisfiedLinkError || (t instanceof RuntimeException && t.getCause() instanceof UnsatisfiedLinkError)) {
                 message += " This is not an error.";
             }
             log.warn(message, t);
         }
         log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
-    
+
         var andesite = createAndesite();
         var config = andesite.config().getConfig("andesite");
         Init.postInit(andesite);
         //NOTE: use the bitwise or operator, as it forces evaluation of all elements
-        if(!(RestHandler.setup(andesite)
+        if (!(RestHandler.setup(andesite)
                 | SingyeongHandler.setup(andesite)
                 | andesite.pluginManager().startListeners())) {
             log.error("No handlers enabled, aborting");
@@ -311,7 +166,7 @@ public class Andesite implements NodeState {
         );
         log.info("Timescale {}", FilterUtil.TIMESCALE_AVAILABLE ? "available" : "unavailable");
     }
-    
+
     @Nonnull
     @CheckReturnValue
     private static Andesite createAndesite() throws IOException {
@@ -319,5 +174,149 @@ public class Andesite implements NodeState {
         var config = rootConfig.getConfig("andesite");
         Init.preInit(config);
         return new Andesite(Vertx.vertx(), rootConfig);
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public PluginManager pluginManager() {
+        return pluginManager;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public Set<String> enabledSources() {
+        return enabledSources;
+    }
+
+    @CheckReturnValue
+    public long nextConnectionId() {
+        return nextBufferId.incrementAndGet();
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    public EventBuffer createEventBuffer(long id) {
+        var buffer = new EventBuffer();
+        buffers.put(id, buffer);
+        return buffer;
+    }
+
+    @Nullable
+    public EventBuffer removeEventBuffer(long id) {
+        return buffers.remove(id);
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public Config config() {
+        return rootConfig;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public Vertx vertx() {
+        return vertx;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public RequestHandler requestHandler() {
+        return handler;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public AudioPlayerManager audioPlayerManager() {
+        return playerManager;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public AudioPlayerManager pcmAudioPlayerManager() {
+        return pcmPlayerManager;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public EventDispatcherImpl dispatcher() {
+        return dispatcher;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public AudioHandler audioHandler() {
+        return audioHandler;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public Map<String, Player> playerMap(@Nonnull String userId) {
+        return players.computeIfAbsent(userId, __ -> new ConcurrentHashMap<>());
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public Player getPlayer(@Nonnull String userId, @Nonnull String guildId) {
+        return playerMap(userId).computeIfAbsent(guildId, __ -> {
+            var player = new Player(this, guildId, userId);
+            dispatcher.onPlayerCreated(userId, guildId, player);
+            return player;
+        });
+    }
+
+    @Nullable
+    @CheckReturnValue
+    @Override
+    public Player getExistingPlayer(@Nonnull String userId, @Nonnull String guildId) {
+        var map = players.get(userId);
+        return map == null ? null : map.get(guildId);
+    }
+
+    @Nullable
+    @Override
+    public Player removePlayer(@Nonnull String userId, @Nonnull String guildId) {
+        var map = players.get(userId);
+        if (map == null) return null;
+        var player = map.remove(guildId);
+        if (player != null) {
+            dispatcher.onPlayerDestroyed(userId, guildId, player);
+        }
+        return player;
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public Stream<Player> allPlayers() {
+        return players.values().stream().flatMap(m -> m.values().stream());
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    @Override
+    public Cleaner cleaner() {
+        return CLEANER.get();
+    }
+
+    @Nonnull
+    @CheckReturnValue
+    private AudioHandler createAudioHandler(@Nonnull Config config) {
+        var handlerName = config.getString("audio-handler");
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (handlerName) {
+            case "magma":
+                return new MagmaHandler(this);
+            default:
+                return pluginManager.loadHandler(AudioHandler.class, handlerName);
+        }
     }
 }

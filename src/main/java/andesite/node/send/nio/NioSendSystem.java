@@ -13,7 +13,7 @@ import java.nio.channels.DatagramChannel;
 public class NioSendSystem implements IAudioSendSystem {
     private static final Logger log = LoggerFactory.getLogger(NioSendSystem.class);
     private static final int OPUS_FRAME_TIME_AMOUNT = 20;
-    
+
     private final Vertx vertx;
     private final IPacketProvider packetProvider;
     private final DatagramChannel channel;
@@ -21,21 +21,21 @@ public class NioSendSystem implements IAudioSendSystem {
     private volatile boolean stop;
     private long lastFrameSent;
     private boolean sentPacket = true;
-    
+
     public NioSendSystem(Vertx vertx, IPacketProvider packetProvider) {
         this.vertx = vertx;
         this.packetProvider = packetProvider;
         try {
             this.channel = DatagramChannel.open()
                     .setOption(StandardSocketOptions.SO_REUSEADDR, true);
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new IllegalStateException("Unable to create UDP channel", e);
         }
     }
-    
+
     @Override
     public synchronized void start() {
-        if(started) return;
+        if (started) return;
         started = true;
         var socket = packetProvider.getUdpSocket();
         var local = socket.getLocalSocketAddress();
@@ -43,22 +43,22 @@ public class NioSendSystem implements IAudioSendSystem {
         try {
             socket.close();
             channel.bind(local).connect(packetProvider.getSocketAddress());
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new IllegalStateException("Unable to configure UDP channel", e);
         }
         run();
     }
-    
+
     @Override
     public void shutdown() {
         stop = true;
     }
-    
+
     private void run() {
-        if(stop) {
+        if (stop) {
             try {
                 channel.close();
-            } catch(IOException e) {
+            } catch (IOException e) {
                 log.error("Error closing udp channel", e);
             }
             return;
@@ -66,29 +66,29 @@ public class NioSendSystem implements IAudioSendSystem {
         lastFrameSent = System.currentTimeMillis();
         var changeTalking = !sentPacket || (System.currentTimeMillis() - lastFrameSent) > OPUS_FRAME_TIME_AMOUNT;
         var buffer = packetProvider.getNextPacketRaw(changeTalking);
-        
+
         sentPacket = buffer != null;
-        if(sentPacket) {
+        if (sentPacket) {
             try {
                 channel.send(buffer, packetProvider.getSocketAddress());
-            } catch(IOException e) {
+            } catch (IOException e) {
                 log.error("Error sending udp packet", e);
             }
         }
         scheduleNextPacket();
     }
-    
+
     private void scheduleNextPacket() {
         var sleepTime = (OPUS_FRAME_TIME_AMOUNT) - (System.currentTimeMillis() - lastFrameSent);
-        if(sleepTime > 0) {
+        if (sleepTime > 0) {
             vertx.setTimer(sleepTime - 1, __ -> sendNextPacket());
         } else {
             sendNextPacket();
         }
     }
-    
+
     private void sendNextPacket() {
-        if(System.currentTimeMillis() < lastFrameSent + 60) {
+        if (System.currentTimeMillis() < lastFrameSent + 60) {
             // If the sending didn't took longer than 60ms (3 times the time frame)
             lastFrameSent += OPUS_FRAME_TIME_AMOUNT;
         } else {

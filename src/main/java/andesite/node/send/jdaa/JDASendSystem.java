@@ -19,49 +19,49 @@ import java.net.SocketException;
 public class JDASendSystem implements IAudioSendSystem {
     private static final int OPUS_FRAME_TIME_AMOUNT = 20;//This is 20 milliseconds. We are only dealing with 20ms opus packets.
     private static final Logger log = LoggerFactory.getLogger(JDASendSystem.class);
-    
+
     private final IPacketProvider packetProvider;
     private Thread sendThread;
-    
+
     public JDASendSystem(IPacketProvider packetProvider) {
         this.packetProvider = packetProvider;
     }
-    
+
     @Override
     public void start() {
         final DatagramSocket udpSocket = packetProvider.getUdpSocket();
-        
+
         sendThread = new Thread(() -> {
             long lastFrameSent = System.currentTimeMillis();
             boolean sentPacket = true;
-            while(!udpSocket.isClosed() && !sendThread.isInterrupted()) {
+            while (!udpSocket.isClosed() && !sendThread.isInterrupted()) {
                 try {
                     boolean changeTalking = !sentPacket || (System.currentTimeMillis() - lastFrameSent) > OPUS_FRAME_TIME_AMOUNT;
                     DatagramPacket packet = packetProvider.getNextPacket(changeTalking);
-                    
+
                     sentPacket = packet != null;
-                    if(sentPacket) {
+                    if (sentPacket) {
                         udpSocket.send(packet);
                     }
-                } catch(NoRouteToHostException e) {
+                } catch (NoRouteToHostException e) {
                     //we can't call this as magma doesn't support it
                     //packetProvider.onConnectionLost();
                     break;
-                } catch(SocketException e) {
+                } catch (SocketException e) {
                     //Most likely the socket has been closed due to the audio connection be closed. Next iteration will kill loop.
-                } catch(Exception e) {
+                } catch (Exception e) {
                     log.error("Error while sending udp audio data", e);
                 } finally {
                     long sleepTime = (OPUS_FRAME_TIME_AMOUNT) - (System.currentTimeMillis() - lastFrameSent);
-                    if(sleepTime > 0) {
+                    if (sleepTime > 0) {
                         try {
                             Thread.sleep(sleepTime);
-                        } catch(InterruptedException e) {
+                        } catch (InterruptedException e) {
                             //We've been asked to stop.
                             Thread.currentThread().interrupt();
                         }
                     }
-                    if(System.currentTimeMillis() < lastFrameSent + 60) {
+                    if (System.currentTimeMillis() < lastFrameSent + 60) {
                         // If the sending didn't took longer than 60ms (3 times the time frame)
                         lastFrameSent += OPUS_FRAME_TIME_AMOUNT;
                     } else {
@@ -81,10 +81,10 @@ public class JDASendSystem implements IAudioSendSystem {
         sendThread.setPriority((Thread.NORM_PRIORITY + Thread.MAX_PRIORITY) / 2);
         sendThread.start();
     }
-    
+
     @Override
     public void shutdown() {
-        if(sendThread != null) {
+        if (sendThread != null) {
             sendThread.interrupt();
         }
     }

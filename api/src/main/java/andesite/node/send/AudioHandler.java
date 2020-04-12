@@ -16,7 +16,7 @@ public interface AudioHandler {
      * @param provider Provider to set.
      */
     void setProvider(@Nonnull String userId, @Nonnull String guildId, @Nullable AudioProvider provider);
-    
+
     /**
      * Handles a voice update.
      *
@@ -29,7 +29,7 @@ public interface AudioHandler {
     void handleVoiceUpdate(@Nonnull String userId, @Nonnull String guildId,
                            @Nonnull String sessionId, @Nonnull String endpoint,
                            @Nonnull String token);
-    
+
     /**
      * Closes a connection for the given user and guild. If the connection
      * has a provider set, it's {@link AudioProvider#close() close} method

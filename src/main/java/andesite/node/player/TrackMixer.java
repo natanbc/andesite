@@ -24,17 +24,17 @@ public class TrackMixer implements AndesiteTrackMixer {
             .order(ByteOrder.nativeOrder())
             .asShortBuffer();
     private final ByteBuffer outputBuffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize());
-    
+
     private final AudioPlayerManager playerManager;
     private final AndesitePlayer parent;
     private final OpusChunkEncoder encoder;
-    
+
     public TrackMixer(AudioPlayerManager playerManager, AndesitePlayer parent) {
         this.playerManager = playerManager;
         this.encoder = new OpusChunkEncoder(playerManager.getConfiguration(), StandardAudioDataFormats.DISCORD_OPUS);
         this.parent = parent;
     }
-    
+
     @SuppressWarnings("unchecked")
     @Nonnull
     @CheckReturnValue
@@ -42,61 +42,61 @@ public class TrackMixer implements AndesiteTrackMixer {
     public Map<String, MixerPlayer> players() {
         return (Map) players;
     }
-    
+
     @Nonnull
     @CheckReturnValue
     @Override
     public MixerPlayer getPlayer(@Nonnull String key) {
         return players.computeIfAbsent(key, k -> new Player(playerManager.createPlayer(), parent, k));
     }
-    
+
     @Override
     public MixerPlayer getExistingPlayer(@Nonnull String key) {
         return players.get(key);
     }
-    
+
     @Override
     public void removePlayer(@Nonnull String key) {
         var p = players.remove(key);
-        if(p != null) {
+        if (p != null) {
             p.player.destroy();
         }
     }
-    
+
     @CheckReturnValue
     @Override
     public boolean canProvide() {
         var v = false;
-        for(var p : players.values()) {
+        for (var p : players.values()) {
             v |= p.tryProvide();
         }
         players.values().removeIf(p -> {
             var notPlaying = p.player.getPlayingTrack() == null && p.framesWithoutProvide > 250; //5 seconds
-            if(notPlaying) {
+            if (notPlaying) {
                 p.player.destroy();
             }
             return notPlaying;
         });
         return v;
     }
-    
+
     @CheckReturnValue
     @Nonnull
     @Override
     public ByteBuffer provide() {
         var buffer = mixBuffer; //avoid getfield opcode
         buffer.clear().position(0);
-        for(var p : players.values()) {
-            if(p.provided) {
+        for (var p : players.values()) {
+            if (p.provided) {
                 var s = p.buffer.position(0).asShortBuffer();
-                
+
                 //http://atastypixel.com/blog/how-to-mix-audio-samples-properly-on-ios/
-                for(int i = 0; i < s.capacity(); i++) {
+                for (int i = 0; i < s.capacity(); i++) {
                     var a = buffer.get(i);
                     var b = s.get(i);
-                    if(a < 0 && b < 0) {
+                    if (a < 0 && b < 0) {
                         buffer.put(i, (short) ((a + b) - ((a * b) / Short.MIN_VALUE)));
-                    } else if(a > 0 && b > 0) {
+                    } else if (a > 0 && b > 0) {
                         buffer.put(i, (short) ((a + b) - ((a * b) / Short.MAX_VALUE)));
                     } else {
                         buffer.put(i, (short) (a + b));
@@ -105,18 +105,18 @@ public class TrackMixer implements AndesiteTrackMixer {
             }
         }
         buffer.flip();
-        
+
         encoder.encode(buffer, outputBuffer.position(0).limit(outputBuffer.capacity()));
         buffer.flip();
         return outputBuffer;
     }
-    
+
     @Override
     public void close() {
         players.values().forEach(p -> p.player.destroy());
         encoder.close();
     }
-    
+
     private static class Player implements MixerPlayer {
         private final ByteBuffer buffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_PCM_S16_BE.maximumChunkSize())
                 .order(ByteOrder.BIG_ENDIAN);
@@ -128,7 +128,7 @@ public class TrackMixer implements AndesiteTrackMixer {
         private final String key;
         private boolean provided;
         private int framesWithoutProvide;
-        
+
         Player(AudioPlayer player, AndesitePlayer parent, String key) {
             this.player = player;
             this.parent = parent;
@@ -137,10 +137,10 @@ public class TrackMixer implements AndesiteTrackMixer {
             buffer.limit(frame.getDataLength());
             this.player.addListener(frameLossTracker);
         }
-        
+
         boolean tryProvide() {
             provided = player.provide(frame);
-            if(provided) {
+            if (provided) {
                 framesWithoutProvide = 0;
                 frameLossTracker.onSuccess();
             } else {
@@ -149,45 +149,45 @@ public class TrackMixer implements AndesiteTrackMixer {
             }
             return provided;
         }
-        
+
         @Nonnull
         @Override
         public NodeState node() {
             return parent.node();
         }
-        
+
         @Nonnull
         @Override
         public String userId() {
             return parent.userId();
         }
-        
+
         @Nonnull
         @Override
         public String guildId() {
             return parent.guildId();
         }
-        
+
         @Nonnull
         @Override
         public FrameLossCounter frameLossCounter() {
             return frameLossTracker;
         }
-        
+
         @Nonnull
         @CheckReturnValue
         @Override
         public FilterChainConfiguration filterConfig() {
             return filterConfig;
         }
-        
+
         @Nonnull
         @CheckReturnValue
         @Override
         public AudioPlayer audioPlayer() {
             return player;
         }
-        
+
         @Nonnull
         @Override
         public JsonObject encodeState() {
@@ -204,13 +204,13 @@ public class TrackMixer implements AndesiteTrackMixer {
                             .put("usable", frameLossTracker.isDataUsable())
                     );
         }
-        
+
         @Nonnull
         @Override
         public AndesitePlayer parentPlayer() {
             return parent;
         }
-        
+
         @Nonnull
         @Override
         public String key() {

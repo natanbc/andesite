@@ -17,7 +17,7 @@ public interface BasePlayer {
     @Nonnull
     @CheckReturnValue
     NodeState node();
-    
+
     /**
      * Returns the user id of this player.
      *
@@ -26,7 +26,7 @@ public interface BasePlayer {
     @Nonnull
     @CheckReturnValue
     String userId();
-    
+
     /**
      * Returns the guild id of this player.
      *
@@ -35,7 +35,7 @@ public interface BasePlayer {
     @Nonnull
     @CheckReturnValue
     String guildId();
-    
+
     /**
      * Returns the frame loss counter of this player, which tracks how
      * many frames were sent or lost over the past minute.
@@ -45,7 +45,7 @@ public interface BasePlayer {
     @Nonnull
     @CheckReturnValue
     FrameLossCounter frameLossCounter();
-    
+
     /**
      * Returns the filter configuration for this player.
      *
@@ -54,7 +54,7 @@ public interface BasePlayer {
     @Nonnull
     @CheckReturnValue
     FilterChainConfiguration filterConfig();
-    
+
     /**
      * Returns the audio player for this player.
      *
@@ -63,7 +63,7 @@ public interface BasePlayer {
     @Nonnull
     @CheckReturnValue
     AudioPlayer audioPlayer();
-    
+
     /**
      * Encodes the state of this player for sending to clients.
      *

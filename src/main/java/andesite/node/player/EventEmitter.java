@@ -14,18 +14,18 @@ import java.util.function.Consumer;
 public class EventEmitter extends AudioEventAdapter {
     private final Player player;
     private final Consumer<JsonObject> sendEvent;
-    
+
     public EventEmitter(@Nonnull Player player, @Nonnull Consumer<JsonObject> sendEvent) {
         this.player = player;
         this.sendEvent = sendEvent;
     }
-    
+
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         sendEvent.accept(event("TrackStartEvent", track));
         sendPlayerUpdate();
     }
-    
+
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         sendEvent.accept(event("TrackEndEvent", track)
@@ -33,7 +33,7 @@ public class EventEmitter extends AudioEventAdapter {
                 .put("mayStartNext", endReason.mayStartNext));
         sendPlayerUpdate();
     }
-    
+
     // These exceptions are already logged by Lavaplayer
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
@@ -42,14 +42,14 @@ public class EventEmitter extends AudioEventAdapter {
                 .put("exception", RequestUtils.encodeThrowableShort(exception)));
         sendPlayerUpdate();
     }
-    
+
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
         sendEvent.accept(event("TrackStuckEvent", track)
                 .put("thresholdMs", thresholdMs));
         sendPlayerUpdate();
     }
-    
+
     public void sendPlayerUpdate() {
         sendEvent.accept(new JsonObject()
                 .put("op", "player-update")
@@ -58,7 +58,7 @@ public class EventEmitter extends AudioEventAdapter {
                 .put("state", player.encodeState())
         );
     }
-    
+
     private JsonObject event(@Nonnull String type, @Nonnull AudioTrack track) {
         return new JsonObject()
                 .put("op", "event")

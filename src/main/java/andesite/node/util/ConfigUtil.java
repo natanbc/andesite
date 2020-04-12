@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 
 public class ConfigUtil {
     private static final Logger log = LoggerFactory.getLogger(ConfigUtil.class);
-    
+
     public static Config load() {
         var defaultConfig = ConfigFactory.empty()
                 .withValue("andesite.version.string", ConfigValueFactory.fromAnyRef(Version.VERSION))
@@ -27,7 +27,7 @@ public class ConfigUtil {
                                 .withFallback(ConfigFactory.parseResources("reference.conf"))
                 );
         var path = Paths.get("application.conf");
-        if(Files.isReadable(path)) {
+        if (Files.isReadable(path)) {
             log.info("Loading config from {}", path.toAbsolutePath());
             return ConfigFactory.parseFile(path.toFile()).withFallback(defaultConfig).resolve();
         }

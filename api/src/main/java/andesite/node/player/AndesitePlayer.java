@@ -14,7 +14,7 @@ public interface AndesitePlayer extends BasePlayer, AudioProvider {
     @Nonnull
     @CheckReturnValue
     AndesiteTrackMixer mixer();
-    
+
     /**
      * Returns the state of the mixer.
      *
@@ -23,7 +23,7 @@ public interface AndesitePlayer extends BasePlayer, AudioProvider {
     @Nonnull
     @CheckReturnValue
     MixerState mixerState();
-    
+
     /**
      * Requests the player switches to the mixer as soon as possible.
      *
@@ -31,7 +31,7 @@ public interface AndesitePlayer extends BasePlayer, AudioProvider {
      * While it doesn't return one, the current provider will be used instead.
      */
     void switchToMixer();
-    
+
     /**
      * Requests the player switches to the default provider as soon as possible.
      *
@@ -39,7 +39,7 @@ public interface AndesitePlayer extends BasePlayer, AudioProvider {
      * While it doesn't return one, the current provider will be used instead.
      */
     void switchToSingle();
-    
+
     enum MixerState {
         /**
          * The mixer is disabled.
@@ -57,13 +57,13 @@ public interface AndesitePlayer extends BasePlayer, AudioProvider {
          * The mixer is being disabled, but is currently enabled.
          */
         DISABLING(true);
-        
+
         private final boolean isUsingMixer;
-        
+
         MixerState(boolean isUsingMixer) {
             this.isUsingMixer = isUsingMixer;
         }
-        
+
         @CheckReturnValue
         public boolean isUsingMixer() {
             return isUsingMixer;

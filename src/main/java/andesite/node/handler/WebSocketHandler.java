@@ -33,22 +33,22 @@ public class WebSocketHandler {
             "seek", "volume", "update",
             "destroy"
     );
-    
+
     private static final Logger log = LoggerFactory.getLogger(WebSocketHandler.class);
-    
+
     public static void setup(@Nonnull Andesite andesite, @Nonnull Router router) {
         router.get("/websocket").handler(handler(andesite, false));
         router.get(
                 andesite.config().getString("andesite.lavalink.ws-path")
         ).handler(handler(andesite, true));
     }
-    
+
     @Nonnull
     @CheckReturnValue
     private static Handler<RoutingContext> handler(@Nonnull Andesite andesite, boolean lavalinkRoute) {
         return context -> {
             var req = context.request();
-            if("websocket".equalsIgnoreCase(req.getHeader("upgrade"))) {
+            if ("websocket".equalsIgnoreCase(req.getHeader("upgrade"))) {
                 var id = andesite.nextConnectionId();
                 context.response().putHeader("Andesite-Connection-Id", String.valueOf(id));
                 var ws = req.upgrade();
@@ -61,18 +61,18 @@ public class WebSocketHandler {
                         lavalinkConnection ? "lavalink " : "",
                         context.request().remoteAddress(), id);
                 var resumeId = context.request().getHeader("Andesite-Resume-Id");
-                if(resumeId != null) {
+                if (resumeId != null) {
                     try {
                         var buffer = andesite.removeEventBuffer(Long.parseLong(resumeId));
-                        if(buffer != null) {
+                        if (buffer != null) {
                             log.info("Resuming connection {} to {}", resumeId, id);
                             andesite.allPlayers().forEach(p -> p.eventListeners().remove(buffer));
                             buffer.empty(json -> ws.writeFinalTextFrame(json.encode()));
                         }
-                    } catch(Exception ignored) {
+                    } catch (Exception ignored) {
                     }
                 }
-                if(!lavalinkConnection) {
+                if (!lavalinkConnection) {
                     ws.writeTextMessage(new JsonObject()
                             .put("op", "connection-id")
                             //making it a string allows a future change of the
@@ -97,11 +97,11 @@ public class WebSocketHandler {
             }
         };
     }
-    
+
     @Nonnull
     @CheckReturnValue
     private static Object toJson(@Nonnull MetadataEntry entry) {
-        switch(entry.type()) {
+        switch (entry.type()) {
             case INTEGER:
             case STRING:
             case VERSION:
@@ -112,7 +112,21 @@ public class WebSocketHandler {
                 throw new AssertionError();
         }
     }
-    
+
+    @Nullable
+    @CheckReturnValue
+    private static JsonObject transformPayloadForLavalink(@Nonnull JsonObject payload) {
+        if ("player-update".equals(payload.getValue("op", null))) {
+            return payload.put("op", "playerUpdate");
+        }
+        if ("event".equals(payload.getValue("op", null))) {
+            if ("TrackStartEvent".equals(payload.getValue("type", null))) {
+                return null;
+            }
+        }
+        return payload;
+    }
+
     private static class FrameHandler implements Handler<WebSocketFrame>, WebSocketState {
         private final Map<Key<?>, Object> userData = new HashMap<>();
         private final Andesite andesite;
@@ -140,7 +154,7 @@ public class WebSocketHandler {
             }
         };
         private long timeout;
-        
+
         FrameHandler(@Nonnull Andesite andesite, @Nonnull String user,
                      @Nonnull ServerWebSocket ws, long connectionId, boolean lavalink) {
             this.andesite = andesite;
@@ -149,7 +163,7 @@ public class WebSocketHandler {
             this.connectionId = connectionId;
             this.lavalink = lavalink;
             this.context = andesite.vertx().getOrCreateContext();
-            if(lavalink) {
+            if (lavalink) {
                 this.timerId = andesite.vertx().setPeriodic(30_000, __ -> {
                     var stats = andesite.requestHandler().nodeStatsForLavalink();
                     ws.writeFinalTextFrame(stats
@@ -162,41 +176,41 @@ public class WebSocketHandler {
             andesite.dispatcher().register(listener);
             ws.closeHandler(__ -> handleClose());
         }
-    
+
         @CheckReturnValue
         @Nonnull
         @Override
         public String user() {
             return user;
         }
-    
+
         @CheckReturnValue
         @Nonnull
         @Override
         public ServerWebSocket ws() {
             return ws;
         }
-    
+
         @CheckReturnValue
         @Nonnull
         @Override
         public String connectionId() {
             return Long.toString(connectionId);
         }
-    
+
         @CheckReturnValue
         @Override
         public boolean lavalink() {
             return lavalink;
         }
-    
+
         @CheckReturnValue
         @Override
         @SuppressWarnings("unchecked")
         public <T> T get(@Nonnull Key<T> key) {
             return (T) userData.getOrDefault(key, key.defaultValue());
         }
-        
+
         @Nullable
         @CheckReturnValue
         @Override
@@ -204,9 +218,9 @@ public class WebSocketHandler {
         public <T> T set(@Nonnull Key<T> key, @Nullable T value) {
             return (T) userData.put(key, value);
         }
-        
+
         private void handleClose() {
-            if(timeout != 0) {
+            if (timeout != 0) {
                 var buffer = andesite.createEventBuffer(connectionId);
                 subscriptions.forEach(p -> p.setListener(buffer, buffer::offer));
                 andesite.vertx().setTimer(timeout, __ -> {
@@ -214,50 +228,50 @@ public class WebSocketHandler {
                     andesite.removeEventBuffer(connectionId);
                 });
             }
-            if(timerId != null) {
+            if (timerId != null) {
                 andesite.vertx().cancelTimer(timerId);
             }
             andesite.dispatcher().unregister(listener);
             subscriptions.forEach(p -> p.eventListeners().remove(this));
         }
-        
+
         @Override
         public void handle(@Nonnull WebSocketFrame frame) {
             JsonObject payload;
             try {
-                if(frame.isText()) {
+                if (frame.isText()) {
                     payload = new JsonObject(frame.textData());
-                } else if(frame.isBinary()) {
+                } else if (frame.isBinary()) {
                     payload = new JsonObject(frame.binaryData());
                 } else {
                     return;
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 ws.close((short) 4001, "Unable to read frame data as json: " + e);
                 return;
             }
             log.debug("Received payload {}", payload);
-            if(andesite.pluginManager().customHandleWebSocketPayload(this, payload)) {
+            if (andesite.pluginManager().customHandleWebSocketPayload(this, payload)) {
                 return;
             }
             var user = payload.getString("userId", this.user);
             var guild = payload.getString("guildId");
             var op = payload.getString("op", null);
-            if(op == null) {
+            if (op == null) {
                 ws.close((short) 4002, "Null op provided");
                 return;
             }
-            if(NEEDS_USER_AND_GUILD.contains(op)) {
-                if(user == null) {
+            if (NEEDS_USER_AND_GUILD.contains(op)) {
+                if (user == null) {
                     ws.close((short) 4002, "Null user id provided");
                     return;
                 }
-                if(guild == null) {
+                if (guild == null) {
                     ws.close((short) 4002, "Null guild id provided");
                     return;
                 }
             }
-            switch(op) {
+            switch (op) {
                 case "voice-server-update":
                 case "voiceUpdate": {
                     andesite.requestHandler().provideVoiceServerUpdate(user, payload);
@@ -300,10 +314,10 @@ public class WebSocketHandler {
                 case "play": {
                     andesite.requestHandler().subscribe(user, guild, this,
                             json -> {
-                                if(lavalink) {
+                                if (lavalink) {
                                     json = transformPayloadForLavalink(json);
                                 }
-                                if(json == null) return;
+                                if (json == null) return;
                                 var s = json.encode();
                                 context.runOnContext(__ -> ws.writeFinalTextFrame(s));
                             });
@@ -339,7 +353,7 @@ public class WebSocketHandler {
                 }
                 case "destroy": {
                     var player = andesite.getExistingPlayer(user, guild);
-                    if(player != null) {
+                    if (player != null) {
                         subscriptions.remove(player);
                     }
                     var json = andesite.requestHandler().destroy(user, guild);
@@ -352,9 +366,9 @@ public class WebSocketHandler {
                 }
             }
         }
-        
+
         private void sendPlayerUpdate(@Nonnull String userId, @Nonnull String guildId, @Nullable JsonObject player) {
-            if(lavalink && player == null) return;
+            if (lavalink && player == null) return;
             var payload = new JsonObject()
                     .put("op", lavalink ? "playerUpdate" : "player-update")
                     .put("userId", userId)
@@ -362,19 +376,5 @@ public class WebSocketHandler {
                     .put("state", player);
             ws.writeFinalTextFrame(payload.encode());
         }
-    }
-    
-    @Nullable
-    @CheckReturnValue
-    private static JsonObject transformPayloadForLavalink(@Nonnull JsonObject payload) {
-        if("player-update".equals(payload.getValue("op", null))) {
-            return payload.put("op", "playerUpdate");
-        }
-        if("event".equals(payload.getValue("op", null))) {
-            if("TrackStartEvent".equals(payload.getValue("type", null))) {
-                return null;
-            }
-        }
-        return payload;
     }
 }

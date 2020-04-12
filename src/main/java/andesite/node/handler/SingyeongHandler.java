@@ -26,22 +26,22 @@ import java.util.function.Supplier;
 public class SingyeongHandler {
     private static final Query EMPTY_QUERY = new QueryBuilder().build();
     private static final Logger log = LoggerFactory.getLogger(SingyeongHandler.class);
-    
+
     public static boolean setup(@Nonnull Andesite andesite) {
         var config = andesite.config().getConfig("andesite");
         var enabled = config.getBoolean("transport.singyeong.enabled");
-        if(!enabled) {
+        if (!enabled) {
             return false;
         }
-    
+
         var dsn = config.getString("transport.singyeong.dsn");
-        
+
         log.info("Connecting to singyeong with dsn {}", dsn);
-        
+
         var client = SingyeongClient.create(andesite.vertx(), dsn);
-        
+
         var players = ConcurrentHashMap.<String>newKeySet();
-        
+
         andesite.dispatcher().register(new AndesiteEventListener() {
             @Override
             public void onPlayerCreated(@Nonnull NodeState state, @Nonnull String userId,
@@ -49,14 +49,14 @@ public class SingyeongHandler {
                 players.add(userId + ":" + guildId);
                 updateMetadata();
             }
-            
+
             @Override
             public void onPlayerDestroyed(@Nonnull NodeState state, @Nonnull String userId,
                                           @Nonnull String guildId, @Nonnull AndesitePlayer player) {
                 players.remove(userId + ":" + guildId);
                 updateMetadata();
             }
-            
+
             private void updateMetadata() {
                 client.updateMetadata("andesite-connections", SingyeongType.LIST, players.stream()
                         .reduce(
@@ -67,26 +67,26 @@ public class SingyeongHandler {
                 );
             }
         });
-        
+
         //used for player event listeners
         var key = new Object();
-        
+
         client.onInvalid(i ->
                 log.error("Got INVALID response for nonce {} with reason {}",
                         i.nonce(), i.reason())
         );
-        
+
         client.onEvent(event -> {
-            if(andesite.pluginManager().customHandleSingyeongPayload(event)) {
+            if (andesite.pluginManager().customHandleSingyeongPayload(event)) {
                 return;
             }
-            
+
             var payload = event.data();
-            
+
             var guild = payload.getString("guildId");
             var user = payload.getString("userId");
-            
-            switch(payload.getString("op")) {
+
+            switch (payload.getString("op")) {
                 case "voice-server-update": {
                     andesite.requestHandler().provideVoiceServerUpdate(user, payload);
                     break;
@@ -159,8 +159,8 @@ public class SingyeongHandler {
                 }
             }
         });
-        
-        
+
+
         client.connect()
                 .thenRun(() -> {
                     andesite.requestHandler().metadataFields(NamePartJoiner.DASHED).forEach((k, v) ->
@@ -177,7 +177,7 @@ public class SingyeongHandler {
                 .join();
         return true;
     }
-    
+
     private static void sendPlayerUpdate(@Nonnull SingyeongClient client, @Nonnull Dispatch dispatch,
                                          @Nullable JsonObject player) {
         sendResponse(client, dispatch, new JsonObject()
@@ -185,12 +185,12 @@ public class SingyeongHandler {
                 .put("guildId", dispatch.data().getString("guildId"))
                 .put("state", player));
     }
-    
+
     private static void sendResponse(@Nonnull SingyeongClient client, @Nonnull Dispatch dispatch,
                                      @Nullable JsonObject payload) {
-        if(payload == null) return;
+        if (payload == null) return;
         var data = dispatch.data();
-        if(data.getValue("response-query") == null || data.getBoolean("noreply", false)) {
+        if (data.getValue("response-query") == null || data.getBoolean("noreply", false)) {
             return;
         }
         client.send(
@@ -199,19 +199,19 @@ public class SingyeongHandler {
                 payload.put("userId", data.getString("userId"))
         );
     }
-    
+
     @Nonnull
     @CheckReturnValue
     private static Query createQuery(@Nullable JsonObject json, @Nonnull Supplier<Query> defaultQuery) {
-        if(json == null) {
+        if (json == null) {
             return defaultQuery.get();
         }
         var builder = new QueryBuilder();
         var opsRaw = json.getJsonArray("ops");
-        if(opsRaw != null) {
+        if (opsRaw != null) {
             var ops = new ArrayList<JsonObject>();
-            for(var v : opsRaw) {
-                if(!(v instanceof JsonObject)) {
+            for (var v : opsRaw) {
+                if (!(v instanceof JsonObject)) {
                     throw new IllegalArgumentException("All ops must be json objects!");
                 }
                 ops.add((JsonObject) v);
@@ -219,12 +219,12 @@ public class SingyeongHandler {
             builder.withOps(ops);
         }
         var targetRaw = json.getValue("target");
-        if(targetRaw instanceof String) {
+        if (targetRaw instanceof String) {
             builder.target((String) targetRaw);
-        } else if(targetRaw instanceof JsonArray) {
+        } else if (targetRaw instanceof JsonArray) {
             var list = new ArrayList<String>();
-            for(var v : (JsonArray) targetRaw) {
-                if(!(v instanceof String)) {
+            for (var v : (JsonArray) targetRaw) {
+                if (!(v instanceof String)) {
                     throw new IllegalArgumentException("All targets must be strings");
                 }
                 list.add((String) v);
@@ -237,11 +237,11 @@ public class SingyeongHandler {
                 .restricted(json.getBoolean("restricted", false))
                 .build();
     }
-    
+
     @Nonnull
     @CheckReturnValue
     private static SingyeongType toSingyeong(@Nonnull MetadataType type) {
-        switch(type) {
+        switch (type) {
             case STRING:
                 return SingyeongType.STRING;
             case INTEGER:
