@@ -100,7 +100,6 @@ docker {
     }
     files "build/libs/andesite-node-${versionObj}-all.jar",
             project(':jattach-debug-plugin').getTasksByName('jar', false).outputs,
-            project(':jfr-debug-plugin').getTasksByName('jar', false).outputs,
             "jlink.sh"
     buildArgs([
         version: versionObj.toString(),
@@ -122,7 +121,6 @@ task buildAll {}
 
 tasks.docker.dependsOn buildAll
 buildAll.dependsOn ':jattach-debug-plugin:jar'
-buildAll.dependsOn ':jfr-debug-plugin:jar'
 buildAll.dependsOn ':api:jar'
 buildAll.dependsOn ':api:javadoc'
 
