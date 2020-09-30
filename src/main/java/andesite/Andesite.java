@@ -279,12 +279,10 @@ public class Andesite implements NodeState {
     private AudioHandler createAudioHandler(@Nonnull Config config) {
         var handlerName = config.getString("audio-handler");
         //noinspection SwitchStatementWithTooFewBranches
-        switch(handlerName) {
-            case "magma":
-                return new MagmaHandler(this);
-            default:
-                return pluginManager.loadHandler(AudioHandler.class, handlerName);
-        }
+        return switch(handlerName) {
+            case "magma" -> new MagmaHandler(this);
+            default -> pluginManager.loadHandler(AudioHandler.class, handlerName);
+        };
     }
     
     @SuppressWarnings("rawtypes")
@@ -316,13 +314,13 @@ public class Andesite implements NodeState {
         var filter = ((Predicate<InetAddress>)blacklisted::contains).negate();
         var searchTriggersFail = rotation.getBoolean("search-triggers-fail");
         var strategy = rotation.getString("strategy").strip().toLowerCase();
-        switch(strategy) {
-            case "rotateonban": return new RotatingIpRoutePlanner(ipBlocks, filter, searchTriggersFail);
-            case "loadbalance": return new BalancingIpRoutePlanner(ipBlocks, filter, searchTriggersFail);
-            case "nanoswitch": return new NanoIpRoutePlanner(ipBlocks, searchTriggersFail);
-            case "rotatingnanoswitch": return new RotatingNanoIpRoutePlanner(ipBlocks, filter, searchTriggersFail);
-            default: throw new IllegalArgumentException("Unknown strategy '" + strategy + "'");
-        }
+        return switch(strategy) {
+            case "rotateonban" -> new RotatingIpRoutePlanner(ipBlocks, filter, searchTriggersFail);
+            case "loadbalance" -> new BalancingIpRoutePlanner(ipBlocks, filter, searchTriggersFail);
+            case "nanoswitch" -> new NanoIpRoutePlanner(ipBlocks, searchTriggersFail);
+            case "rotatingnanoswitch" -> new RotatingNanoIpRoutePlanner(ipBlocks, filter, searchTriggersFail);
+            default -> throw new IllegalArgumentException("Unknown strategy '" + strategy + "'");
+        };
     }
     
     private static void configureYt(@Nonnull AudioPlayerManager manager, @Nonnull Config config, @Nullable AbstractRoutePlanner planner) {

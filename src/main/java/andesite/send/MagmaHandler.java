@@ -100,21 +100,16 @@ public class MagmaHandler implements AudioHandler {
         var hasConfig = config.hasPath("send-system.type");
         var sendSystem = hasConfig ? config.getString("send-system.type") : hasNas ? "nas" : "nio";
         switch(sendSystem) {
-            case "nas":
+            case "nas" -> {
                 if(!hasNas) {
                     throw new IllegalArgumentException("NAS is unsupported in this environment. " +
-                            "Please choose a different send system.");
+                                                               "Please choose a different send system.");
                 }
                 factory = new NativeAudioSendFactory(config.getInt("send-system.nas-buffer"));
-                break;
-            case "jda":
-                factory = new JDASendFactory();
-                break;
-            case "nio":
-                factory = new NioSendFactory(andesite.vertx());
-                break;
-            default:
-                throw new IllegalArgumentException("No send system with type " + config.getString("send-system.type"));
+            }
+            case "jda" -> factory = new JDASendFactory();
+            case "nio" -> factory = new NioSendFactory(andesite.vertx());
+            default -> throw new IllegalArgumentException("No send system with type " + config.getString("send-system.type"));
         }
 //        if(config.getBoolean("send-system.async")) {
 //            factory = new AsyncPacketProviderFactory(factory);

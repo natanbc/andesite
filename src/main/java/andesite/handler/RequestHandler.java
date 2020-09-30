@@ -715,10 +715,8 @@ public class RequestHandler implements AndesiteRequestHandler {
         if(track != null && end != 0) {
             track.setMarker(new TrackMarker(end, state -> {
                 switch(state) {
-                    case REACHED:
-                    case BYPASSED:
-                    case LATE:
-                        STOP_PLAYER_WITH_REASON.accept(player, AudioTrackEndReason.FINISHED);
+                    case REACHED, BYPASSED, LATE ->
+                            STOP_PLAYER_WITH_REASON.accept(player, AudioTrackEndReason.FINISHED);
                 }
             }));
         }

@@ -1,4 +1,5 @@
 rootProject.name = 'andesite'
 include 'api'
 include 'jattach-debug-plugin'
+include 'test-bot'
 
