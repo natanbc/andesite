@@ -58,7 +58,7 @@ public class Andesite implements NodeState {
             "beam", BeamAudioSourceManager::new,
             "http", HttpAudioSourceManager::new,
             "local", LocalAudioSourceManager::new,
-            "soundcloud", SoundCloudAudioSourceManager::new,
+            "soundcloud", SoundCloudAudioSourceManager::createDefault,
             "twitch", TwitchStreamAudioSourceManager::new,
             "vimeo", VimeoAudioSourceManager::new,
             "youtube", YoutubeAudioSourceManager::new
@@ -279,7 +279,7 @@ public class Andesite implements NodeState {
             return;
         }
         yt.setPlaylistPageCount(config.getInt("lavaplayer.youtube.max-playlist-page-count"));
-        yt.setMixLoaderMaximumPoolSize(config.getInt("lavaplayer.youtube.mix-loader-max-pool-size"));
+        //yt.setMixLoaderMaximumPoolSize(config.getInt("lavaplayer.youtube.mix-loader-max-pool-size"));
     }
     
     public static void main(String[] args) throws IOException {

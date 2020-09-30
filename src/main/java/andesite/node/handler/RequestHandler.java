@@ -424,7 +424,7 @@ public class RequestHandler implements AndesiteRequestHandler {
             var internalBean = (com.sun.management.OperatingSystemMXBean) os;
             root.put("cpu", new JsonObject()
                     .put("andesite", internalBean.getProcessCpuLoad())
-                    .put("system", internalBean.getSystemCpuLoad())
+                    .put("system", systemCpuLoad(internalBean))
             );
         } else {
             root.putNull("cpu");
@@ -573,7 +573,7 @@ public class RequestHandler implements AndesiteRequestHandler {
         //INTERNAL_BEAN_CLASS is a Class<?> object to the com.sun.management.OperatingSystemMXBean class
         if(INTERNAL_BEAN_CLASS != null && INTERNAL_BEAN_CLASS.isInstance(os)) {
             var internalBean = (com.sun.management.OperatingSystemMXBean) os;
-            systemLoad = internalBean.getSystemCpuLoad();
+            systemLoad = systemCpuLoad(internalBean);
             load = internalBean.getProcessCpuLoad();
         }
         root.put("cpu", new JsonObject()
@@ -722,5 +722,10 @@ public class RequestHandler implements AndesiteRequestHandler {
                 }
             }));
         }
+    }
+    
+    @SuppressWarnings("deprecation")
+    private static double systemCpuLoad(Object bean) {
+        return ((com.sun.management.OperatingSystemMXBean)bean).getSystemCpuLoad();
     }
 }
