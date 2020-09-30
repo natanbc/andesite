@@ -51,47 +51,49 @@ public class WebSocketHandler {
             if("websocket".equalsIgnoreCase(req.getHeader("upgrade"))) {
                 var id = andesite.nextConnectionId();
                 context.response().putHeader("Andesite-Connection-Id", String.valueOf(id));
-                var ws = req.upgrade();
-                var userId = context.<String>get("user-id");
-                var llQuery = context.queryParam("lavalink");
-                var lavalinkConnection = lavalinkRoute
-                        || "lavalink".equalsIgnoreCase(req.getHeader("Andesite-Compat"))
-                        || llQuery != null && !llQuery.isEmpty();
-                log.info("New {}connection from {} with id {}",
-                        lavalinkConnection ? "lavalink " : "",
-                        context.request().remoteAddress(), id);
-                var resumeId = context.request().getHeader("Andesite-Resume-Id");
-                if(resumeId != null) {
-                    try {
-                        var buffer = andesite.removeEventBuffer(Long.parseLong(resumeId));
-                        if(buffer != null) {
-                            log.info("Resuming connection {} to {}", resumeId, id);
-                            andesite.allPlayers().forEach(p -> p.eventListeners().remove(buffer));
-                            buffer.empty(json -> ws.writeFinalTextFrame(json.encode()));
+                req.toWebSocket(res -> {
+                    var ws = res.result();
+                    var userId = context.<String>get("user-id");
+                    var llQuery = context.queryParam("lavalink");
+                    var lavalinkConnection = lavalinkRoute
+                                                     || "lavalink".equalsIgnoreCase(req.getHeader("Andesite-Compat"))
+                                                     || llQuery != null && !llQuery.isEmpty();
+                    log.info("New {}connection from {} with id {}",
+                            lavalinkConnection ? "lavalink " : "",
+                            context.request().remoteAddress(), id);
+                    var resumeId = context.request().getHeader("Andesite-Resume-Id");
+                    if(resumeId != null) {
+                        try {
+                            var buffer = andesite.removeEventBuffer(Long.parseLong(resumeId));
+                            if(buffer != null) {
+                                log.info("Resuming connection {} to {}", resumeId, id);
+                                andesite.allPlayers().forEach(p -> p.eventListeners().remove(buffer));
+                                buffer.empty(json -> ws.writeFinalTextFrame(json.encode()));
+                            }
+                        } catch(Exception ignored) {
                         }
-                    } catch(Exception ignored) {
                     }
-                }
-                if(!lavalinkConnection) {
-                    ws.writeTextMessage(new JsonObject()
-                            .put("op", "connection-id")
-                            //making it a string allows a future change of the
-                            //id format without breaking clients - the actual
-                            //format is opaque to them.
-                            .put("id", String.valueOf(id))
-                            .encode()
-                    );
-                    var metadata = new JsonObject();
-                    andesite.requestHandler().metadataFields(NamePartJoiner.LOWER_CAMEL_CASE).forEach((k, v) ->
-                            metadata.put(k, toJson(v))
-                    );
-                    ws.writeTextMessage(new JsonObject()
-                            .put("op", "metadata")
-                            .put("data", metadata)
-                            .encode()
-                    );
-                }
-                ws.frameHandler(new FrameHandler(andesite, userId, ws, id, lavalinkConnection));
+                    if(!lavalinkConnection) {
+                        ws.writeTextMessage(new JsonObject()
+                                                    .put("op", "connection-id")
+                                                    //making it a string allows a future change of the
+                                                    //id format without breaking clients - the actual
+                                                    //format is opaque to them.
+                                                    .put("id", String.valueOf(id))
+                                                    .encode()
+                        );
+                        var metadata = new JsonObject();
+                        andesite.requestHandler().metadataFields(NamePartJoiner.LOWER_CAMEL_CASE).forEach((k, v) ->
+                                                                                                                  metadata.put(k, toJson(v))
+                        );
+                        ws.writeTextMessage(new JsonObject()
+                                                    .put("op", "metadata")
+                                                    .put("data", metadata)
+                                                    .encode()
+                        );
+                    }
+                    ws.frameHandler(new FrameHandler(andesite, userId, ws, id, lavalinkConnection));
+                });
             } else {
                 context.next();
             }

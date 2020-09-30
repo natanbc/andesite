@@ -36,7 +36,7 @@ ext {
     //@formatter:on
 }
 
-mainClassName = 'andesite.node.Andesite'
+mainClassName = 'andesite.Andesite'
 
 repositories {
     jcenter()
@@ -153,6 +153,7 @@ natives.each { arch ->
         configurations = [ project.configurations.runtime ]
         manifest.inheritFrom project.tasks.jar.manifest
 
+        exclude 'module-info.class'
         exclude 'lombok/**'
         exclude 'vertx-web-js/**'
         exclude 'vertx-web/**'
