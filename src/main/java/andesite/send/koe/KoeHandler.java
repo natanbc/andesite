@@ -21,6 +21,8 @@ import moe.kyokobot.koe.VoiceServerInfo;
 import moe.kyokobot.koe.codec.netty.NettyFramePollerFactory;
 import moe.kyokobot.koe.codec.udpqueue.UdpQueueFramePollerFactory;
 import moe.kyokobot.koe.gateway.GatewayVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -30,6 +32,8 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class KoeHandler implements AudioHandler {
+    private static final Logger log = LoggerFactory.getLogger(KoeHandler.class);
+    
     private final Map<Long, KoeClient> clients = new ConcurrentHashMap<>();
     private final Andesite andesite;
     private final Koe koe;
@@ -67,11 +71,19 @@ public class KoeHandler implements AudioHandler {
             }
         }
         builder.setHighPacketPriority(config.getBoolean("high-packet-priority"));
-        var hasNas = isNasSupported();
-        var udpQueue = config.hasPath("udp-queue.enabled") ? config.getBoolean("udp-queue.enabled") : hasNas;
+    
+        boolean udpQueue;
+        if(config.hasPath("udp-queue.enabled")) {
+            udpQueue = config.getBoolean("udp-queue.enabled");
+        } else {
+            log.info("Detecting whether or not udp-queue is available...");
+            udpQueue = isNasSupported();
+        }
         if(udpQueue) {
-            if(!hasNas) {
-                throw new IllegalArgumentException("UDP queue native library not available");
+            if(!isNasSupported()) {
+                throw new IllegalArgumentException("udp-queue native library required by the " +
+                                                           "config (koe.udp-queue.enabled = true) but " +
+                                                           "is not available");
             }
             var buffer = config.getInt("udp-queue.buffer");
             var threads = config.getInt("udp-queue.threads");
@@ -143,7 +155,8 @@ public class KoeHandler implements AudioHandler {
         try {
             new UdpQueueManager(20, 20_000_000, 4096).close();
             return true;
-        } catch(UnsatisfiedLinkError e) {
+        } catch(LinkageError e) {
+            log.warn("The message above is NOT an error. It just means the native library couldn't be located");
             return false;
         }
     }
