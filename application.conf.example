@@ -42,7 +42,14 @@ andesite {
 
     youtube {
       max-playlist-page-count = 6
-      mix-loader-max-pool-size = 10
+
+      rotation {
+        ips = ["1.0.0.0/8", "dead:beef::0/32"]
+        excluded-ips = ["1.0.0.1"]
+        strategy = "RotateOnBan"
+        search-triggers-fail = true
+        retry-limit = -1
+      }
     }
   }
 

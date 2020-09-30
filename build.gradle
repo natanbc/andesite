@@ -22,6 +22,7 @@ ext {
     jsr305Version =         '3.0.2'
     koeVersion =            '454cfec'
     lavaplayerVersion =     'a63c541dc5'
+    ytRotatorVersion =      '0.1.7'
     lavadspVersion =        '0.5.2'
     logbackVersion =        '1.2.3'
     magmaVersion =          '0.12.5'
@@ -40,6 +41,7 @@ mainClassName = 'andesite.node.Andesite'
 repositories {
     jcenter()
     maven { url 'https://dl.bintray.com/natanbc/maven' }
+    maven { url 'https://dl.bintray.com/sedmelluq/com.sedmelluq' }
     maven { url 'https://jitpack.io' }
 }
 
@@ -60,6 +62,9 @@ dependencies {
 
     //Audio player
     compile "com.github.Devoxin:lavaplayer:$lavaplayerVersion"
+
+    //IPv6 rotation
+    compile "com.sedmelluq:lavaplayer-ext-youtube-rotator:$ytRotatorVersion"
 
     //Audio filters
     compile "com.github.natanbc:lavadsp:$lavadspVersion"

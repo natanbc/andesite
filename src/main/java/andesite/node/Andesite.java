@@ -27,6 +27,15 @@ import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceMan
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
+import com.sedmelluq.lava.extensions.youtuberotator.YoutubeIpRotator;
+import com.sedmelluq.lava.extensions.youtuberotator.planner.AbstractRoutePlanner;
+import com.sedmelluq.lava.extensions.youtuberotator.planner.BalancingIpRoutePlanner;
+import com.sedmelluq.lava.extensions.youtuberotator.planner.NanoIpRoutePlanner;
+import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingIpRoutePlanner;
+import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingNanoIpRoutePlanner;
+import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.IpBlock;
+import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv4Block;
+import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
 import com.typesafe.config.Config;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
@@ -38,10 +47,14 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.Cleaner;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -110,8 +123,9 @@ public class Andesite implements NodeState {
                 .peek(key -> pcmPlayerManager.registerSourceManager(SOURCE_MANAGERS.get(key).get()))
                 .collect(Collectors.toSet());
         
-        configureYt(playerManager, config);
-        configureYt(pcmPlayerManager, config);
+        var planner = createRoutePlanner(config);
+        configureYt(playerManager, config, planner);
+        configureYt(pcmPlayerManager, config, planner);
         
         log.info("Enabled default sources: {}", enabledSources);
         //we need to set the cleanup to basically never run so mixer players aren't destroyed without need.
@@ -273,13 +287,60 @@ public class Andesite implements NodeState {
         }
     }
     
-    private static void configureYt(@Nonnull AudioPlayerManager manager, @Nonnull Config config) {
+    @SuppressWarnings("rawtypes")
+    @Nullable
+    @CheckReturnValue
+    private static AbstractRoutePlanner createRoutePlanner(@Nonnull Config config) {
+        var rotation = config.getConfig("lavaplayer.youtube.rotation");
+        if(rotation.getStringList("ips").isEmpty()) return null;
+        List<IpBlock> ipBlocks = rotation.getStringList("ips").stream()
+                .map(block -> {
+                    if(Ipv4Block.isIpv4CidrBlock(block)) {
+                        return new Ipv4Block(block);
+                    }
+                    if(Ipv6Block.isIpv6CidrBlock(block)) {
+                        return new Ipv6Block(block);
+                    }
+                    throw new IllegalArgumentException("Invalid IP block '" + block + "'");
+                })
+                .collect(Collectors.toList());
+        var blacklisted = rotation.getStringList("excluded-ips").stream()
+                .map(ip -> {
+                    try {
+                        return InetAddress.getByName(ip);
+                    } catch(UnknownHostException e) {
+                        throw new IllegalArgumentException("Unable to resolve blocked IP '" + ip + "'", e);
+                    }
+                })
+                .collect(Collectors.toSet());
+        var filter = ((Predicate<InetAddress>)blacklisted::contains).negate();
+        var searchTriggersFail = rotation.getBoolean("search-triggers-fail");
+        var strategy = rotation.getString("strategy").strip().toLowerCase();
+        switch(strategy) {
+            case "rotateonban": return new RotatingIpRoutePlanner(ipBlocks, filter, searchTriggersFail);
+            case "loadbalance": return new BalancingIpRoutePlanner(ipBlocks, filter, searchTriggersFail);
+            case "nanoswitch": return new NanoIpRoutePlanner(ipBlocks, searchTriggersFail);
+            case "rotatingnanoswitch": return new RotatingNanoIpRoutePlanner(ipBlocks, filter, searchTriggersFail);
+            default: throw new IllegalArgumentException("Unknown strategy '" + strategy + "'");
+        }
+    }
+    
+    private static void configureYt(@Nonnull AudioPlayerManager manager, @Nonnull Config config, @Nullable AbstractRoutePlanner planner) {
         var yt = manager.source(YoutubeAudioSourceManager.class);
         if(yt == null) {
             return;
         }
         yt.setPlaylistPageCount(config.getInt("lavaplayer.youtube.max-playlist-page-count"));
-        //yt.setMixLoaderMaximumPoolSize(config.getInt("lavaplayer.youtube.mix-loader-max-pool-size"));
+        if(planner != null) {
+            var retryLimit = config.getInt("lavaplayer.youtube.rotation.retry-limit");
+           if(retryLimit < 0) {
+               YoutubeIpRotator.setup(yt, planner);
+           } else if(retryLimit == 0) {
+               YoutubeIpRotator.setup(yt, planner, Integer.MAX_VALUE);
+           } else {
+               YoutubeIpRotator.setup(yt, planner, retryLimit);
+           }
+        }
     }
     
     public static void main(String[] args) throws IOException {

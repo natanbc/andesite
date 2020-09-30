@@ -36,8 +36,12 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | sentry.log-level | string | lowest level to send to sentry | WARN |
 | lavaplayer.frame-buffer-duration | integer | duration of the frame buffer, in milliseconds. changes in filters/volume take at least this time to start applying | 5000 |
 | lavaplayer.non-allocating | boolean | whether or not to use the non allocating frame buffer | true |
-| lavaplayer.youtube.max-playlist-page-count | maximum number of pages loaded from one playlist. There are 100 tracks per page. | 6 |
-| lavaplayer.youtube.mix-loader-max-pool-size | maximum number of threads used by the mix loader pool | 10 |
+| lavaplayer.youtube.max-playlist-page-count | int | maximum number of pages loaded from one playlist. There are 100 tracks per page. | 6 |
+| lavaplayer.youtube.rotation.ips | string[] | IP blocks to use for rotation. IP rotation is disabled if empty | [] |
+| lavaplayer.youtube.rotation.excluded-ips | string[] | IP **addresses** to exclude from rotation | [] |
+| lavaplayer.youtube.rotation.strategy | string | strategy to use for rotation. Valid options are `RotateOnBan`, `LoadBalance`, `NanoSwitch`, `RotatingNanoSwitch` | RotateOnBan |
+| lavaplayer.youtube.rotation.search-triggers-fail | boolean | whether a search 429 should trigger marking the IP as failing | true |
+| lavaplayer.youtube.rotation.retry-limit | int | -1 = use default lavaplayer value, 0 = infinity, >0 = retry will happen this numbers times | -1 |
 | source.bandcamp | boolean | whether or not to enable playing and resolving tracks from bandcamp | true |
 | source.beam | boolean | whether or not to enable playing and resolving tracks from beam | true |
 | source.http | boolean | whether or not to enable playing and resolving tracks from http urls | **false** |
