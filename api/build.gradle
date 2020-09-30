@@ -46,7 +46,7 @@ dependencies {
     api "io.vertx:vertx-web:$vertxWebVersion"
 
     //Audio player
-    api "com.sedmelluq:lavaplayer:$lavaplayerVersion"
+    api "com.github.Devoxin:lavaplayer:$lavaplayerVersion"
 
     //Audio filters
     api "com.github.natanbc:lavadsp:$lavadspVersion"

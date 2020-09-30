@@ -1,11 +1,11 @@
 plugins {
     id 'java'
     id 'application'
-    id 'com.github.johnrengelman.shadow' version '4.0.4'
-	id 'com.palantir.docker' version '0.22.1'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+	id 'com.palantir.docker' version '0.25.0'
 }
 
-def versionObj = new Version(major: 0, minor: 18, revision: 9)
+def versionObj = new Version(major: 0, minor: 19, revision: 0)
 
 sourceCompatibility = 11
 targetCompatibility = 11
@@ -17,17 +17,17 @@ allprojects {
 
 ext {
     //@formatter:off
-    configVersion =         '1.3.4'
+    configVersion =         '1.4.0'
     jdaNasVersion =         '1.1.0'
     jsr305Version =         '3.0.2'
     koeVersion =            '454cfec'
-    lavaplayerVersion =     '1.3.27'
+    lavaplayerVersion =     'a63c541dc5'
     lavadspVersion =        '0.5.2'
     logbackVersion =        '1.2.3'
-    magmaVersion =          '0.10.4'
+    magmaVersion =          '0.12.5'
     nativeLoaderVersion =   '0.3.0' 
-    prometheusVersion =     '0.7.0'
-    sentryVersion =         '1.7.27'
+    prometheusVersion =     '0.9.0'
+    sentryVersion =         '1.7.30'
     singyeongVersion =      '8de14db'
     vertxWebVersion =       '3.8.1'
     
@@ -53,13 +53,13 @@ dependencies {
     compile "io.vertx:vertx-web:$vertxWebVersion"
 
     //Audio sending
-    compile "club.minnced:magma:$magmaVersion"
+    compile "space.npstr.Magma:magma:$magmaVersion"
 
     //Audio sending
     //compile "moe.kyokobot:koe:$koeVersion"
 
     //Audio player
-    compile "com.sedmelluq:lavaplayer:$lavaplayerVersion"
+    compile "com.github.Devoxin:lavaplayer:$lavaplayerVersion"
 
     //Audio filters
     compile "com.github.natanbc:lavadsp:$lavadspVersion"
@@ -144,7 +144,7 @@ jar {
 
 natives.each { arch ->
     def shadowTask = task("shadow-${arch}", type: ShadowJar) {
-        classifier = arch
+        archiveClassifier.set(arch)
 
         from project.sourceSets.main.output
         configurations = [ project.configurations.runtime ]

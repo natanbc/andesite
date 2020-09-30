@@ -9,10 +9,11 @@ import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.audio.factory.IAudioSendFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import space.npstr.magma.MagmaApi;
-import space.npstr.magma.MagmaMember;
-import space.npstr.magma.MagmaServerUpdate;
-import space.npstr.magma.events.api.WebSocketClosed;
+import space.npstr.magma.MagmaFactory;
+import space.npstr.magma.api.MagmaApi;
+import space.npstr.magma.api.MagmaMember;
+import space.npstr.magma.api.MagmaServerUpdate;
+import space.npstr.magma.api.event.WebSocketClosed;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -28,7 +29,7 @@ public class MagmaHandler implements AudioHandler {
     
     public MagmaHandler(Andesite andesite) {
         var factory = createSendFactory(andesite);
-        this.magma = MagmaApi.of(__ -> factory);
+        this.magma = MagmaFactory.of(__ -> factory);
         magma.getEventStream().subscribe(event -> {
             if(event instanceof WebSocketClosed) {
                 var e = (WebSocketClosed) event;
