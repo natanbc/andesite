@@ -3,7 +3,7 @@ package andesite.send.koe;
 import andesite.Andesite;
 import andesite.send.AudioHandler;
 import andesite.send.AudioProvider;
-import com.sedmelluq.discord.lavaplayer.udpqueue.natives.UdpQueueManager;
+import andesite.util.UdpUtils;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
@@ -77,10 +77,10 @@ public class KoeHandler implements AudioHandler {
             udpQueue = config.getBoolean("udp-queue.enabled");
         } else {
             log.info("Detecting whether or not udp-queue is available...");
-            udpQueue = isNasSupported();
+            udpQueue = UdpUtils.isUdpQueueAvailable();
         }
         if(udpQueue) {
-            if(!isNasSupported()) {
+            if(!UdpUtils.isUdpQueueAvailable()) {
                 throw new IllegalArgumentException("udp-queue native library required by the " +
                                                            "config (koe.udp-queue.enabled = true) but " +
                                                            "is not available");
@@ -149,15 +149,5 @@ public class KoeHandler implements AudioHandler {
             });
         }
         return conn;
-    }
-    
-    private static boolean isNasSupported() {
-        try {
-            new UdpQueueManager(20, 20_000_000, 4096).close();
-            return true;
-        } catch(LinkageError e) {
-            log.warn("The message above is NOT an error. It just means the native library couldn't be located");
-            return false;
-        }
     }
 }
