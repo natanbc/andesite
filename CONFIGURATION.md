@@ -19,7 +19,7 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | debug-password | string | password to use for debug routes. If missing or null, the regular password is used instead. | null |
 | log-level | string | lowest level to log | INFO |
 | auto-ytsearch | boolean | whether or not andesite should automatically prepend `ytsearch:` to identifiers that don't match known prefixes when loading tracks | true |
-| audio-handler | string | audio handler implementation to use. by default, only `magma` is supported. Plugins may [add more implementations](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md#custom-audio-handlers), in which case the fully qualified class name must be used | magma |
+| audio-handler | string | audio handler implementation to use. By default, `magma` and `koe` are supported. Plugins may [add more implementations](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md#custom-audio-handlers), in which case the fully qualified class name must be used | magma |
 | node.region | string | region of the node | "unknown" |
 | node.id | string | id of the node | "unknown" |
 | transport.http.bind-address | string | address to bind the http/websocket server. 0.0.0.0 means all network interfaces on the machine | 0.0.0.0 |
@@ -53,6 +53,12 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | lavalink.ws-path | string | route to run the lavalink websocket on. | / |
 | magma.send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | `nas` on supported environments, `nio` otherwise |
 | magma.send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |
+| koe.enable-epoll | boolean | whether or not epoll should be enabled if available | true |
+| koe.byte-buf-allocator | string | ByteBufAllocator to use. Valid options are `default` (aka pooled), `netty-default`, `unpooled` | netty-default |
+| koe.high-packet-priority | boolean | whether or not sent packets should be marked as high priority | true |
+| koe.udp-queue.enabled* | boolean | whether or not the native UDP queue should be enabled | `true` if udp queue is available, `false` otherwise |
+| koe.udp-queue.buffer | integer | buffer duration, in milliseconds, to keep in native code | 400 |
+| koe.udp-queue.threads | integer | number of threads for the native sending pool. If negative, the value is set to the number of CPU cores available | -1 |
 
 \* When running on architectures not supported by [jda-nas](https://github.com/sedmelluq/jda-nas), such as
 ARM or Darwin devices, you must use either `jda` or `nio` for the send system. For production, nio is preferred

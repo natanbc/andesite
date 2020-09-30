@@ -1,8 +1,10 @@
-package andesite.send;
+package andesite.send.magma;
 
 import andesite.Andesite;
-import andesite.send.jdaa.JDASendFactory;
-import andesite.send.nio.NioSendFactory;
+import andesite.send.AudioHandler;
+import andesite.send.AudioProvider;
+import andesite.send.magma.jdaa.JDASendFactory;
+import andesite.send.magma.nio.NioSendFactory;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import com.sedmelluq.discord.lavaplayer.udpqueue.natives.UdpQueueManager;
 import net.dv8tion.jda.api.audio.AudioSendHandler;

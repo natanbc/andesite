@@ -20,7 +20,7 @@ ext {
     configVersion =         '1.4.0'
     jdaNasVersion =         '1.1.0'
     jsr305Version =         '3.0.2'
-    koeVersion =            '454cfec'
+    koeVersion =            '64b28abee9'
     lavaplayerVersion =     'a63c541dc5'
     ytRotatorVersion =      '0.1.7'
     lavadspVersion =        '0.5.2'
@@ -58,7 +58,10 @@ dependencies {
     compile "space.npstr.Magma:magma:$magmaVersion"
 
     //Audio sending
-    //compile "moe.kyokobot:koe:$koeVersion"
+    compile("moe.kyokobot.koe:core:$koeVersion") {
+        exclude group: "org.slf4j", module: "slf4j-api"
+    }
+    compile "moe.kyokobot.koe:ext-udpqueue:$koeVersion"
 
     //Audio player
     compile "com.github.Devoxin:lavaplayer:$lavaplayerVersion"

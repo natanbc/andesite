@@ -76,4 +76,15 @@ andesite {
       nas-buffer = 400
     }
   }
+
+  koe {
+    enable-epoll = true
+    byte-buf-allocator = "netty-default"
+    high-packet-priority = true
+    udp-queue {
+      enabled = true
+      buffer = 400
+      threads = -1
+    }
+  }
 }

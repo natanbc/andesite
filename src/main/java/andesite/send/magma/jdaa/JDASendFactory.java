@@ -1,4 +1,4 @@
-package andesite.send.jdaa;
+package andesite.send.magma.jdaa;
 
 import net.dv8tion.jda.api.audio.factory.IAudioSendFactory;
 import net.dv8tion.jda.api.audio.factory.IAudioSendSystem;

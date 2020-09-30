@@ -8,7 +8,8 @@ import andesite.handler.SingyeongHandler;
 import andesite.player.Player;
 import andesite.plugin.PluginManager;
 import andesite.send.AudioHandler;
-import andesite.send.MagmaHandler;
+import andesite.send.koe.KoeHandler;
+import andesite.send.magma.MagmaHandler;
 import andesite.util.ConfigUtil;
 import andesite.util.FilterUtil;
 import andesite.util.Init;
@@ -278,10 +279,11 @@ public class Andesite implements NodeState {
     @CheckReturnValue
     private AudioHandler createAudioHandler(@Nonnull Config config) {
         var handlerName = config.getString("audio-handler");
-        //noinspection SwitchStatementWithTooFewBranches
         switch(handlerName) {
             case "magma":
                 return new MagmaHandler(this);
+            case "koe":
+                return new KoeHandler(this);
             default:
                 return pluginManager.loadHandler(AudioHandler.class, handlerName);
         }
