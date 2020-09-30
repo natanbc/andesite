@@ -1,4 +1,4 @@
-rootProject.name = 'andesite-node'
+rootProject.name = 'andesite'
 include 'api'
 include 'jattach-debug-plugin'
 
