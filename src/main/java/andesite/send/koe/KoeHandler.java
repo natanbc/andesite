@@ -53,23 +53,12 @@ public class KoeHandler implements AudioHandler {
                     .setDatagramChannelClass(NioDatagramChannel.class);
         }
         var byteBufAllocator = config.getString("byte-buf-allocator").strip().toLowerCase();
-        switch(byteBufAllocator) {
-            case "netty-default": {
-                builder.setByteBufAllocator(ByteBufAllocator.DEFAULT);
-                break;
-            }
-            case "default": {
-                builder.setByteBufAllocator(new PooledByteBufAllocator());
-                break;
-            }
-            case "unpooled": {
-                builder.setByteBufAllocator(UnpooledByteBufAllocator.DEFAULT);
-                break;
-            }
-            default: {
-                throw new IllegalArgumentException("Invalid byte buf allocator '" + byteBufAllocator + "'");
-            }
-        }
+        builder.setByteBufAllocator(switch(byteBufAllocator) {
+            case "netty-default" -> ByteBufAllocator.DEFAULT;
+            case "default" -> PooledByteBufAllocator.DEFAULT;
+            case "unpooled" -> UnpooledByteBufAllocator.DEFAULT;
+            default -> throw new IllegalArgumentException("Invalid byte buf allocator '" + byteBufAllocator + "'");
+        });
         builder.setHighPacketPriority(config.getBoolean("high-packet-priority"));
     
         boolean udpQueue;
