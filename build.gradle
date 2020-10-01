@@ -103,7 +103,7 @@ docker {
         tag 'versioned', "natanbc/andesite:${versionObj}"
         tag 'latest', 'natanbc/andesite:latest'
     }
-    files "build/libs/andesite-node-${versionObj}-all.jar",
+    files "build/libs/andesite-${versionObj}-all.jar",
             project(':jattach-debug-plugin').getTasksByName('jar', false).outputs,
             "jlink.sh"
     buildArgs([
