@@ -362,10 +362,9 @@ public class Andesite implements NodeState {
                 log.error("No handlers enabled, aborting");
                 System.exit(-1);
             }
-            log.info("Handlers: REST {}, WebSocket {}, Singyeong {}",
+            log.info("Handlers: REST {}, WebSocket {}",
                     config.getBoolean("transport.http.rest") ? "enabled" : "disabled",
-                    config.getBoolean("transport.http.ws") ? "enabled" : "disabled",
-                    config.getBoolean("transport.singyeong.enabled") ? "enabled" : "disabled"
+                    config.getBoolean("transport.http.ws") ? "enabled" : "disabled"
             );
             log.info("Timescale {}", FilterUtil.TIMESCALE_AVAILABLE ? "available" : "unavailable");
         } catch(Throwable t) {
