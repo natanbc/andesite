@@ -4,7 +4,6 @@ Connections can be made over three methods:
 
 - HTTP
 - WebSocket
-- [Singyeong](https://github.com/queer/singyeong)
 
 ## Metadata
 
@@ -196,27 +195,7 @@ or
 var ws = new WebSocket("ws://my.node/websocket?user-id=1234", "andesite-password:youshallnotpass")
 ```
 
-After the connection is established, the API is identical to 
-
-## Singyeong
-
-Metadata fields are provided with their keys prefixed by `andesite-`, eg `version-major`
-becomes `andesite-version-major`. The types are sent with the analogous singyeong types,
-with the exception of `version`, which is sent with the `VERSION` type. There's also an
-additional field, `andesite-players`, which contains a list of `userid:guildid` pairs handled
-by the process.
-
-All payloads sent via singyeong are equal to those sent via [web socket](#websocket), except they
-also require an `userId` key.
-
-Responses to commands are sent based on the `response-nonce` and `response-query` fields.
-They default to the command nonce and an empty query, respectively.
-
-When sending a `play` op, you can set the `query` field to route the events sent by the player. It defaults to
-an empty query for the sender application id.
-
-Setting the `noreply` field to `true` will prevent a response from being sent (events are still sent).
-Sending a null or absent `response-query` has the same effect.
+After the connection is established, the API is identical to regular websockets.
 
 # Entities
 
