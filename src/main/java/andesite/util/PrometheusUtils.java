@@ -5,19 +5,32 @@ import andesite.event.AndesiteEventListener;
 import andesite.player.AndesitePlayer;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import com.typesafe.config.Config;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
+import io.prometheus.client.hotspot.BufferPoolsExports;
+import io.prometheus.client.hotspot.ClassLoadingExports;
 import io.prometheus.client.hotspot.DefaultExports;
+import io.prometheus.client.hotspot.GarbageCollectorExports;
+import io.prometheus.client.hotspot.MemoryAllocationExports;
+import io.prometheus.client.hotspot.MemoryPoolsExports;
+import io.prometheus.client.hotspot.StandardExports;
+import io.prometheus.client.hotspot.VersionInfoExports;
 import io.prometheus.client.logback.InstrumentedAppender;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.lang.management.ManagementFactory;
+import java.time.Duration;
 import java.util.List;
 
 class PrometheusUtils {
-    static void setup() {
+    static Duration updatePeriod = Duration.ofSeconds(3);
+    
+    static void setup(Config config) {
+        updatePeriod = config.getDuration("prometheus.update-period");
+        
         var prometheusAppender = new InstrumentedAppender();
         
         var factory = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -26,8 +39,18 @@ class PrometheusUtils {
         prometheusAppender.start();
         root.addAppender(prometheusAppender);
         
+        //same as DefaultExports.initialize() but doesn't add the
+        //thread exports, because that stops all java threads every time
+        //it's measured
+        new StandardExports().register();
+        new MemoryPoolsExports().register();
+        new MemoryAllocationExports().register();
+        new BufferPoolsExports().register();
+        new GarbageCollectorExports().register();
+        new ClassLoadingExports().register();
+        new VersionInfoExports().register();
         
-        DefaultExports.initialize();
+        JFRExports.register();
     }
     
     static void configureMetrics(@Nonnull NodeState state) {
