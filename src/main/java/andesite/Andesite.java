@@ -342,7 +342,8 @@ public class Andesite implements NodeState {
         }
     }
     
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
+        var start = System.nanoTime();
         try {
             log.info("System info: {}", NativeLibLoader.loadSystemInfo());
         } catch(Throwable t) {
@@ -369,6 +370,7 @@ public class Andesite implements NodeState {
                     config.getBoolean("transport.http.ws") ? "enabled" : "disabled"
             );
             log.info("Timescale {}", FilterUtil.TIMESCALE_AVAILABLE ? "available" : "unavailable");
+            log.info("Started in {} ms", (System.nanoTime() - start) / 1_000_000);
         } catch(Throwable t) {
             log.error("Fatal error during initialization", t);
             System.exit(1);

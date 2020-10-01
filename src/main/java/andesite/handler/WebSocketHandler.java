@@ -84,7 +84,7 @@ public class WebSocketHandler {
                         );
                         var metadata = new JsonObject();
                         andesite.requestHandler().metadataFields(NamePartJoiner.LOWER_CAMEL_CASE).forEach((k, v) ->
-                                                                                                                  metadata.put(k, toJson(v))
+                              metadata.put(k, toJson(v))
                         );
                         ws.writeTextMessage(new JsonObject()
                                                     .put("op", "metadata")
@@ -103,16 +103,10 @@ public class WebSocketHandler {
     @Nonnull
     @CheckReturnValue
     private static Object toJson(@Nonnull MetadataEntry entry) {
-        switch(entry.type()) {
-            case INTEGER:
-            case STRING:
-            case VERSION:
-                return entry.rawValue();
-            case STRING_LIST:
-                return new JsonArray(entry.asStringList());
-            default:
-                throw new AssertionError();
-        }
+        return switch(entry.type()) {
+            case INTEGER, STRING, VERSION -> entry.rawValue();
+            case STRING_LIST -> new JsonArray(entry.asStringList());
+        };
     }
     
     private static class FrameHandler implements Handler<WebSocketFrame>, WebSocketState {
@@ -259,47 +253,34 @@ public class WebSocketHandler {
                     return;
                 }
             }
+            //lavalink compat
             switch(op) {
-                case "voice-server-update":
-                case "voiceUpdate": {
-                    andesite.requestHandler().provideVoiceServerUpdate(user, payload);
-                    break;
-                }
-                case "event-buffer": {
-                    timeout = payload.getInteger("timeout", 0);
-                    break;
-                }
-                case "get-stats": {
-                    ws.writeFinalTextFrame(new JsonObject()
-                            .put("op", "stats")
-                            .put("userId", this.user)
-                            .put("stats", andesite.requestHandler().nodeStats())
-                            .encode()
-                    );
-                    break;
-                }
-                case "get-player": {
+                case "voice-server-update", "voiceUpdate" ->
+                        andesite.requestHandler().provideVoiceServerUpdate(user, payload);
+                case "event-buffer" -> timeout = payload.getInteger("timeout", 0);
+                case "get-stats" -> ws.writeFinalTextFrame(new JsonObject()
+                                               .put("op", "stats")
+                                               .put("userId", this.user)
+                                               .put("stats", andesite.requestHandler().nodeStats())
+                                               .encode()
+                );
+                case "get-player" -> {
                     var json = andesite.requestHandler().player(user, guild);
                     sendPlayerUpdate(user, guild, json);
-                    break;
                 }
-                case "mixer": {
+                case "mixer" -> {
                     var json = andesite.requestHandler().mixer(user, guild, payload);
                     sendPlayerUpdate(user, guild, json);
-                    break;
                 }
-                case "filters": {
+                case "filters" -> {
                     var json = andesite.requestHandler().filters(user, guild, payload);
                     sendPlayerUpdate(user, guild, json);
-                    break;
                 }
-                //lavalink compat
-                case "equalizer": {
+                case "equalizer" -> {
                     var json = andesite.requestHandler().equalizer(user, guild, payload);
                     sendPlayerUpdate(user, guild, json);
-                    break;
                 }
-                case "play": {
+                case "play" -> {
                     andesite.requestHandler().subscribe(user, guild, this,
                             json -> {
                                 if(lavalink) {
@@ -312,46 +293,36 @@ public class WebSocketHandler {
                     subscriptions.add(andesite.getPlayer(user, guild));
                     var json = andesite.requestHandler().play(user, guild, payload);
                     sendPlayerUpdate(user, guild, json);
-                    break;
                 }
-                case "stop": {
+                case "stop" -> {
                     var json = andesite.requestHandler().stop(user, guild);
                     sendPlayerUpdate(user, guild, json);
-                    break;
                 }
-                case "pause": {
+                case "pause" -> {
                     var json = andesite.requestHandler().pause(user, guild, payload);
                     sendPlayerUpdate(user, guild, json);
-                    break;
                 }
-                case "seek": {
+                case "seek" -> {
                     var json = andesite.requestHandler().seek(user, guild, payload);
                     sendPlayerUpdate(user, guild, json);
-                    break;
                 }
-                case "volume": {
+                case "volume" -> {
                     var json = andesite.requestHandler().volume(user, guild, payload);
                     sendPlayerUpdate(user, guild, json);
-                    break;
                 }
-                case "update": {
+                case "update" -> {
                     var json = andesite.requestHandler().update(user, guild, payload);
                     sendPlayerUpdate(user, guild, json);
-                    break;
                 }
-                case "destroy": {
+                case "destroy" -> {
                     var player = andesite.getExistingPlayer(user, guild);
                     if(player != null) {
                         subscriptions.remove(player);
                     }
                     var json = andesite.requestHandler().destroy(user, guild);
                     sendPlayerUpdate(user, guild, json == null ? null : json.put("destroyed", true));
-                    break;
                 }
-                case "ping": {
-                    ws.writeFinalTextFrame(payload.put("userId", this.user).put("op", "pong").encode());
-                    break;
-                }
+                case "ping" -> ws.writeFinalTextFrame(payload.put("userId", this.user).put("op", "pong").encode());
             }
         }
         
