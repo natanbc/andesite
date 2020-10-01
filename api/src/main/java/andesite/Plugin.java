@@ -2,7 +2,6 @@ package andesite;
 
 import andesite.handler.WebSocketState;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-import gg.amy.singyeong.data.Dispatch;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -133,24 +132,6 @@ public interface Plugin {
     @Nonnull
     @CheckReturnValue
     default HookResult onRawWebSocketPayload(@Nonnull NodeState nodeState, @Nonnull WebSocketState wsState, @Nonnull JsonObject payload) {
-        return HookResult.CALL_NEXT;
-    }
-    
-    /**
-     * Called when a singyeong payload is received. Runs on the event loop, so <b>blocking should be avoided.</b>
-     *
-     * @param state   State of the node.
-     * @param payload Payload received plus metadata.
-     *
-     * @return Whether or not other handlers should be called.
-     *
-     * @see NodeState
-     * @see Dispatch
-     * @see HookResult
-     */
-    @Nonnull
-    @CheckReturnValue
-    default HookResult onRawSingyeongPayload(@Nonnull NodeState state, @Nonnull Dispatch payload) {
         return HookResult.CALL_NEXT;
     }
     

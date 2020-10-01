@@ -26,8 +26,6 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | transport.http.port | integer | port to run the http/websocket server | 5000 |
 | transport.http.rest | boolean | whether or not to enable the http api | true |
 | transport.http.ws | boolean | whether or not to enable the websocket api | true |
-| transport.singyeong.enabled | boolean | whether or not to enable the singyeong api | false |
-| transport.singyeong.dsn | string | singyeong [dsn](#singyeong-dsn-format) for connecting | null |
 | prometheus.enabled | boolean | whether or not to enable prometheus metrics | false |
 | prometheus.path | string | path to collect prometheus metrics, uses the http port | /metrics |
 | prometheus.update-period | duration | interval for collecting periodic stats with JFR | 3s |
@@ -66,25 +64,3 @@ ARM or Darwin devices, you must use either `jda` or `nio` for the send system. F
 as it doesn't spawn a thread per voice connection. The default is changed to nio when running on unsupported
 architectures. Note that **lavaplayer has no arm natives**, so you may encounter errors on some tracks. Most
 youtube tracks won't have issues, but YMMV.
-
-### Singyeong DSN Format
-
-A singyeong DNS is an URI with the format
-
-```
-<protocol>://<app id>[:<password>]@host[:port]
-```
-
-| key | description |
-|-----|-------------|
-| protocol | `singyeong` or `ssingyeong` (`ws` vs `wss`) |
-| app id | app id to use |
-| password | password to use, optional |
-| host | host to connect |
-| port | port to connect, defaults to 80 or 443, depending on the protocol |
-
-- `singyeong://andesite@localhost` - valid, connects to port 80 on the current machine
-- `ssingyeong://andesite@localhost` - valid, connects to port 443 on the current machine
-- `wss://andesite@localhost` - invalid, protocol must be `singyeong` or `ssingyeong`
-- `singyeong://andesite:youshallnotpass@localhost:1234` - valid, connects with password `youshallnotpass` to port
-`1234` of the current machine

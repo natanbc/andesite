@@ -1,61 +1,7 @@
 # Debugging
 
-Andesite has plugins to support [JFR](https://openjdk.java.net/jeps/328) and [jattach](https://github.com/apangin/jattach)
-for debugging. Prebuilt jars for them can be found on the [releases](https://github.com/natanbc/andesite-node/releases) page.
-
-Both plugins are included by default on docker images.
-
-## JFR
-
-### GET /jfr/state
-
-Returns the state of the current JFR recording.
-
-| key | type | description |
-|-----|------|-------------|
-| recording | boolean | whether or not a recording is in progress |
-| maxSize | integer | maximum size for the recording on disk, if auto dumping is enabled. May be absent. |
-| size | integer | current size of the recording. May be absent. |
-| id | integer | current recording id. May be absent. |
-| duration | integer | current recording duration, in milliseconds. May be absent. |
-| name | string | current recording name. May be absent |
-| settings | object | map of the current recording settings. May be absent. |
-| destination | string | path to write the data. May be absent. | 
-
-### GET /jfr/events
-
-Returns a list of available events.
-
-#### Event
-
-| key | type | description |
-|-----|------|-------------|
-| name | string | name of the event |
-| label | string | human readable name that describes the event |
-| description | string | short sentence that describes the event |
-| id | integer | unique id for the event in the JVM | 
-
-### POST /jfr/start
-
-Starts recording. Only one recording may be active at a time.
-
-Query params:
-
-| key | type | description |
-|-----|------|-------------|
-| events | string | comma separated list of events to enable, or `all` to enable all |
-| destination | string | path to store events in the disk. Events are kept in memory and may be dropped if absent |
-| maxSize | integer | maximum size for the file on disk before old events start getting removed |
-
-### POST /jfr/stop
-
-Stops recording, optionally dumping to a file.
-
-Query params:
-
-| key | type | description |
-|-----|------|-------------|
-| path | string | path to store the events. May be absent |
+Andesite has plugins to support [jattach](https://github.com/apangin/jattach)
+for debugging. Prebuilt jars for them can be found on the [releases](https://github.com/natanbc/andesite/releases) page.
 
 ## Jattach Plugin
 

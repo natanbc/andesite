@@ -30,7 +30,6 @@ ext {
     nativeLoaderVersion =      '0.3.0'
     prometheusVersion =        '0.9.0'
     sentryVersion =            '1.7.30'
-    singyeongVersion =         '8de14db'
     vertxWebVersion =          '3.9.3'
     
     jattachVersion =           'v1.5'
@@ -80,11 +79,6 @@ dependencies {
     //Native send system
     compile "com.sedmelluq:jda-nas:$jdaNasVersion"
 
-    //Singyeong connection support
-    compile("com.github.singyeong:java-client:$singyeongVersion") {
-        exclude group: 'org.projectlombok', module: 'lombok'
-    }
-
     //Logger implementation
     compile "ch.qos.logback:logback-classic:$logbackVersion"
 
@@ -109,7 +103,7 @@ docker {
         tag 'versioned', "natanbc/andesite:${versionObj}"
         tag 'latest', 'natanbc/andesite:latest'
     }
-    files "build/libs/andesite-node-${versionObj}-all.jar",
+    files "build/libs/andesite-${versionObj}-all.jar",
             project(':jattach-debug-plugin').getTasksByName('jar', false).outputs,
             "jlink.sh"
     buildArgs([

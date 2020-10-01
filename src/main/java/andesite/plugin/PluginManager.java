@@ -6,7 +6,6 @@ import andesite.handler.WebSocketState;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import gg.amy.singyeong.data.Dispatch;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -160,17 +159,6 @@ public class PluginManager {
         for(var p : plugins) {
             log.debug("Calling custom ws handling of plugin {}", p);
             if(p.onRawWebSocketPayload(this.state, state, payload) == Plugin.HookResult.ABORT) {
-                log.debug("Payload handled");
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    public boolean customHandleSingyeongPayload(@Nonnull Dispatch dispatch) {
-        for(var p : plugins) {
-            log.debug("Calling custom singyeong handling of plugin {}", p);
-            if(p.onRawSingyeongPayload(state, dispatch) == Plugin.HookResult.ABORT) {
                 log.debug("Payload handled");
                 return true;
             }

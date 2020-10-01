@@ -22,14 +22,17 @@ javadoc {
     failOnError = false
     options.encoding = "UTF-8"
     options.addBooleanOption('html5', true)
-    options.addBooleanOption("-no-module-directories", true)
+    options.addStringOption('Xdoclint:none', '-quiet')
+    //options.addBooleanOption("-no-module-directories", true)
     if(options instanceof StandardJavadocDocletOptions) {
         options
                 .linkSource()
+                .keyWords()
+                .use()
                 .noDeprecated()
                 .links(
-                    "https://vertx.io/docs/$vertxWebVersion/apidocs/",
-                    "https://static.javadoc.io/com.google.code.findbugs/jsr305/$jsr305Version/",
+                    "https://vertx.io/docs/apidocs/",
+                    "https://www.javadoc.io/doc/com.google.code.findbugs/jsr305/$jsr305Version/",
                     "https://natanbc.github.io/lavadsp/"
                 )
                 .charSet("UTF-8")
@@ -41,7 +44,7 @@ javadoc {
 dependencies {
     //Config
     api "com.typesafe:config:$configVersion"
-    
+
     //REST, WebSocket, etc
     api "io.vertx:vertx-web:$vertxWebVersion"
 
@@ -50,11 +53,6 @@ dependencies {
 
     //Audio filters
     api "com.github.natanbc:lavadsp:$lavadspVersion"
-    
-    //Singyeong connection support
-    api("com.github.singyeong:java-client:$singyeongVersion") {
-        exclude group: 'org.projectlombok', module: 'lombok'
-    }
 
     //Code safety
     api "com.google.code.findbugs:jsr305:$jsr305Version"

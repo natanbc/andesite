@@ -4,7 +4,6 @@ import andesite.event.EventBuffer;
 import andesite.event.EventDispatcherImpl;
 import andesite.handler.RequestHandler;
 import andesite.handler.RestHandler;
-import andesite.handler.SingyeongHandler;
 import andesite.player.Player;
 import andesite.plugin.PluginManager;
 import andesite.send.AudioHandler;
@@ -353,24 +352,27 @@ public class Andesite implements NodeState {
             }
             log.warn(message, t);
         }
-        log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
+        try {
+            log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
     
-        var andesite = createAndesite();
-        var config = andesite.config().getConfig("andesite");
-        Init.postInit(andesite);
-        //NOTE: use the bitwise or operator, as it forces evaluation of all elements
-        if(!(RestHandler.setup(andesite)
-                | SingyeongHandler.setup(andesite)
-                | andesite.pluginManager().startListeners())) {
-            log.error("No handlers enabled, aborting");
-            System.exit(-1);
+            var andesite = createAndesite();
+            var config = andesite.config().getConfig("andesite");
+            Init.postInit(andesite);
+            //NOTE: use the bitwise or operator, as it forces evaluation of all elements
+            if(!(RestHandler.setup(andesite)
+                         | andesite.pluginManager().startListeners())) {
+                log.error("No handlers enabled, aborting");
+                System.exit(-1);
+            }
+            log.info("Handlers: REST {}, WebSocket {}",
+                    config.getBoolean("transport.http.rest") ? "enabled" : "disabled",
+                    config.getBoolean("transport.http.ws") ? "enabled" : "disabled"
+            );
+            log.info("Timescale {}", FilterUtil.TIMESCALE_AVAILABLE ? "available" : "unavailable");
+        } catch(Throwable t) {
+            log.error("Fatal error during initialization", t);
+            System.exit(1);
         }
-        log.info("Handlers: REST {}, WebSocket {}, Singyeong {}",
-                config.getBoolean("transport.http.rest") ? "enabled" : "disabled",
-                config.getBoolean("transport.http.ws") ? "enabled" : "disabled",
-                config.getBoolean("transport.singyeong.enabled") ? "enabled" : "disabled"
-        );
-        log.info("Timescale {}", FilterUtil.TIMESCALE_AVAILABLE ? "available" : "unavailable");
     }
     
     @Nonnull

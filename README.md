@@ -11,7 +11,7 @@ on the #andesite channel.
 - Darwin (Mac) and partial ARM support
 - [Plugin](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md) support
 - [Debug](https://github.com/natanbc/andesite-node/blob/master/DEBUGGING.md) tooling
-- Available over REST, WebSocket or [singyeong](https://github.com/queer/singyeong)
+- Available over REST, or WebSocket
 - [Prometheus](https://prometheus.io) metrics
 - [Sentry](https://sentry.io) error reporting
 - Mostly API compatible with [Lavalink](https://github.com/Frederikam/Lavalink)

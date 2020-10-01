@@ -18,10 +18,6 @@ andesite {
 
       port = 5000
     }
-    singyeong {
-      enabled = false
-      dsn = "singyeong://andesite@localhost:9876"
-    }
   }
 
   prometheus {
