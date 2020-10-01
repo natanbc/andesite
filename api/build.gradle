@@ -44,7 +44,7 @@ javadoc {
 dependencies {
     //Config
     api "com.typesafe:config:$configVersion"
-    
+
     //REST, WebSocket, etc
     api "io.vertx:vertx-web:$vertxWebVersion"
 
@@ -53,11 +53,6 @@ dependencies {
 
     //Audio filters
     api "com.github.natanbc:lavadsp:$lavadspVersion"
-    
-    //Singyeong connection support
-    api("com.github.singyeong:java-client:$singyeongVersion") {
-        exclude group: 'org.projectlombok', module: 'lombok'
-    }
 
     //Code safety
     api "com.google.code.findbugs:jsr305:$jsr305Version"

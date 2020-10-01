@@ -4,7 +4,6 @@ import andesite.event.EventBuffer;
 import andesite.event.EventDispatcherImpl;
 import andesite.handler.RequestHandler;
 import andesite.handler.RestHandler;
-import andesite.handler.SingyeongHandler;
 import andesite.player.Player;
 import andesite.plugin.PluginManager;
 import andesite.send.AudioHandler;
@@ -358,7 +357,6 @@ public class Andesite implements NodeState {
         Init.postInit(andesite);
         //NOTE: use the bitwise or operator, as it forces evaluation of all elements
         if(!(RestHandler.setup(andesite)
-                | SingyeongHandler.setup(andesite)
                 | andesite.pluginManager().startListeners())) {
             log.error("No handlers enabled, aborting");
             System.exit(-1);
