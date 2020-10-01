@@ -16,7 +16,7 @@ public class Init {
                 Level.valueOf(config.getString("log-level").toUpperCase())
         );
         if(config.getBoolean("prometheus.enabled")) {
-            PrometheusUtils.setup();
+            PrometheusUtils.setup(config);
             var listener = new GCListener();
             for(var gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
                 if(gcBean instanceof NotificationEmitter) {
