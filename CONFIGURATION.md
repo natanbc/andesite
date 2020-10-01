@@ -30,6 +30,7 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | transport.singyeong.dsn | string | singyeong [dsn](#singyeong-dsn-format) for connecting | null |
 | prometheus.enabled | boolean | whether or not to enable prometheus metrics | false |
 | prometheus.path | string | path to collect prometheus metrics, uses the http port | /metrics |
+| prometheus.update-period | duration | interval for collecting periodic stats with JFR | 3s |
 | sentry.enabled | boolean | whether or not to enable sentry | false |
 | sentry.dsn | string | sentry dsn to report errors | null |
 | sentry.tags | string | comma separated list of `key:value` pairs for sentry tags | null |
