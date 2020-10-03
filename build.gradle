@@ -99,6 +99,14 @@ dependencies {
 }
 
 docker {
+    if(System.getenv("DOCKERFILE") != null) {
+        def f = file(System.getenv("DOCKERFILE"))
+        if(f.exists()) {
+            dockerfile f
+        } else {
+            println("Dockerfile '" + System.getenv("DOCKERFILE") + "' doesn't exist")
+        }
+    }
     name "natanbc/andesite:${getCommitHash()}"
     //only set latest tag for releases, so `docker pull natanbc/andesite`
     //pulls the latest stable version
