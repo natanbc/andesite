@@ -2,8 +2,19 @@ package andesite.send.koe;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollDatagramChannel;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.kqueue.KQueue;
+import io.netty.channel.kqueue.KQueueDatagramChannel;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.kqueue.KQueueSocketChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import moe.kyokobot.koe.Koe;
 import moe.kyokobot.koe.KoeOptions;
 import moe.kyokobot.koe.codec.FramePollerFactory;
@@ -18,19 +29,28 @@ public class KoeBuilder {
     private FramePollerFactory framePollerFactory;
     private boolean highPacketPriority;
 
-    public KoeBuilder setEventLoopGroup(EventLoopGroup eventLoopGroup) {
-        this.eventLoopGroup = eventLoopGroup;
-        return this;
+    public void epoll() {
+        if(!Epoll.isAvailable()) {
+            throw new IllegalArgumentException("Epoll is not available");
+        }
+        eventLoopGroup = new EpollEventLoopGroup();
+        socketChannelClass = EpollSocketChannel.class;
+        datagramChannelClass = EpollDatagramChannel.class;
     }
-
-    public KoeBuilder setSocketChannelClass(Class<? extends SocketChannel> socketChannelClass) {
-        this.socketChannelClass = socketChannelClass;
-        return this;
+    
+    public void kqueue() {
+        if(!KQueue.isAvailable()) {
+            throw new IllegalArgumentException("KQueue is not available");
+        }
+        eventLoopGroup = new KQueueEventLoopGroup();
+        socketChannelClass = KQueueSocketChannel.class;
+        datagramChannelClass = KQueueDatagramChannel.class;
     }
-
-    public KoeBuilder setDatagramChannelClass(Class<? extends DatagramChannel> datagramChannelClass) {
-        this.datagramChannelClass = datagramChannelClass;
-        return this;
+    
+    public void nio() {
+        eventLoopGroup = new NioEventLoopGroup();
+        socketChannelClass = NioSocketChannel.class;
+        datagramChannelClass = NioDatagramChannel.class;
     }
 
     public KoeBuilder setByteBufAllocator(ByteBufAllocator byteBufAllocator) {

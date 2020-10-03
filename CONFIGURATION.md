@@ -52,7 +52,7 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | lavalink.ws-path | string | route to run the lavalink websocket on. | / |
 | magma.send-system.type* | string | type of send system to use. Valid options are `nio`, `jda` and `nas` | `nas` on supported environments, `nio` otherwise |
 | magma.send-system.nas-buffer | integer | buffer duration, in milliseconds, to keep in native code. Ignored if type isn't `nas` | 400 |
-| koe.enable-epoll | boolean | whether or not epoll should be enabled if available | true |
+| koe.transport | string | transport to use. Valid options are `epoll`, `kqueue`, `nio` and `default` | first one available of `epoll`, `kqueue`, `nio` (always available) |
 | koe.byte-buf-allocator | string | ByteBufAllocator to use. Valid options are `default` (aka pooled), `netty-default`, `unpooled` | netty-default |
 | koe.high-packet-priority | boolean | whether or not sent packets should be marked as high priority | true |
 | koe.udp-queue.enabled* | boolean | whether or not the native UDP queue should be enabled | `true` if udp queue is available, `false` otherwise |

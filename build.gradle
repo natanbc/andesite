@@ -21,6 +21,7 @@ ext {
     jdaNasVersion =            '1.1.0'
     jsr305Version =            '3.0.2'
     koeVersion =               '64b28abee9'
+    nettyKQueueVersion =       '4.1.52.Final'
     lavaplayerVersion =        'a63c541dc5'
     lavaplayerNativesVersion = '1.3.13'
     ytRotatorVersion =         '0.1.7'
@@ -63,10 +64,12 @@ dependencies {
     }
     compile "moe.kyokobot.koe:ext-udpqueue:$koeVersion"
 
+    //KQueue based transport
+    compile "io.netty:netty-transport-native-kqueue:$nettyKQueueVersion"
+
     //Audio player
     compile "com.github.Devoxin:lavaplayer:$lavaplayerVersion"
     compile "com.sedmelluq:lavaplayer-natives-extra:$lavaplayerNativesVersion"
-
 
     //IPv6 rotation
     compile "com.sedmelluq:lavaplayer-ext-youtube-rotator:$ytRotatorVersion"

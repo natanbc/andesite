@@ -8,12 +8,7 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollDatagramChannel;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioDatagramChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.channel.kqueue.KQueue;
 import moe.kyokobot.koe.Koe;
 import moe.kyokobot.koe.KoeClient;
 import moe.kyokobot.koe.MediaConnection;
@@ -43,14 +38,21 @@ public class KoeHandler implements AudioHandler {
         var config = andesite.config().getConfig("andesite.koe");
         var builder = new KoeBuilder()
                 .setGatewayVersion(GatewayVersion.V4);
-        if(config.getBoolean("enable-epoll") && Epoll.isAvailable()) {
-            builder.setEventLoopGroup(new EpollEventLoopGroup())
-                    .setSocketChannelClass(EpollSocketChannel.class)
-                    .setDatagramChannelClass(EpollDatagramChannel.class);
-        } else {
-            builder.setEventLoopGroup(new NioEventLoopGroup())
-                    .setSocketChannelClass(NioSocketChannel.class)
-                    .setDatagramChannelClass(NioDatagramChannel.class);
+        var transport = config.getString("transport");
+        switch(transport.strip().toLowerCase()) {
+            case "epoll" -> builder.epoll();
+            case "kqueue" -> builder.kqueue();
+            case "nio" -> builder.nio();
+            case "default" -> {
+                if(Epoll.isAvailable()) {
+                    builder.epoll();
+                } else if(KQueue.isAvailable()) {
+                    builder.kqueue();
+                } else {
+                    builder.nio();
+                }
+            }
+            default -> throw new IllegalArgumentException("Invalid transport '" + transport + "'");
         }
         var byteBufAllocator = config.getString("byte-buf-allocator").strip().toLowerCase();
         builder.setByteBufAllocator(switch(byteBufAllocator) {

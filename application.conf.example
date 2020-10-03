@@ -75,8 +75,8 @@ andesite {
   }
 
   koe {
-    enable-epoll = true
-    byte-buf-allocator = "netty-default"
+    transport = default
+    byte-buf-allocator = netty-default
     high-packet-priority = true
     udp-queue {
       buffer = 400
