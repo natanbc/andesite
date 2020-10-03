@@ -19,6 +19,7 @@ public class UdpUtils {
             log.info("Loaded udp-queue library");
             return available = true;
         } catch(Throwable t) {
+            log.debug("Error loading udp-queue", t);
             log.warn("Unable to load udp-queue library");
             return available = false;
         }

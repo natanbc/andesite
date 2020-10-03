@@ -45,10 +45,13 @@ public class KoeHandler implements AudioHandler {
             case "nio" -> builder.nio();
             case "default" -> {
                 if(Epoll.isAvailable()) {
+                    log.info("Using epoll transport");
                     builder.epoll();
                 } else if(KQueue.isAvailable()) {
+                    log.info("Using kqueue transport");
                     builder.kqueue();
                 } else {
+                    log.info("Using nio transport");
                     builder.nio();
                 }
             }
@@ -71,6 +74,7 @@ public class KoeHandler implements AudioHandler {
             udpQueue = UdpUtils.isUdpQueueAvailable();
         }
         if(udpQueue) {
+            log.info("Using udp-queue poller");
             if(!UdpUtils.isUdpQueueAvailable()) {
                 throw new IllegalArgumentException("udp-queue native library required by the " +
                                                            "config (koe.udp-queue.enabled = true) but " +
@@ -81,6 +85,7 @@ public class KoeHandler implements AudioHandler {
             builder.setFramePollerFactory(new UdpQueueFramePollerFactory(buffer,
                     threads < 0 ? Runtime.getRuntime().availableProcessors() : threads));
         } else {
+            log.info("Using netty poller");
             builder.setFramePollerFactory(new NettyFramePollerFactory());
         }
         
