@@ -1,4 +1,4 @@
-package andesite.provider;
+package andesite.send.magma.provider;
 
 import net.dv8tion.jda.api.audio.factory.IPacketProvider;
 import net.dv8tion.jda.api.audio.hooks.ConnectionStatus;
