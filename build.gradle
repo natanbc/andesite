@@ -119,8 +119,10 @@ def natives = [
         'all',
         'darwin',
         'linux-arm',
+        'linux-aarch64',
         'linux-x86',
         'linux-x86-64',
+        'linux-x86-64-musl',
         'win-x86',
         'win-x86-64'
 ]
@@ -147,7 +149,6 @@ jar {
         )
     }
 }
-
 natives.each { arch ->
     def shadowTask = task("shadow-${arch}", type: ShadowJar) {
         archiveClassifier.set(arch)
@@ -155,6 +156,9 @@ natives.each { arch ->
         from project.sourceSets.main.output
         configurations = [ project.configurations.runtime ]
         manifest.inheritFrom project.tasks.jar.manifest
+
+        exclude 'natives/linux-aarch32/**'
+        exclude 'natives/linux-armhf/**'
 
         exclude 'module-info.class'
         exclude 'lombok/**'
@@ -173,6 +177,12 @@ natives.each { arch ->
                 if(it != arch) {
                     exclude "natives/${it}/**"
                 }
+            }
+        }
+        if(arch == 'linux-x86-64-musl') {
+            from('musl') {
+                include 'libconnector.so'
+                into 'natives/linux-x86-64/'
             }
         }
     }
