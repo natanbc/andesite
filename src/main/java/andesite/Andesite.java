@@ -278,7 +278,6 @@ public class Andesite implements NodeState {
     @CheckReturnValue
     private AudioHandler createAudioHandler(@Nonnull Config config) {
         var handlerName = config.getString("audio-handler");
-        //noinspection SwitchStatementWithTooFewBranches
         return switch(handlerName) {
             case "magma" -> new MagmaHandler(this);
             case "koe" -> new KoeHandler(this);
