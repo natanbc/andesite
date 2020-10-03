@@ -37,7 +37,9 @@ public class KoeHandler implements AudioHandler {
         this.andesite = andesite;
         var config = andesite.config().getConfig("andesite.koe");
         var builder = new KoeBuilder()
-                .setGatewayVersion(GatewayVersion.V4);
+                .setGatewayVersion(GatewayVersion.valueOf(
+                        config.getString("gateway").strip().toUpperCase()
+                ));
         var transport = config.getString("transport");
         switch(transport.strip().toLowerCase()) {
             case "epoll" -> builder.epoll();

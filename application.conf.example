@@ -75,6 +75,7 @@ andesite {
   }
 
   koe {
+    gateway = v4
     transport = default
     byte-buf-allocator = netty-default
     high-packet-priority = true
