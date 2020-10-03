@@ -193,6 +193,7 @@ natives.each { arch ->
         if(arch == 'linux-x86-64-musl') {
             from('musl') {
                 include 'libconnector.so'
+                include 'libudpqueue.so'
                 into 'natives/linux-x86-64/'
             }
         }
