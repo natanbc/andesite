@@ -11,6 +11,7 @@ import io.netty.channel.epoll.Epoll;
 import io.netty.channel.kqueue.KQueue;
 import moe.kyokobot.koe.Koe;
 import moe.kyokobot.koe.KoeClient;
+import moe.kyokobot.koe.KoeEventAdapter;
 import moe.kyokobot.koe.MediaConnection;
 import moe.kyokobot.koe.VoiceServerInfo;
 import moe.kyokobot.koe.codec.netty.NettyFramePollerFactory;
@@ -130,9 +131,8 @@ public class KoeHandler implements AudioHandler {
             return c.getConnection(gid);
         }
         var client = clients.computeIfAbsent(uid, koe::newClient);
-        var conn = client.getConnection(gid);
-        if(conn == null) {
-            conn = client.createConnection(gid);
+        return client.getConnections().computeIfAbsent(gid, id -> {
+            var conn = client.createConnection(id);
             conn.registerListener(new KoeEventAdapter() {
                 @Override
                 public void gatewayClosed(int code, String reason, boolean byRemote) {
@@ -145,7 +145,7 @@ public class KoeHandler implements AudioHandler {
                     );
                 }
             });
-        }
-        return conn;
+            return conn;
+        });
     }
 }
