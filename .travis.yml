@@ -22,7 +22,6 @@ deploy:
     file_glob: true
     file:
       - build/libs/*-all.jar
-      - build/libs/*-musl.jar
       - jattach-debug-plugin/build/libs/*
       - api/build/libs/*
     skip_cleanup: true
