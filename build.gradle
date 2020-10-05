@@ -119,7 +119,7 @@ docker {
         tag 'latest', 'natanbc/andesite:latest'
     }
     files "build/libs/andesite-${versionObj}-linux-x86-64.jar",
-            "build/libs/andesite-${versionObj}-linux-x86-64-musl.jar",
+            "build/libs/andesite-${versionObj}-linux-musl-x86-64.jar",
             project(':jattach-debug-plugin').getTasksByName('jar', false).outputs,
             "jlink.sh"
     buildArgs([
