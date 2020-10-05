@@ -628,8 +628,6 @@ public class RequestHandler implements AndesiteRequestHandler {
             frames.put("nulled", totalLost / players);
             frames.put("deficit", totalDeficit / players);
             root.put("frameStats", frames);
-        } else {
-            root.putNull("frameStats");
         }
         
         return root;
