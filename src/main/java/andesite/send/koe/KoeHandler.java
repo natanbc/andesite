@@ -3,7 +3,7 @@ package andesite.send.koe;
 import andesite.Andesite;
 import andesite.send.AudioHandler;
 import andesite.send.AudioProvider;
-import andesite.util.UdpUtils;
+import andesite.util.NativeUtils;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
@@ -73,12 +73,11 @@ public class KoeHandler implements AudioHandler {
         if(config.hasPath("udp-queue.enabled")) {
             udpQueue = config.getBoolean("udp-queue.enabled");
         } else {
-            log.info("Detecting whether or not udp-queue is available...");
-            udpQueue = UdpUtils.isUdpQueueAvailable();
+            udpQueue = NativeUtils.isUdpQueueAvailable();
         }
         if(udpQueue) {
             log.info("Using udp-queue poller");
-            if(!UdpUtils.isUdpQueueAvailable()) {
+            if(!NativeUtils.isUdpQueueAvailable()) {
                 throw new IllegalArgumentException("udp-queue native library required by the " +
                                                            "config (koe.udp-queue.enabled = true) but " +
                                                            "is not available");
@@ -131,21 +130,26 @@ public class KoeHandler implements AudioHandler {
             return c.getConnection(gid);
         }
         var client = clients.computeIfAbsent(uid, koe::newClient);
-        return client.getConnections().computeIfAbsent(gid, id -> {
-            var conn = client.createConnection(id);
-            conn.registerListener(new KoeEventAdapter() {
-                @Override
-                public void gatewayClosed(int code, String reason, boolean byRemote) {
-                    andesite.dispatcher().onWebSocketClosed(
-                            Long.toUnsignedString(uid),
-                            Long.toUnsignedString(gid),
-                            code,
-                            reason,
-                            byRemote
-                    );
-                }
-            });
-            return conn;
-        });
+        MediaConnection conn;
+        //noinspection SynchronizationOnLocalVariableOrMethodParameter
+        synchronized(client) {
+            conn = client.getConnection(gid);
+            if(conn == null) {
+                conn = client.createConnection(gid);
+                conn.registerListener(new KoeEventAdapter() {
+                    @Override
+                    public void gatewayClosed(int code, String reason, boolean byRemote) {
+                        andesite.dispatcher().onWebSocketClosed(
+                                Long.toUnsignedString(uid),
+                                Long.toUnsignedString(gid),
+                                code,
+                                reason,
+                                byRemote
+                        );
+                    }
+                });
+            }
+        }
+        return conn;
     }
 }

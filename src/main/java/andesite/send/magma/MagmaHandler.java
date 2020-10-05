@@ -5,7 +5,7 @@ import andesite.send.AudioHandler;
 import andesite.send.AudioProvider;
 import andesite.send.magma.jdaa.JDASendFactory;
 import andesite.send.magma.nio.NioSendFactory;
-import andesite.util.UdpUtils;
+import andesite.util.NativeUtils;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.audio.factory.IAudioSendFactory;
@@ -98,7 +98,7 @@ public class MagmaHandler implements AudioHandler {
     private static IAudioSendFactory createSendFactory(Andesite andesite) {
         var config = andesite.config().getConfig("andesite.magma");
         IAudioSendFactory factory;
-        var hasNas = UdpUtils.isUdpQueueAvailable();
+        var hasNas = NativeUtils.isUdpQueueAvailable();
         var hasConfig = config.hasPath("send-system.type");
         var sendSystem = hasConfig ? config.getString("send-system.type") : hasNas ? "nas" : "nio";
         switch(sendSystem) {

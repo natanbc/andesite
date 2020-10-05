@@ -5,7 +5,7 @@ ARG version
 WORKDIR /andesite
 
 COPY jlink.sh jlink.sh
-COPY andesite-${version}-linux-x86-64-musl.jar andesite.jar
+COPY andesite-${version}-linux-musl-x86-64.jar andesite.jar
 
 ENV ADDITIONAL_MODULES=jdk.crypto.ec,jdk.crypto.cryptoki
 

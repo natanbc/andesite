@@ -26,7 +26,7 @@ ext {
     lavaplayerVersion =        'a63c541dc5'
     lavaplayerNativesVersion = '1.3.13'
     ytRotatorVersion =         '0.1.7'
-    lavadspVersion =           '0.5.2'
+    lavadspVersion =           '0.6'
     logbackVersion =           '1.2.3'
     magmaVersion =             '0.12.5'
     nativeLoaderVersion =      '0.3.0'
@@ -82,7 +82,9 @@ dependencies {
     compile "com.github.natanbc:native-loader:$nativeLoaderVersion"
 
     //Native send system
-    compile "com.sedmelluq:jda-nas:$jdaNasVersion"
+    compile("com.sedmelluq:jda-nas:$jdaNasVersion") {
+        exclude group: 'com.sedmelluq', module: 'udp-queue'
+    }
 
     //Logger implementation
     compile "ch.qos.logback:logback-classic:$logbackVersion"
@@ -133,7 +135,7 @@ def natives = [
         'linux-aarch64',
         'linux-x86',
         'linux-x86-64',
-        'linux-x86-64-musl',
+        'linux-musl-x86-64',
         'win-x86',
         'win-x86-64'
 ]
@@ -188,13 +190,6 @@ natives.each { arch ->
                 if(it != arch) {
                     exclude "natives/${it}/**"
                 }
-            }
-        }
-        if(arch == 'linux-x86-64-musl') {
-            from('musl') {
-                include 'libconnector.so'
-                include 'libudpqueue.so'
-                into 'natives/linux-x86-64/'
             }
         }
     }
