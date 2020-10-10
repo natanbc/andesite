@@ -21,9 +21,8 @@ deploy:
     api_key: $GITHUB_TOKEN
     file_glob: true
     file:
-      - build/libs/*
+      - build/libs/*-all.jar
       - jattach-debug-plugin/build/libs/*
-      - jfr-debug-plugin/build/libs/*
       - api/build/libs/*
     skip_cleanup: true
     name: $TRAVIS_TAG

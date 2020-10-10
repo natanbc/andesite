@@ -9,6 +9,8 @@ import ch.qos.logback.classic.filter.ThresholdFilter;
 import com.typesafe.config.Config;
 import io.sentry.Sentry;
 import io.sentry.SentryClient;
+import io.sentry.SentryOptions;
+import io.sentry.config.Lookup;
 import io.sentry.event.Event;
 import io.sentry.event.EventBuilder;
 import io.sentry.logback.SentryAppender;
@@ -22,11 +24,19 @@ import java.util.List;
 import java.util.Map;
 
 class SentryUtils {
+    private static final Map<String, String> EXTRA_OPTIONS = Map.of(
+            "stacktrace.app.packages", "andesite"
+    );
     private static final String SENTRY_APPENDER_NAME = "SENTRY";
     private static SentryClient client;
     
     static void setup(Config config) {
-        var client = Sentry.init(config.getString("sentry.dsn"));
+        var options = SentryOptions.defaults(config.getString("sentry.dsn"));
+        options.setLookup(Lookup.getDefaultWithAdditionalProviders(
+                List.of(EXTRA_OPTIONS::get),
+                List.of()
+        ));
+        var client = Sentry.init(options);
         client.setRelease(Version.VERSION);
         client.setTags(parseTags(config.getStringList("sentry.tags")));
         SentryUtils.client = client;

@@ -1,10 +1,12 @@
-package andesite.send;
+package andesite.send.magma;
 
 import andesite.Andesite;
-import andesite.send.jdaa.JDASendFactory;
-import andesite.send.nio.NioSendFactory;
+import andesite.send.AudioHandler;
+import andesite.send.AudioProvider;
+import andesite.send.magma.jdaa.JDASendFactory;
+import andesite.send.magma.nio.NioSendFactory;
+import andesite.util.NativeUtils;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
-import com.sedmelluq.discord.lavaplayer.udpqueue.natives.UdpQueueManager;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.audio.factory.IAudioSendFactory;
 import org.slf4j.Logger;
@@ -96,7 +98,7 @@ public class MagmaHandler implements AudioHandler {
     private static IAudioSendFactory createSendFactory(Andesite andesite) {
         var config = andesite.config().getConfig("andesite.magma");
         IAudioSendFactory factory;
-        var hasNas = isNasSupported();
+        var hasNas = NativeUtils.isUdpQueueAvailable();
         var hasConfig = config.hasPath("send-system.type");
         var sendSystem = hasConfig ? config.getString("send-system.type") : hasNas ? "nas" : "nio";
         switch(sendSystem) {
@@ -119,15 +121,6 @@ public class MagmaHandler implements AudioHandler {
 //                config.getBoolean("send-system.async") ? "enabled" : "disabled"
         );
         return factory;
-    }
-    
-    private static boolean isNasSupported() {
-        try {
-            new UdpQueueManager(20, 20_000_000, 4096).close();
-            return true;
-        } catch(UnsatisfiedLinkError e) {
-            return false;
-        }
     }
     
     private static class MagmaSendHandler implements AudioSendHandler {

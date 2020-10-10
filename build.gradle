@@ -17,21 +17,24 @@ allprojects {
 
 ext {
     //@formatter:off
-    configVersion =         '1.4.0'
-    jdaNasVersion =         '1.1.0'
-    jsr305Version =         '3.0.2'
-    koeVersion =            '454cfec'
-    lavaplayerVersion =     'a63c541dc5'
-    ytRotatorVersion =      '0.1.7'
-    lavadspVersion =        '0.5.2'
-    logbackVersion =        '1.2.3'
-    magmaVersion =          '0.12.5'
-    nativeLoaderVersion =   '0.3.0' 
-    prometheusVersion =     '0.9.0'
-    sentryVersion =         '1.7.30'
-    vertxWebVersion =       '3.9.3'
+    configVersion =            '1.4.0'
+    jdaNasVersion =            '1.1.0'
+    jsr305Version =            '3.0.2'
+    koeVersion =               '64b28abee9'
+    nettyEpollVersion =        '4.1.52.Final'
+    nettyKQueueVersion =       '4.1.52.Final'
+    lavaplayerVersion =        'a63c541dc5'
+    lavaplayerNativesVersion = '1.3.13'
+    ytRotatorVersion =         '0.1.7'
+    lavadspVersion =           '0.6'
+    logbackVersion =           '1.2.3'
+    magmaVersion =             '0.12.5'
+    nativeLoaderVersion =      '0.3.0'
+    prometheusVersion =        '0.9.0'
+    sentryVersion =            '1.7.30'
+    vertxWebVersion =          '3.9.3'
     
-    jattachVersion =        'v1.5'
+    jattachVersion =           'v1.5'
     //@formatter:on
 }
 
@@ -57,10 +60,18 @@ dependencies {
     compile "space.npstr.Magma:magma:$magmaVersion"
 
     //Audio sending
-    //compile "moe.kyokobot:koe:$koeVersion"
+    compile("moe.kyokobot.koe:core:$koeVersion") {
+        exclude group: "org.slf4j", module: "slf4j-api"
+    }
+    compile "moe.kyokobot.koe:ext-udpqueue:$koeVersion"
+
+    //Native transports
+    compile "io.netty:netty-transport-native-epoll:$nettyEpollVersion:linux-x86_64"
+    compile "io.netty:netty-transport-native-kqueue:$nettyKQueueVersion:osx-x86_64"
 
     //Audio player
     compile "com.github.Devoxin:lavaplayer:$lavaplayerVersion"
+    compile "com.sedmelluq:lavaplayer-natives-extra:$lavaplayerNativesVersion"
 
     //IPv6 rotation
     compile "com.sedmelluq:lavaplayer-ext-youtube-rotator:$ytRotatorVersion"
@@ -71,7 +82,9 @@ dependencies {
     compile "com.github.natanbc:native-loader:$nativeLoaderVersion"
 
     //Native send system
-    compile "com.sedmelluq:jda-nas:$jdaNasVersion"
+    compile("com.sedmelluq:jda-nas:$jdaNasVersion") {
+        exclude group: 'com.sedmelluq', module: 'udp-queue'
+    }
 
     //Logger implementation
     compile "ch.qos.logback:logback-classic:$logbackVersion"
@@ -90,6 +103,14 @@ dependencies {
 }
 
 docker {
+    if(System.getenv("DOCKERFILE") != null) {
+        def f = file(System.getenv("DOCKERFILE"))
+        if(f.exists()) {
+            dockerfile f
+        } else {
+            println("Dockerfile '" + System.getenv("DOCKERFILE") + "' doesn't exist")
+        }
+    }
     name "natanbc/andesite:${getCommitHash()}"
     //only set latest tag for releases, so `docker pull natanbc/andesite`
     //pulls the latest stable version
@@ -97,7 +118,8 @@ docker {
         tag 'versioned', "natanbc/andesite:${versionObj}"
         tag 'latest', 'natanbc/andesite:latest'
     }
-    files "build/libs/andesite-${versionObj}-all.jar",
+    files "build/libs/andesite-${versionObj}-linux-x86-64.jar",
+            "build/libs/andesite-${versionObj}-linux-musl-x86-64.jar",
             project(':jattach-debug-plugin').getTasksByName('jar', false).outputs,
             "jlink.sh"
     buildArgs([
@@ -110,8 +132,10 @@ def natives = [
         'all',
         'darwin',
         'linux-arm',
+        'linux-aarch64',
         'linux-x86',
         'linux-x86-64',
+        'linux-musl-x86-64',
         'win-x86',
         'win-x86-64'
 ]
@@ -138,7 +162,6 @@ jar {
         )
     }
 }
-
 natives.each { arch ->
     def shadowTask = task("shadow-${arch}", type: ShadowJar) {
         archiveClassifier.set(arch)
@@ -146,6 +169,9 @@ natives.each { arch ->
         from project.sourceSets.main.output
         configurations = [ project.configurations.runtime ]
         manifest.inheritFrom project.tasks.jar.manifest
+
+        exclude 'natives/linux-aarch32/**'
+        exclude 'natives/linux-armhf/**'
 
         exclude 'module-info.class'
         exclude 'lombok/**'

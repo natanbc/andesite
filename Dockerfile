@@ -5,7 +5,7 @@ ARG version
 WORKDIR /andesite
 
 COPY jlink.sh jlink.sh
-COPY andesite-${version}-all.jar andesite.jar
+COPY andesite-${version}-linux-x86-64.jar andesite.jar
 COPY jattach-debug-plugin-${version}.jar plugins/jattach-debug.jar
 
 ENV ADDITIONAL_MODULES=jdk.crypto.ec,jdk.crypto.cryptoki

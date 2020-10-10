@@ -1,4 +1,4 @@
-package andesite.provider;
+package andesite.send.magma.provider;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;

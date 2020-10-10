@@ -7,12 +7,15 @@ import andesite.handler.RestHandler;
 import andesite.player.Player;
 import andesite.plugin.PluginManager;
 import andesite.send.AudioHandler;
-import andesite.send.MagmaHandler;
+import andesite.send.koe.KoeHandler;
+import andesite.send.magma.MagmaHandler;
 import andesite.util.ConfigUtil;
 import andesite.util.FilterUtil;
 import andesite.util.Init;
 import andesite.util.LazyInit;
+import andesite.util.NativeUtils;
 import com.github.natanbc.nativeloader.NativeLibLoader;
+import com.github.natanbc.nativeloader.system.SystemType;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -277,9 +280,9 @@ public class Andesite implements NodeState {
     @CheckReturnValue
     private AudioHandler createAudioHandler(@Nonnull Config config) {
         var handlerName = config.getString("audio-handler");
-        //noinspection SwitchStatementWithTooFewBranches
         return switch(handlerName) {
             case "magma" -> new MagmaHandler(this);
+            case "koe" -> new KoeHandler(this);
             default -> pluginManager.loadHandler(AudioHandler.class, handlerName);
         };
     }
@@ -342,8 +345,11 @@ public class Andesite implements NodeState {
     
     public static void main(String[] args) {
         var start = System.nanoTime();
+        log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
         try {
-            log.info("System info: {}", NativeLibLoader.loadSystemInfo());
+            var type = SystemType.detect();
+            log.info("Detected system: {}/{}", type.getOsType(), type.getArchitectureType());
+            log.info("CPU info: {}", NativeLibLoader.loadSystemInfo());
         } catch(Throwable t) {
             String message = "Unable to load system info.";
             if(t instanceof UnsatisfiedLinkError || (t instanceof RuntimeException && t.getCause() instanceof UnsatisfiedLinkError)) {
@@ -352,8 +358,8 @@ public class Andesite implements NodeState {
             log.warn(message, t);
         }
         try {
-            log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
-    
+            log.info("Loading native libraries");
+            NativeUtils.tryLoad();
             var andesite = createAndesite();
             var config = andesite.config().getConfig("andesite");
             Init.postInit(andesite);

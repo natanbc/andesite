@@ -24,7 +24,9 @@ on the #andesite channel.
 Grab a jar from the [releases page](https://github.com/natanbc/andesite-node/releases)
 or use the [docker image](https://hub.docker.com/r/natanbc/andesite)
 
-Andesite requires a JVM with Java 11 support.
+Andesite requires a JVM with Java 15 support.
+
+A musl-based docker image can be built with `DOCKERFILE=musl/Dockerfile ./gradlew docker`
 
 # Configuration
 

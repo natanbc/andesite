@@ -1,4 +1,4 @@
-package andesite.provider;
+package andesite.send.magma.provider;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
