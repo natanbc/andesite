@@ -32,4 +32,10 @@ RUN chmod +x /bin/jattach
 
 COPY --from=builder /andesite /andesite
 
-CMD ["jrt/bin/java", "-Djdk.tls.client.protocols=TLSv1,TLSv1.1,TLSv1.2", "-jar", "andesite.jar"]
+CMD [                                                    \
+    "jrt/bin/java",                                      \
+    "-Djdk.tls.client.protocols=TLSv1,TLSv1.1,TLSv1.2",  \
+    "-Dnativeloader.os=linux",                           \
+    "-jar",                                              \
+    "andesite.jar"                                       \
+]

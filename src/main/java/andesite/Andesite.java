@@ -15,6 +15,7 @@ import andesite.util.Init;
 import andesite.util.LazyInit;
 import andesite.util.NativeUtils;
 import com.github.natanbc.nativeloader.NativeLibLoader;
+import com.github.natanbc.nativeloader.SystemNativeLibraryProperties;
 import com.github.natanbc.nativeloader.system.SystemType;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -347,7 +348,8 @@ public class Andesite implements NodeState {
         var start = System.nanoTime();
         log.info("Starting andesite version {}, commit {}", Version.VERSION, Version.COMMIT);
         try {
-            var type = SystemType.detect();
+            var type = SystemType.detect(
+                    new SystemNativeLibraryProperties(null, "nativeloader."));
             log.info("Detected system: {}/{}", type.getOsType(), type.getArchitectureType());
             log.info("CPU info: {}", NativeLibLoader.loadSystemInfo());
         } catch(Throwable t) {
