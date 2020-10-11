@@ -4,7 +4,7 @@ andesite {
   debug-password = null
   log-level = INFO
   auto-ytsearch = true
-  audio-handler = magma
+  audio-handler = koe
 
   node {
     region = unknown
