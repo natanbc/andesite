@@ -2,6 +2,7 @@ package andesite.util;
 
 import com.github.natanbc.lavadsp.natives.TimescaleNativeLibLoader;
 import com.github.natanbc.nativeloader.NativeLibLoader;
+import com.github.natanbc.nativeloader.system.DefaultOperatingSystemTypes;
 import com.sedmelluq.discord.lavaplayer.natives.ConnectorNativeLibLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,9 @@ public class NativeUtils {
     private static final Logger log = LoggerFactory.getLogger(NativeUtils.class);
     private static final String QUEUE_MANAGER_LIBRARY =
             "com.sedmelluq.discord.lavaplayer.udpqueue.natives.UdpQueueManagerLibrary";
+    private static final NativeLibLoader MPG123 = NativeLibLoader.create(
+            NativeUtils.class, "libmpg123-0"
+    ).systemFilter(it -> it.getOsType() == DefaultOperatingSystemTypes.WINDOWS);
     private static final NativeLibLoader UDP_QUEUE_LOADER = NativeLibLoader.create(
             NativeUtils.class, "udpqueue"
     );
@@ -42,13 +46,16 @@ public class NativeUtils {
              * and mark the LP internal loader as loaded to prevent crashes on musl-based systems.
              * On all other systems, this is equivalent to LP's internal loader.
              */
+            MPG123.load();
             CONNECTOR_LOADER.load();
             var loadersField = ConnectorNativeLibLoader.class.getDeclaredField("loaders");
             loadersField.setAccessible(true);
-            var loader = Array.get(loadersField.get(null), 1);
-            var previousResultField = loader.getClass().getDeclaredField("previousResult");
-            previousResultField.setAccessible(true);
-            previousResultField.set(loader, Boolean.TRUE);
+            for(int i = 0; i < 2; i++) {
+                var loader = Array.get(loadersField.get(null), i);
+                var previousResultField = loader.getClass().getDeclaredField("previousResult");
+                previousResultField.setAccessible(true);
+                previousResultField.set(loader, Boolean.TRUE);
+            }
             log.info("Loaded connector");
         } catch(Throwable t) {
             log.warn("Error loading connector", t);
