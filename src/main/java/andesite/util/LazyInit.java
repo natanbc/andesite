@@ -15,7 +15,7 @@ public class LazyInit<T> implements Supplier<T> {
         return value != null;
     }
     
-    public synchronized Optional<T> getIfPresent() {
+    public Optional<T> getIfPresent() {
         return Optional.ofNullable(value);
     }
     
