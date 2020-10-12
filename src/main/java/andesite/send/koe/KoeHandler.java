@@ -23,14 +23,13 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class KoeHandler implements AudioHandler {
     private static final Logger log = LoggerFactory.getLogger(KoeHandler.class);
     
-    private final Map<Long, KoeClient> clients = new ConcurrentHashMap<>();
+    private final Map<Long, KoeClient> clients = new HashMap<>();
     private final Andesite andesite;
     private final Koe koe;
     
@@ -96,59 +95,60 @@ public class KoeHandler implements AudioHandler {
     
     @Override
     public void setProvider(@Nonnull String userId, @Nonnull String guildId, @Nullable AudioProvider provider) {
-        var conn = Objects.requireNonNull(connection(userId, guildId, true));
-        var sender = (KoeProvider)conn.getAudioSender();
-        if(sender != null && sender.source == provider) return;
-        conn.setAudioSender(new KoeProvider(conn, provider));
-        if(sender != null) sender.dispose();
+        synchronized(this) {
+            var conn = getConnection(userId, guildId);
+            var sender = (KoeProvider)conn.getAudioSender();
+            if(sender != null && sender.source == provider) return;
+            conn.setAudioSender(new KoeProvider(conn, provider));
+            if(sender != null) sender.dispose();
+        }
     }
     
     @Override
     public void handleVoiceUpdate(@Nonnull String userId, @Nonnull String guildId, @Nonnull String sessionId, @Nonnull String endpoint, @Nonnull String token) {
-        var conn = Objects.requireNonNull(connection(userId, guildId, true));
-        conn.connect(new VoiceServerInfo(
-                sessionId, endpoint, token
-        ));
+        synchronized(this) {
+            getConnection(userId, guildId).connect(new VoiceServerInfo(
+                    sessionId, endpoint, token
+            ));
+        }
     }
     
     @Override
     public void closeConnection(@Nonnull String userId, @Nonnull String guildId) {
-        var conn = connection(userId, guildId, false);
-        if(conn != null) {
-            conn.close();
+        var uid = Long.parseUnsignedLong(userId);
+        var gid = Long.parseUnsignedLong(guildId);
+        synchronized(this) {
+            var client = clients.get(uid);
+            if(client == null) return;
+            client.destroyConnection(gid);
+            if(client.getConnections().isEmpty()) {
+                client.close();
+                clients.remove(uid);
+            }
         }
     }
     
-    @Nullable
+    @Nonnull
     @CheckReturnValue
-    private MediaConnection connection(@Nonnull String userId, @Nonnull String guildId, boolean create) {
+    private MediaConnection getConnection(@Nonnull String userId, @Nonnull String guildId) {
         var uid = Long.parseUnsignedLong(userId);
         var gid = Long.parseUnsignedLong(guildId);
-        if(!create) {
-            var c = clients.get(uid);
-            if(c == null) return null;
-            return c.getConnection(gid);
-        }
         var client = clients.computeIfAbsent(uid, koe::newClient);
-        MediaConnection conn;
-        //noinspection SynchronizationOnLocalVariableOrMethodParameter
-        synchronized(client) {
-            conn = client.getConnection(gid);
-            if(conn == null) {
-                conn = client.createConnection(gid);
-                conn.registerListener(new KoeEventAdapter() {
-                    @Override
-                    public void gatewayClosed(int code, String reason, boolean byRemote) {
-                        andesite.dispatcher().onWebSocketClosed(
-                                Long.toUnsignedString(uid),
-                                Long.toUnsignedString(gid),
-                                code,
-                                reason,
-                                byRemote
-                        );
-                    }
-                });
-            }
+        MediaConnection conn = client.getConnection(gid);
+        if(conn == null) {
+            conn = client.createConnection(gid);
+            conn.registerListener(new KoeEventAdapter() {
+                @Override
+                public void gatewayClosed(int code, String reason, boolean byRemote) {
+                    andesite.dispatcher().onWebSocketClosed(
+                            Long.toUnsignedString(uid),
+                            Long.toUnsignedString(gid),
+                            code,
+                            reason,
+                            byRemote
+                    );
+                }
+            });
         }
         return conn;
     }
