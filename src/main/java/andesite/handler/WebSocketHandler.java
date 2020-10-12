@@ -343,6 +343,14 @@ public class WebSocketHandler {
         if("player-update".equals(payload.getValue("op", null))) {
             return payload.put("op", "playerUpdate");
         }
+        if("event".equals(payload.getValue("op", null))) {
+            if("WebSocketClosedEvent".equals(payload.getValue("type", null))) {
+                var reason = payload.getString("reason", null);
+                if(reason == null) {
+                    payload.put("reason", "");
+                }
+            }
+        }
         return payload;
     }
 }
