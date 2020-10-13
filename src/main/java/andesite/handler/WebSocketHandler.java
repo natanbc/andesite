@@ -52,6 +52,9 @@ public class WebSocketHandler {
                 var id = andesite.nextConnectionId();
                 context.response().putHeader("Andesite-Connection-Id", String.valueOf(id));
                 req.toWebSocket(res -> {
+                    if(res.failed()) {
+                        return;
+                    }
                     var ws = res.result();
                     var userId = context.<String>get("user-id");
                     var llQuery = context.queryParam("lavalink");
