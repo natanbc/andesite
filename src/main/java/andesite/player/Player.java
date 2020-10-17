@@ -122,9 +122,8 @@ public class Player implements AndesitePlayer {
         m.ifPresent(trackMixer -> trackMixer.players().forEach((k, p) -> {
             mixerStats.put(k, p.encodeState());
         }));
-        return new JsonObject()
-                .put("time", String.valueOf(Instant.now().toEpochMilli()))
-                .put("position", audioPlayer.getPlayingTrack() == null ? null : audioPlayer.getPlayingTrack().getPosition())
+        var obj = new JsonObject()
+                .put("time", Instant.now().toEpochMilli())
                 .put("paused", audioPlayer.isPaused())
                 .put("volume", audioPlayer.getVolume())
                 .put("filters", filterConfig.encode())
@@ -135,6 +134,12 @@ public class Player implements AndesitePlayer {
                         .put("success", frameLossTracker.lastMinuteSuccess().sum())
                         .put("usable", frameLossTracker.isDataUsable())
                 );
+        var track = audioPlayer.getPlayingTrack();
+        if(track != null) {
+            obj.put("position", track.getPosition());
+        }
+    
+        return obj;
     }
     
     @Nonnull
