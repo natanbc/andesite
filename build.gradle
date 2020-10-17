@@ -280,7 +280,8 @@ static def getCommitHash() {
 def getBuildNumber() {
     def properties = [
             "BUILD_NUMBER",
-            "TRAVIS_BUILD_NUMBER"
+            "TRAVIS_BUILD_NUMBER",
+            "GITHUB_RUN_ID"
     ]
     for(name in properties) {
         String property
