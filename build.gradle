@@ -5,7 +5,7 @@ plugins {
 	id 'com.palantir.docker' version '0.25.0'
 }
 
-def versionObj = new Version(major: 0, minor: 19, revision: 0)
+def versionObj = new Version(major: 0, minor: 20, revision: 0)
 
 sourceCompatibility = 15
 targetCompatibility = 15
@@ -17,24 +17,24 @@ allprojects {
 
 ext {
     //@formatter:off
-    configVersion =            '1.4.0'
-    jdaNasVersion =            '1.1.0'
-    jsr305Version =            '3.0.2'
-    koeVersion =               '64b28abee9'
-    nettyEpollVersion =        '4.1.52.Final'
-    nettyKQueueVersion =       '4.1.52.Final'
-    lavaplayerVersion =        '1.3.58'
-    lavaplayerNativesVersion = '1.3.13'
-    ytRotatorVersion =         '0.1.7'
-    lavadspVersion =           '0.6.1'
-    logbackVersion =           '1.2.3'
-    magmaVersion =             '0.12.5'
-    nativeLoaderVersion =      '0.5.0'
-    prometheusVersion =        '0.9.0'
-    sentryVersion =            '1.7.30'
-    vertxWebVersion =          '3.9.3'
+    configVersion =       '1.4.0'
+    jdaNasVersion =       '1.1.0'
+    jsr305Version =       '3.0.2'
+    koeVersion =          '64b28abee9'
+    nettyEpollVersion =   '4.1.52.Final'
+    nettyKQueueVersion =  '4.1.52.Final'
+    lavaplayerVersion =   '1.3.58'
+    lpcrossVersion =      '0.1'
+    ytRotatorVersion =    '0.1.7'
+    lavadspVersion =      '0.7.1'
+    logbackVersion =      '1.2.3'
+    magmaVersion =        '0.12.5'
+    nativeLoaderVersion = '0.6.0'
+    prometheusVersion =   '0.9.0'
+    sentryVersion =       '1.7.30'
+    vertxWebVersion =     '3.9.3'
     
-    jattachVersion =           'v1.5'
+    jattachVersion =      'v1.5'
     //@formatter:on
 }
 
@@ -63,18 +63,24 @@ dependencies {
     compile("moe.kyokobot.koe:core:$koeVersion") {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
-    compile "moe.kyokobot.koe:ext-udpqueue:$koeVersion"
+    compile("moe.kyokobot.koe:ext-udpqueue:$koeVersion") {
+        exclude group: 'com.sedmelluq', module: 'udp-queue'
+    }
 
     //Native transports
     compile "io.netty:netty-transport-native-epoll:$nettyEpollVersion:linux-x86_64"
     compile "io.netty:netty-transport-native-kqueue:$nettyKQueueVersion:osx-x86_64"
 
     //Audio player
-    compile "com.github.Devoxin:lavaplayer:$lavaplayerVersion"
-    compile "com.sedmelluq:lavaplayer-natives-extra:$lavaplayerNativesVersion"
+    compile("com.github.Devoxin:lavaplayer:$lavaplayerVersion") {
+        exclude group: 'com.sedmelluq', module: 'lavaplayer-natives'
+    }
+    compile "com.github.natanbc:lp-cross:$lpcrossVersion"
 
     //IPv6 rotation
-    compile "com.sedmelluq:lavaplayer-ext-youtube-rotator:$ytRotatorVersion"
+    compile("com.sedmelluq:lavaplayer-ext-youtube-rotator:$ytRotatorVersion") {
+        exclude group: 'com.sedmelluq', module: 'lavaplayer'
+    }
 
     //Audio filters
     compile "com.github.natanbc:lavadsp:$lavadspVersion"
@@ -131,10 +137,12 @@ docker {
 def natives = [
         'all',
         'darwin',
-        'linux-arm',
+        'freebsd-x86-64',
         'linux-aarch64',
+        'linux-arm',
         'linux-x86',
         'linux-x86-64',
+        'linux-musl-aarch64',
         'linux-musl-x86-64',
         'win-x86',
         'win-x86-64'

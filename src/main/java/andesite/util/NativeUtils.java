@@ -2,7 +2,6 @@ package andesite.util;
 
 import com.github.natanbc.lavadsp.natives.TimescaleNativeLibLoader;
 import com.github.natanbc.nativeloader.NativeLibLoader;
-import com.github.natanbc.nativeloader.system.DefaultOperatingSystemTypes;
 import com.sedmelluq.discord.lavaplayer.natives.ConnectorNativeLibLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,9 +12,6 @@ public class NativeUtils {
     private static final Logger log = LoggerFactory.getLogger(NativeUtils.class);
     private static final String QUEUE_MANAGER_LIBRARY =
             "com.sedmelluq.discord.lavaplayer.udpqueue.natives.UdpQueueManagerLibrary";
-    private static final NativeLibLoader MPG123 = NativeLibLoader.create(
-            NativeUtils.class, "libmpg123-0"
-    ).systemFilter(it -> it.getOsType() == DefaultOperatingSystemTypes.WINDOWS);
     private static final NativeLibLoader UDP_QUEUE_LOADER = NativeLibLoader.create(
             NativeUtils.class, "udpqueue"
     );
@@ -42,11 +38,10 @@ public class NativeUtils {
     public static void tryLoadConnector() {
         try {
             /*
-             * Lavaplayer doesn't have musl binaries, so load the musl binaries here if needed
-             * and mark the LP internal loader as loaded to prevent crashes on musl-based systems.
-             * On all other systems, this is equivalent to LP's internal loader.
+             * Load the lp-cross version of the library, then mark lavaplayer's loader
+             * as loaded to avoid failing when loading mpg123 on windows/attempting to load
+             * connector again
              */
-            MPG123.load();
             CONNECTOR_LOADER.load();
             var loadersField = ConnectorNativeLibLoader.class.getDeclaredField("loaders");
             loadersField.setAccessible(true);
@@ -68,9 +63,8 @@ public class NativeUtils {
         }
         try {
             /*
-             * Lavaplayer doesn't have musl binaries, so load the musl binaries here if needed
-             * and mark the LP internal loader as loaded to prevent crashes on musl-based systems.
-             * On all other systems, this is equivalent to LP's internal loader.
+             * Load the lp-cross version of the library, then mark jda-nas' loader
+             * as loaded to avoid failing attempting to load udp-queue
              */
             UDP_QUEUE_LOADER.load();
             var loaderField = Class.forName(QUEUE_MANAGER_LIBRARY)
