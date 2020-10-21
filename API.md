@@ -1,6 +1,6 @@
 # Connection Methods
 
-Connections can be made over three methods:
+Connections can be made over two methods:
 
 - HTTP
 - WebSocket
@@ -19,10 +19,10 @@ The current values are
 | version-revision | string | revision version of the node |
 | version-commit | string | commit hash of the node |
 | version-build | integer | build number provided by the CI |
-| node-region | string | [region](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) defined in the config |
-| node-id | string | [id](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) defined in the config |
-| enabled-sources | list of strings | list of sources [enabled](https://github.com/natanbc/andesite-node/blob/master/CONFIGURATION.md#settings) in the config |
-| loaded-plugins | list of strings | list of [plugins](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md) loaded |
+| node-region | string | [region](https://github.com/natanbc/andesite/blob/master/CONFIGURATION.md#settings) defined in the config |
+| node-id | string | [id](https://github.com/natanbc/andesite/blob/master/CONFIGURATION.md#settings) defined in the config |
+| enabled-sources | list of strings | list of sources [enabled](https://github.com/natanbc/andesite/blob/master/CONFIGURATION.md#settings) in the config |
+| loaded-plugins | list of strings | list of [plugins](https://github.com/natanbc/andesite/blob/master/PLUGINS.md) loaded |
 
 Connection methods may choose to format these in a more idiomatic format.
 

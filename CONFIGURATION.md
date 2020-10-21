@@ -8,7 +8,7 @@ Andesite can be configured from 2 sources, from highest to lowest priority
 All andesite keys must be prefixed with `andesite.`. When using a HOCON file, they can be put inside a
 block named `andesite`. Plugins may choose to use a different prefix.
 
-An example config can be found [here](https://github.com/natanbc/andesite-node/blob/master/application.conf.example)
+An example config can be found [here](https://github.com/natanbc/andesite/blob/master/application.conf.example)
 
 # Settings
 
@@ -19,7 +19,7 @@ An example config can be found [here](https://github.com/natanbc/andesite-node/b
 | debug-password | string | password to use for debug routes. If missing or null, the regular password is used instead. | null |
 | log-level | string | lowest level to log | INFO |
 | auto-ytsearch | boolean | whether or not andesite should automatically prepend `ytsearch:` to identifiers that don't match known prefixes when loading tracks | true |
-| audio-handler | string | audio handler implementation to use. By default, `magma` and `koe` are supported. Plugins may [add more implementations](https://github.com/natanbc/andesite-node/blob/master/PLUGINS.md#custom-audio-handlers), in which case the fully qualified class name must be used | magma |
+| audio-handler | string | audio handler implementation to use. By default, `magma` and `koe` are supported. Plugins may [add more implementations](https://github.com/natanbc/andesite/blob/master/PLUGINS.md#custom-audio-handlers), in which case the fully qualified class name must be used | koe |
 | node.region | string | region of the node | "unknown" |
 | node.id | string | id of the node | "unknown" |
 | transport.http.bind-address | string | address to bind the http/websocket server. 0.0.0.0 means all network interfaces on the machine | 0.0.0.0 |

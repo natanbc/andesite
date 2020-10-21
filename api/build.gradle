@@ -92,7 +92,7 @@ bintray {
         repo = 'maven'
         name = 'andesite-api'
         licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/natanbc/andesite-node.git'
+        vcsUrl = 'https://github.com/natanbc/andesite.git'
         publish = true
         version {
             name = project.version.toString()

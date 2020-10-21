@@ -10,11 +10,11 @@ Additional plugin roots may be provided with the `extra-plugins` configuration.
 
 Andesite will fail to start if *any* plugin fails to load.
 
-An example plugin is available [here](https://github.com/natanbc/andesite-node/blob/master/example-plugin/src/main/java/example/ExamplePlugin.java)
+An example plugin is available [here](https://github.com/natanbc/andesite/blob/master/example-plugin/src/main/java/example/ExamplePlugin.java)
 
 The plugin API is also available as a jar in the releases.
 
-Javadocs can be found on [github pages](https://natanbc.github.io/andesite-node/)
+Javadocs can be found on [github pages](https://natanbc.github.io/andesite/)
 
 ## Plugin Root
 
@@ -34,8 +34,8 @@ If the manifest is missing, andesite will ignore the root. If present, the manif
 a valid json object and contain the `classes` key, or loading will fail. The array may be left empty,
 although that would render the plugin useless, as all plugins are completely isolated from each other.
 
-All entry points defined in `manifest.json` must implement the [`Plugin`](https://github.com/natanbc/andesite-node/blob/master/api/src/main/java/andesite/node/Plugin.java)
-class.
+All entry points defined in `manifest.json` must implement the [`Plugin`](https://github.com/natanbc/andesite/blob/master/api/src/main/java/andesite/node/Plugin.java)
+interface.
 
 The classes must also be contained in the plugin root, with their path being
 `ROOT_PATH + "/" + CLASS_NAME.replace('.', '/') + ".class"`. Jar files built by any
