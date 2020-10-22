@@ -77,12 +77,11 @@ Lists have their values joined by a string, eg `[a, b]` becomes `a,b`.
 - The regular websocket is available on the `/websocket` route.
 - A (mostly*) lavalink compatible websocket is available by default on the `/` route. 
 
-Websocket authorization is the same as HTTP, as has the same metadata sent in the response.
+Websocket authorization is the same as HTTP.
 
-Additionally, the `metadata` payload sent on connection start provides the metadata
-for clients which don't have access to the handshake response headers. The values are
-sent with unmodified keys, and the appropriate json types. Lists are converted into arrays,
-other values are sent as-is.
+The `metadata` payload sent on connection start provides the metadata, instead of providing it
+through HTTP headers. The values are sent with `lowerCamelCase` keys and the appropriate json types.
+Lists are converted into arrays, other values are sent as-is.
 
 All payloads must be valid json objects. If parsing fails, the socket is closed with code 4001.
 Both text and binary frames are accepted, as long as the data is valid UTF 8.
