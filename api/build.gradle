@@ -49,7 +49,7 @@ dependencies {
     api "io.vertx:vertx-web:$vertxWebVersion"
 
     //Audio player
-    api("com.github.Devoxin:lavaplayer:$lavaplayerVersion") {
+    api("com.sedmelluq:lavaplayer:$lavaplayerVersion") {
         exclude group: 'com.sedmelluq', module: 'lavaplayer-natives'
     }
 
