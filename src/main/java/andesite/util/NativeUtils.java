@@ -10,15 +10,32 @@ import java.lang.reflect.Array;
 
 public class NativeUtils {
     private static final Logger log = LoggerFactory.getLogger(NativeUtils.class);
-    private static final String QUEUE_MANAGER_LIBRARY =
+    private static final String QUEUE_MANAGER_LIBRARY_NAME =
             "com.sedmelluq.discord.lavaplayer.udpqueue.natives.UdpQueueManagerLibrary";
+    private static final String LOAD_RESULT_NAME =
+            "com.sedmelluq.lava.common.natives.NativeLibraryLoader$LoadResult";
     private static final NativeLibLoader UDP_QUEUE_LOADER = NativeLibLoader.create(
             NativeUtils.class, "udpqueue"
     );
     private static final NativeLibLoader CONNECTOR_LOADER = NativeLibLoader.create(
             NativeUtils.class, "connector"
     );
+    private static final Object LOAD_RESULT;
     private static Boolean udpQueueAvailable;
+    
+    static {
+        Object loadResult;
+        try {
+            var ctor = Class.forName(LOAD_RESULT_NAME)
+                    .getDeclaredConstructor(boolean.class, RuntimeException.class);
+            ctor.setAccessible(true);
+            loadResult = ctor.newInstance(true, null);
+        } catch(ReflectiveOperationException e) {
+            log.error("Unable to create successful load result");
+            loadResult = null;
+        }
+        LOAD_RESULT = loadResult;
+    }
     
     public static void tryLoad() {
         tryLoadConnector();
@@ -46,10 +63,7 @@ public class NativeUtils {
             var loadersField = ConnectorNativeLibLoader.class.getDeclaredField("loaders");
             loadersField.setAccessible(true);
             for(int i = 0; i < 2; i++) {
-                var loader = Array.get(loadersField.get(null), i);
-                var previousResultField = loader.getClass().getDeclaredField("previousResult");
-                previousResultField.setAccessible(true);
-                previousResultField.set(loader, Boolean.TRUE);
+                markLoaded(Array.get(loadersField.get(null), i));
             }
             log.info("Loaded connector");
         } catch(Throwable t) {
@@ -67,7 +81,7 @@ public class NativeUtils {
              * as loaded to avoid failing attempting to load udp-queue
              */
             UDP_QUEUE_LOADER.load();
-            var loaderField = Class.forName(QUEUE_MANAGER_LIBRARY)
+            var loaderField = Class.forName(QUEUE_MANAGER_LIBRARY_NAME)
                                       .getDeclaredField("nativeLoader");
             loaderField.setAccessible(true);
             markLoaded(loaderField.get(null));
@@ -82,6 +96,6 @@ public class NativeUtils {
     private static void markLoaded(Object loader) throws ReflectiveOperationException {
         var previousResultField = loader.getClass().getDeclaredField("previousResult");
         previousResultField.setAccessible(true);
-        previousResultField.set(loader, Boolean.TRUE);
+        previousResultField.set(loader, LOAD_RESULT);
     }
 }
