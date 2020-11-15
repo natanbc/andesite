@@ -54,9 +54,10 @@ public class Player implements AndesitePlayer {
         this.audioPlayer = audioPlayerManager.createPlayer();
         this.audioPlayer.addListener(event -> emitters.values().forEach(e -> e.onEvent(event)));
         this.audioPlayer.addListener(frameLossTracker);
+        var audioConfig = audioPlayerManager.getConfiguration();
         this.fastProvider = andesite.config().getBoolean("andesite.lavaplayer.non-allocating") ?
-                new NonAllocatingProvider(audioPlayer) :
-                new AllocatingProvider(audioPlayer);
+                new NonAllocatingProvider(audioPlayer, audioConfig) :
+                new AllocatingProvider(audioPlayer, audioConfig);
         this.realProvider = fastProvider;
         this.updateTimerId = andesite.vertx().setPeriodic(5000, __ -> {
             if(audioPlayer.getPlayingTrack() == null) return;

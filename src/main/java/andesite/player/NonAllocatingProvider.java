@@ -1,7 +1,7 @@
 package andesite.player;
 
 import andesite.send.AudioProvider;
-import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
+import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
 
@@ -10,11 +10,12 @@ import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 
 class NonAllocatingProvider implements AudioProvider {
-    private final ByteBuffer buffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize());
     private final MutableAudioFrame frame = new MutableAudioFrame();
+    private final ByteBuffer buffer;
     private final AudioPlayer player;
     
-    public NonAllocatingProvider(AudioPlayer player) {
+    public NonAllocatingProvider(AudioPlayer player, AudioConfiguration configuration) {
+        this.buffer = ByteBuffer.allocate(configuration.getOutputFormat().maximumChunkSize());
         this.player = player;
         frame.setBuffer(buffer);
     }
