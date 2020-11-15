@@ -135,6 +135,10 @@ public class WebSocketHandler {
                         .put("reason", reason)
                         .put("code", closeCode)
                         .put("byRemote", byRemote);
+                if(lavalink) {
+                    payload = transformPayloadForLavalink(payload);
+                }
+                if(payload == null) return;
                 ws.writeFinalTextFrame(payload.encode());
             }
         };
