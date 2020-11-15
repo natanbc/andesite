@@ -128,6 +128,7 @@ public class TrackMixer implements AndesiteTrackMixer {
         private final String key;
         private boolean provided;
         private int framesWithoutProvide;
+        private double realPositionMs;
         
         Player(AudioPlayer player, AndesitePlayer parent, String key) {
             this.player = player;
@@ -143,6 +144,7 @@ public class TrackMixer implements AndesiteTrackMixer {
             if(provided) {
                 framesWithoutProvide = 0;
                 frameLossTracker.onSuccess();
+                realPositionMs = andesite.player.Player.updatePosition(realPositionMs, filterConfig);
             } else {
                 framesWithoutProvide++;
                 frameLossTracker.onFail();
@@ -194,7 +196,7 @@ public class TrackMixer implements AndesiteTrackMixer {
             var track = player.getPlayingTrack();
             return new JsonObject()
                     .put("time", String.valueOf(Instant.now().toEpochMilli()))
-                    .put("position", track == null ? null : track.getPosition())
+                    .put("position", track == null ? null : (long)realPositionMs)
                     .put("paused", player.isPaused())
                     .put("volume", player.getVolume())
                     .put("filters", filterConfig.encode())

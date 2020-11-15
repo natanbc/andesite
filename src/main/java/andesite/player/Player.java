@@ -44,6 +44,8 @@ public class Player implements AndesitePlayer {
     private volatile AudioProvider switchWhenReady;
     
     private long lastUse;
+    /* lavaplayer position is wrong if you change the speed */
+    private double realPositionMs;
     
     public Player(@Nonnull Andesite andesite, @Nonnull String guildId, @Nonnull String userId) {
         this.andesite = andesite;
@@ -137,7 +139,7 @@ public class Player implements AndesitePlayer {
                 );
         var track = audioPlayer.getPlayingTrack();
         if(track != null) {
-            obj.put("position", track.getPosition());
+            obj.put("position", (long)realPositionMs);
         }
     
         return obj;
@@ -220,6 +222,7 @@ public class Player implements AndesitePlayer {
         }
         var r = realProvider.canProvide();
         if(r) {
+            realPositionMs = updatePosition(realPositionMs, filterConfig);
             frameLossTracker.onSuccess();
         } else {
             frameLossTracker.onFail();
@@ -242,6 +245,11 @@ public class Player implements AndesitePlayer {
         audioPlayer.destroy();
         andesite.vertx().cancelTimer(updateTimerId);
         andesite.vertx().cancelTimer(cleanupTimerId);
+    }
+    
+    static double updatePosition(double current, FilterChainConfiguration filterConfig) {
+        var scale = filterConfig.timescale().enabled() ? filterConfig.timescale().speed() : 1;
+        return current + 20 * scale;
     }
     
     private static boolean anyPlaying(Iterable<MixerPlayer> iterable) {
