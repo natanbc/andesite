@@ -47,8 +47,11 @@ public class EqualizerConfig implements Config {
     @Override
     public JsonObject encode() {
         var array = new JsonArray();
-        for(var band : equalizerBands) {
-            array.add(band);
+        for(var i = 0; i < Equalizer.BAND_COUNT; i++) {
+            array.add(new JsonObject()
+                    .put("band", i)
+                    .put("gain", equalizerBands[i])
+            );
         }
         return new JsonObject().put("bands", array);
     }
