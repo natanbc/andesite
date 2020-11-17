@@ -209,9 +209,7 @@ public class RequestHandler implements AndesiteRequestHandler {
                 p.startTrack(track, false);
             } else {
                 if(config.containsKey("position")) {
-                    if(track != null) {
-                        track.setPosition(asLong(config.getValue("position"), -1));
-                    }
+                    mixerPlayer.seek(asLong(config.getValue("position"), 0));
                 }
             }
         });
@@ -244,12 +242,7 @@ public class RequestHandler implements AndesiteRequestHandler {
     public JsonObject seek(@Nonnull String userId, @Nonnull String guildId, @Nonnull JsonObject payload) {
         log.info("Seeking for user {} in guild {} with payload {}", userId, guildId, payload);
         var player = andesite.getPlayer(userId, guildId);
-        var track = player.audioPlayer().getPlayingTrack();
-        if(track != null) {
-            var pos = asLong(payload.getValue("position"), 0L);
-            player.setPosition(pos);
-            track.setPosition(pos);
-        }
+        player.seek(asLong(payload.getValue("position"), 0L));
         return player.encodeState();
     }
     
@@ -280,10 +273,7 @@ public class RequestHandler implements AndesiteRequestHandler {
             player.audioPlayer().setPaused(payload.getBoolean("pause"));
         }
         if(payload.containsKey("position")) {
-            var track = player.audioPlayer().getPlayingTrack();
-            if(track != null) {
-                track.setPosition(asLong(payload.getValue("position"), -1));
-            }
+            player.seek(asLong(payload.getValue("position"), 0));
         }
         if(payload.containsKey("volume")) {
             player.audioPlayer().setVolume(payload.getInteger("volume"));

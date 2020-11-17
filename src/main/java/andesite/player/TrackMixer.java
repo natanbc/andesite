@@ -6,6 +6,8 @@ import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.format.transcoder.OpusChunkEncoder;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
 import io.vertx.core.json.JsonObject;
 
@@ -46,7 +48,7 @@ public class TrackMixer implements AndesiteTrackMixer {
     @Nonnull
     @CheckReturnValue
     @Override
-    public MixerPlayer getPlayer(@Nonnull String key) {
+    public Player getPlayer(@Nonnull String key) {
         return players.computeIfAbsent(key, k -> new Player(playerManager.createPlayer(), parent, k));
     }
     
@@ -117,7 +119,7 @@ public class TrackMixer implements AndesiteTrackMixer {
         encoder.close();
     }
     
-    private static class Player implements MixerPlayer {
+    public static class Player implements MixerPlayer {
         private final ByteBuffer buffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_PCM_S16_BE.maximumChunkSize())
                 .order(ByteOrder.BIG_ENDIAN);
         private final MutableAudioFrame frame = new MutableAudioFrame();
@@ -137,6 +139,12 @@ public class TrackMixer implements AndesiteTrackMixer {
             frame.setBuffer(buffer);
             buffer.limit(frame.getDataLength());
             this.player.addListener(frameLossTracker);
+            this.player.addListener(new AudioEventAdapter() {
+                @Override
+                public void onTrackStart(AudioPlayer player, AudioTrack track) {
+                    realPositionMs = track.getPosition();
+                }
+            });
         }
         
         boolean tryProvide() {
@@ -217,6 +225,14 @@ public class TrackMixer implements AndesiteTrackMixer {
         @Override
         public String key() {
             return key;
+        }
+    
+        public void seek(long ms) {
+            var track = player.getPlayingTrack();
+            if(track != null) {
+                track.setPosition(ms);
+            }
+            realPositionMs = ms;
         }
     }
 }

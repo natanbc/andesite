@@ -78,7 +78,7 @@ public class Player implements AndesitePlayer {
         audioPlayer.addListener(new AudioEventAdapter() {
             @Override
             public void onTrackStart(AudioPlayer player, AudioTrack track) {
-                realPositionMs = 0;
+                realPositionMs = track.getPosition();
             }
         });
     }
@@ -255,7 +255,11 @@ public class Player implements AndesitePlayer {
         andesite.vertx().cancelTimer(cleanupTimerId);
     }
     
-    public void setPosition(long ms) {
+    public void seek(long ms) {
+        var track = audioPlayer.getPlayingTrack();
+        if(track != null) {
+            track.setPosition(ms);
+        }
         realPositionMs = ms;
     }
     
