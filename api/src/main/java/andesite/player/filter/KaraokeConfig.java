@@ -76,6 +76,6 @@ public class KaraokeConfig implements Config {
             .put("level", level)
             .put("monoLevel", monoLevel)
             .put("filterBand", filterBand)
-            .put("filterWidth", filterBand);
+            .put("filterWidth", filterWidth);
     }
 }
