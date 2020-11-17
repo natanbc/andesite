@@ -7,6 +7,8 @@ import andesite.send.AudioProvider;
 import andesite.util.LazyInit;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +73,12 @@ public class Player implements AndesitePlayer {
             var mixerPlaying = mixer.isPresent() && anyPlaying(mixer.get().players().values());
             if((regularPlaying || mixerPlaying) && now > lastUse + TimeUnit.SECONDS.toNanos(60)) {
                 andesite.requestHandler().destroy(userId, guildId);
+            }
+        });
+        audioPlayer.addListener(new AudioEventAdapter() {
+            @Override
+            public void onTrackStart(AudioPlayer player, AudioTrack track) {
+                realPositionMs = 0;
             }
         });
     }
@@ -245,6 +253,10 @@ public class Player implements AndesitePlayer {
         audioPlayer.destroy();
         andesite.vertx().cancelTimer(updateTimerId);
         andesite.vertx().cancelTimer(cleanupTimerId);
+    }
+    
+    public void setPosition(long ms) {
+        realPositionMs = ms;
     }
     
     static double updatePosition(double current, FilterChainConfiguration filterConfig) {

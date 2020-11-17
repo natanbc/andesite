@@ -246,7 +246,9 @@ public class RequestHandler implements AndesiteRequestHandler {
         var player = andesite.getPlayer(userId, guildId);
         var track = player.audioPlayer().getPlayingTrack();
         if(track != null) {
-            track.setPosition(asLong(payload.getValue("position"), 0L));
+            var pos = asLong(payload.getValue("position"), 0L);
+            player.setPosition(pos);
+            track.setPosition(pos);
         }
         return player.encodeState();
     }
