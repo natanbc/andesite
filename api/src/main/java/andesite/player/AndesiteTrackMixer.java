@@ -14,7 +14,7 @@ public interface AndesiteTrackMixer extends AudioProvider {
      */
     @Nonnull
     @CheckReturnValue
-    Map<String, MixerPlayer> players();
+    Map<String, ? extends MixerPlayer> players();
     
     /**
      * Gets or creates a new player with the provided key. This key will be

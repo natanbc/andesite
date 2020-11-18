@@ -37,12 +37,11 @@ public class TrackMixer implements AndesiteTrackMixer {
         this.parent = parent;
     }
     
-    @SuppressWarnings("unchecked")
     @Nonnull
     @CheckReturnValue
     @Override
-    public Map<String, MixerPlayer> players() {
-        return (Map) players;
+    public Map<String, ? extends MixerPlayer> players() {
+        return players;
     }
     
     @Nonnull

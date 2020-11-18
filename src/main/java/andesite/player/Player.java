@@ -268,7 +268,7 @@ public class Player implements AndesitePlayer {
         return current + 20 * scale;
     }
     
-    private static boolean anyPlaying(Iterable<MixerPlayer> iterable) {
+    private static boolean anyPlaying(Iterable<? extends MixerPlayer> iterable) {
         for(var p : iterable) {
             if(p.audioPlayer().getPlayingTrack() != null && !p.audioPlayer().isPaused()) {
                 return true;
