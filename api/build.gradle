@@ -32,8 +32,7 @@ javadoc {
                 .noDeprecated()
                 .links(
                     "https://vertx.io/docs/apidocs/",
-                    "https://www.javadoc.io/doc/com.google.code.findbugs/jsr305/$jsr305Version/",
-                    "https://natanbc.github.io/lavadsp/"
+                    "https://www.javadoc.io/doc/com.google.code.findbugs/jsr305/$jsr305Version/"
                 )
                 .charSet("UTF-8")
                 .docEncoding("UTF-8")
