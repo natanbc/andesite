@@ -20,7 +20,7 @@ ext {
     configVersion =       '1.4.0'
     jdaNasVersion =       '1.1.0'
     jsr305Version =       '3.0.2'
-    koeVersion =          '64b28abee9'
+    koeVersion =          '1864a8b803'
     nettyEpollVersion =   '4.1.52.Final'
     nettyKQueueVersion =  '4.1.52.Final'
     lavaplayerVersion =   '1.3.60'
