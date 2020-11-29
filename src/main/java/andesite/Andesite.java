@@ -350,7 +350,7 @@ public class Andesite implements NodeState {
         try {
             var type = SystemType.detect(
                     new SystemNativeLibraryProperties(null, "nativeloader."));
-            log.info("Detected system: {}/{}", type.getOsType(), type.getArchitectureType());
+            log.info("Detected system: {}/{}", type.osType(), type.architectureType());
             log.info("CPU info: {}", NativeLibLoader.loadSystemInfo());
         } catch(Throwable t) {
             String message = "Unable to load system info.";
