@@ -64,16 +64,24 @@ public class WebSocketHandler {
                     log.info("New {}connection from {} with id {}",
                             lavalinkConnection ? "lavalink " : "",
                             context.request().remoteAddress(), id);
+                    var frameHandler = new FrameHandler(andesite, userId, ws, id, lavalinkConnection);
                     var resumeId = context.request().getHeader("Andesite-Resume-Id");
                     if(resumeId != null) {
                         try {
                             var buffer = andesite.removeEventBuffer(Long.parseLong(resumeId));
                             if(buffer != null) {
                                 log.info("Resuming connection {} to {}", resumeId, id);
-                                andesite.allPlayers().forEach(p -> p.eventListeners().remove(buffer));
+                                buffer.subscriptions().forEach(p -> {
+                                    p.eventListeners().remove(buffer);
+                                    p.setListener(frameHandler, frameHandler::subscriptionHandler);
+                                });
                                 buffer.empty(json -> ws.writeFinalTextFrame(json.encode()));
+                            } else {
+                                log.warn("Attempted to resume session with {} but it didn't exist " +
+                                                 "(check if you configured resuming or tried resuming twice)", resumeId);
                             }
-                        } catch(Exception ignored) {
+                        } catch(Exception e) {
+                            log.error("Error resuming connection with id {}", resumeId, e);
                         }
                     }
                     if(!lavalinkConnection) {
@@ -95,7 +103,7 @@ public class WebSocketHandler {
                                                     .encode()
                         );
                     }
-                    ws.frameHandler(new FrameHandler(andesite, userId, ws, id, lavalinkConnection));
+                    ws.frameHandler(frameHandler);
                 });
             } else {
                 context.next();
@@ -210,7 +218,8 @@ public class WebSocketHandler {
         
         private void handleClose() {
             if(timeout != 0) {
-                var buffer = andesite.createEventBuffer(connectionId);
+                log.info("setting up buffer");
+                var buffer = andesite.createEventBuffer(connectionId, subscriptions);
                 subscriptions.forEach(p -> p.setListener(buffer, buffer::offer));
                 andesite.vertx().setTimer(timeout, __ -> {
                     subscriptions.forEach(p -> p.eventListeners().remove(buffer));
@@ -222,6 +231,15 @@ public class WebSocketHandler {
             }
             andesite.dispatcher().unregister(listener);
             subscriptions.forEach(p -> p.eventListeners().remove(this));
+        }
+        
+        void subscriptionHandler(JsonObject json) {
+            if(lavalink) {
+                json = transformPayloadForLavalink(json);
+            }
+            if(json == null) return;
+            var s = json.encode();
+            context.runOnContext(__ -> ws.writeFinalTextFrame(s));
         }
         
         @Override
@@ -288,16 +306,9 @@ public class WebSocketHandler {
                     sendPlayerUpdate(user, guild, json);
                 }
                 case "play" -> {
-                    andesite.requestHandler().subscribe(user, guild, this,
-                            json -> {
-                                if(lavalink) {
-                                    json = transformPayloadForLavalink(json);
-                                }
-                                if(json == null) return;
-                                var s = json.encode();
-                                context.runOnContext(__ -> ws.writeFinalTextFrame(s));
-                            });
-                    subscriptions.add(andesite.getPlayer(user, guild));
+                    var player = andesite.getPlayer(user, guild);
+                    player.setListener(this, this::subscriptionHandler);
+                    subscriptions.add(player);
                     var json = andesite.requestHandler().play(user, guild, payload);
                     sendPlayerUpdate(user, guild, json);
                 }

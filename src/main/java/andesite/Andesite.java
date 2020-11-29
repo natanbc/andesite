@@ -165,8 +165,8 @@ public class Andesite implements NodeState {
     
     @Nonnull
     @CheckReturnValue
-    public EventBuffer createEventBuffer(long id) {
-        var buffer = new EventBuffer();
+    public EventBuffer createEventBuffer(long id, Set<Player> subscriptions) {
+        var buffer = new EventBuffer(subscriptions);
         buffers.put(id, buffer);
         return buffer;
     }
