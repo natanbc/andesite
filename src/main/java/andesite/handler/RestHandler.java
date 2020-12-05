@@ -248,12 +248,12 @@ public class RestHandler {
             state.requestHandler().resolveTracks(identifier)
                     .thenAccept(json -> context.response().end(json.toBuffer()))
                     .exceptionally(e -> {
-                        if(e instanceof FriendlyException) {
+                        if(e.getCause() instanceof FriendlyException) {
                             context.response().end(
                                     new JsonObject()
                                             .put("loadType", "LOAD_FAILED")
-                                            .put("cause", RequestUtils.encodeThrowable(context, e))
-                                            .put("severity", ((FriendlyException) e).severity.name())
+                                            .put("cause", RequestUtils.encodeThrowable(context, e.getCause()))
+                                            .put("severity", ((FriendlyException) e.getCause()).severity.name())
                                             .toBuffer()
                             );
                         } else {
