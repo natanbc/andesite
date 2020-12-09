@@ -75,7 +75,13 @@ public class WebSocketHandler {
                                     p.eventListeners().remove(buffer);
                                     p.setListener(frameHandler, frameHandler::subscriptionHandler);
                                 });
-                                buffer.empty(json -> ws.writeFinalTextFrame(json.encode()));
+                                buffer.empty(json -> {
+                                    if(lavalinkConnection){
+                                        json = transformPayloadForLavalink(json);
+                                    }
+                                    if(json == null) return;
+                                    ws.writeFinalTextFrame(json.encode());
+                                });
                             } else {
                                 log.warn("Attempted to resume session with {} but it didn't exist " +
                                                  "(check if you configured resuming or tried resuming twice)", resumeId);
