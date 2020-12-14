@@ -343,7 +343,7 @@ public class WebSocketHandler {
                     if(player != null) {
                         subscriptions.remove(player);
                     }
-                    var json = andesite.requestHandler().destroy(user, guild);
+                    var json = andesite.requestHandler().destroy(user, guild, false);
                     sendPlayerUpdate(user, guild, json == null ? null : json.put("destroyed", true));
                 }
                 case "ping" -> ws.writeFinalTextFrame(payload.put("userId", this.user).put("op", "pong").encode());

@@ -50,6 +50,15 @@ public class EventEmitter extends AudioEventAdapter {
         sendPlayerUpdate();
     }
     
+    public void onPlayerDestroyed(boolean cleanup) {
+        sendEvent.accept(new JsonObject()
+                                 .put("op", "event")
+                                 .put("type", "PlayerDestroyedEvent")
+                                 .put("cleanup", cleanup)
+                                 .put("guildId", player.guildId())
+                                 .put("userId", player.userId()));
+    }
+    
     public void sendPlayerUpdate() {
         sendEvent.accept(new JsonObject()
                 .put("op", "player-update")

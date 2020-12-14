@@ -156,11 +156,12 @@ public interface AndesiteRequestHandler {
      *
      * @param userId  User id of the player.
      * @param guildId Guild id of the player.
+     * @param cleanup Whether or not this player is being destroyed by an automatic cleanup.
      *
      * @return The player state, or null if it doesn't exist.
      */
     @Nullable
-    JsonObject destroy(@Nonnull String userId, @Nonnull String guildId);
+    JsonObject destroy(@Nonnull String userId, @Nonnull String guildId, boolean cleanup);
     
     /**
      * Resolves tracks with the provided identifier.

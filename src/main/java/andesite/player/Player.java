@@ -72,7 +72,7 @@ public class Player implements AndesitePlayer {
             var regularPlaying = audioPlayer.getPlayingTrack() != null && !audioPlayer.isPaused();
             var mixerPlaying = mixer.isPresent() && anyPlaying(mixer.get().players().values());
             if((regularPlaying || mixerPlaying) && now > lastUse + TimeUnit.SECONDS.toNanos(60)) {
-                andesite.requestHandler().destroy(userId, guildId);
+                andesite.requestHandler().destroy(userId, guildId, true);
             }
         });
         audioPlayer.addListener(new AudioEventAdapter() {
@@ -253,6 +253,10 @@ public class Player implements AndesitePlayer {
         audioPlayer.destroy();
         andesite.vertx().cancelTimer(updateTimerId);
         andesite.vertx().cancelTimer(cleanupTimerId);
+    }
+    
+    public void onDestroy(boolean cleanup) {
+        emitters.values().forEach(e -> e.onPlayerDestroyed(cleanup));
     }
     
     public void seek(long ms) {

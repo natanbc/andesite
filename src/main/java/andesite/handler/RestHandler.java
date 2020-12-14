@@ -195,7 +195,7 @@ public class RestHandler {
             });
             
             router.delete("/player/:guild_id").handler(context -> {
-                var res = andesite.requestHandler().destroy(context.get("user-id"), context.pathParam("guild_id"));
+                var res = andesite.requestHandler().destroy(context.get("user-id"), context.pathParam("guild_id"), false);
                 sendResponse(context, res);
             });
         }

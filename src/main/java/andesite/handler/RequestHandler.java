@@ -286,9 +286,12 @@ public class RequestHandler implements AndesiteRequestHandler {
     
     @Nullable
     @Override
-    public JsonObject destroy(@Nonnull String userId, @Nonnull String guildId) {
+    public JsonObject destroy(@Nonnull String userId, @Nonnull String guildId, boolean cleanup) {
         log.info("Destroying player for user {} in guild {}", userId, guildId);
         var player = andesite.removePlayer(userId, guildId);
+        if(player != null) {
+            player.onDestroy(cleanup);
+        }
         //will call close()
         andesite.audioHandler().closeConnection(userId, guildId);
         return player == null ? null : player.encodeState();
