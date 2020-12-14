@@ -12,6 +12,17 @@ ENV ADDITIONAL_MODULES=jdk.crypto.ec,jdk.crypto.cryptoki
 
 RUN ["bash", "jlink.sh", "andesite.jar", "plugins/jattach-debug.jar"]
 
+RUN ["jrt/bin/java", "-Xshare:dump"]
+
+RUN [                                                    \
+    "jrt/bin/java",                                      \
+    "-XX:ArchiveClassesAtExit=app.jsa",                  \
+    "-Dnativeloader.os=linux",                           \
+    "-jar",                                              \
+    "andesite.jar",                                      \
+    "cds"                                                \
+]
+
 FROM frolvlad/alpine-glibc:alpine-3.9
 
 ARG jattachVersion
@@ -34,6 +45,7 @@ COPY --from=builder /andesite /andesite
 
 CMD [                                                    \
     "jrt/bin/java",                                      \
+    "-XX:SharedArchiveFile=app.jsa",                     \
     "-Djdk.tls.client.protocols=TLSv1,TLSv1.1,TLSv1.2",  \
     "-Dnativeloader.os=linux",                           \
     "-jar",                                              \

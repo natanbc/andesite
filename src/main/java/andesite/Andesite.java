@@ -377,6 +377,11 @@ public class Andesite implements NodeState {
             );
             log.info("Timescale {}", FilterUtil.TIMESCALE_AVAILABLE ? "available" : "unavailable");
             log.info("Started in {} ms", (System.nanoTime() - start) / 1_000_000);
+            //Most classes have already been loaded and will go into the CDS file, just exit so it
+            //gets created
+            if(args.length > 0 && args[0].equalsIgnoreCase("cds")) {
+                System.exit(0);
+            }
         } catch(Throwable t) {
             log.error("Fatal error during initialization", t);
             System.exit(1);
