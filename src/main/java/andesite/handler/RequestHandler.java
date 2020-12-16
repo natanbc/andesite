@@ -673,7 +673,16 @@ public class RequestHandler implements AndesiteRequestHandler {
         }
         if(config.containsKey("volume")) {
             var volumeConfig = filterConfig.volume();
-            volumeConfig.setVolume(config.getJsonObject("volume").getFloat("volume", volumeConfig.volume()));
+            var val = config.getValue("volume");
+            float volume;
+            if(val instanceof JsonObject) {
+                volume = ((JsonObject) val).getFloat("volume", volumeConfig.volume());
+            } else if(val instanceof Number) {
+                volume = ((Number) val).floatValue();
+            } else {
+                throw new IllegalArgumentException("Invalid volume value: " + val);
+            }
+            volumeConfig.setVolume(volume);
         }
         player.audioPlayer().setFilterFactory(filterConfig.factory());
     }
