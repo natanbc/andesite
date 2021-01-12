@@ -636,6 +636,14 @@ public class RequestHandler implements AndesiteRequestHandler {
     
     private void updateFilters(@Nonnull BasePlayer player, @Nonnull JsonObject config) {
         var filterConfig = player.filterConfig();
+        if(config.containsKey("channelmix")) {
+            var channelMix = config.getJsonObject("channelmix");
+            var channelMixConfig = filterConfig.channelMix();
+            channelMixConfig.setLeftToLeft(channelMix.getFloat("leftToLeft", channelMixConfig.leftToLeft()));
+            channelMixConfig.setLeftToRight(channelMix.getFloat("leftToRight", channelMixConfig.leftToRight()));
+            channelMixConfig.setRightToLeft(channelMix.getFloat("rightToLeft", channelMixConfig.rightToLeft()));
+            channelMixConfig.setRightToRight(channelMix.getFloat("rightToRight", channelMixConfig.rightToRight()));
+        }
         if(config.containsKey("equalizer")) {
             var array = config.getJsonObject("equalizer").getJsonArray("bands");
             var equalizerConfig = filterConfig.equalizer();
@@ -651,6 +659,16 @@ public class RequestHandler implements AndesiteRequestHandler {
             karaokeConfig.setMonoLevel(karaoke.getFloat("monoLevel", karaokeConfig.monoLevel()));
             karaokeConfig.setFilterBand(karaoke.getFloat("filterBand", karaokeConfig.filterBand()));
             karaokeConfig.setFilterWidth(karaoke.getFloat("filterWidth", karaokeConfig.filterWidth()));
+        }
+        if(config.containsKey("lowpass")) {
+            var lowPass = config.getJsonObject("lowpass");
+            var lowPassConfig = filterConfig.lowPass();
+            lowPassConfig.setSmoothing(lowPass.getFloat("smoothing", lowPassConfig.smoothing()));
+        }
+        if(config.containsKey("rotation")) {
+            var rotation = config.getJsonObject("rotation");
+            var rotationConfig = filterConfig.rotation();
+            rotationConfig.setRotationHz(rotation.getFloat("rotationHz", rotationConfig.rotationHz()));
         }
         if(config.containsKey("timescale")) {
             var timescale = config.getJsonObject("timescale");

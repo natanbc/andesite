@@ -19,8 +19,11 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 public class FilterChainConfiguration {
+    private final ChannelMixConfig channelMix = new ChannelMixConfig();
     private final EqualizerConfig equalizer = new EqualizerConfig();
     private final KaraokeConfig karaoke = new KaraokeConfig();
+    private final LowPassConfig lowPass = new LowPassConfig();
+    private final RotationConfig rotation = new RotationConfig();
     private final TimescaleConfig timescale = new TimescaleConfig();
     private final TremoloConfig tremolo = new TremoloConfig();
     private final VibratoConfig vibrato = new VibratoConfig();
@@ -28,8 +31,11 @@ public class FilterChainConfiguration {
     private final Map<Class<? extends Config>, Config> filters = new HashMap<>();
     
     public FilterChainConfiguration() {
+        filters.put(channelMix.getClass(), channelMix);
         filters.put(equalizer.getClass(), equalizer);
         filters.put(karaoke.getClass(), karaoke);
+        filters.put(lowPass.getClass(), lowPass);
+        filters.put(rotation.getClass(), rotation);
         filters.put(timescale.getClass(), timescale);
         filters.put(tremolo.getClass(), tremolo);
         filters.put(vibrato.getClass(), vibrato);
@@ -136,6 +142,12 @@ public class FilterChainConfiguration {
     
     @Nonnull
     @CheckReturnValue
+    public ChannelMixConfig channelMix() {
+        return channelMix;
+    }
+    
+    @Nonnull
+    @CheckReturnValue
     public EqualizerConfig equalizer() {
         return equalizer;
     }
@@ -144,6 +156,18 @@ public class FilterChainConfiguration {
     @CheckReturnValue
     public KaraokeConfig karaoke() {
         return karaoke;
+    }
+    
+    @Nonnull
+    @CheckReturnValue
+    public LowPassConfig lowPass() {
+        return lowPass;
+    }
+    
+    @Nonnull
+    @CheckReturnValue
+    public RotationConfig rotation() {
+        return rotation;
     }
     
     @Nonnull
