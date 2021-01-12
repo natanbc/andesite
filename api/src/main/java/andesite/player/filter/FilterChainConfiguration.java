@@ -1,7 +1,7 @@
 package andesite.player.filter;
 
 import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;
-import com.sedmelluq.discord.lavaplayer.filter.FilterChainBuilder;
+import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.filter.PcmFilterFactory;
 import com.sedmelluq.discord.lavaplayer.filter.UniversalPcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
@@ -11,6 +11,7 @@ import io.vertx.core.json.JsonObject;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,19 +179,17 @@ public class FilterChainConfiguration {
         
         @Override
         public List<AudioFilter> buildChain(AudioTrack track, AudioDataFormat format, UniversalPcmAudioFilter output) {
-            var builder = new FilterChainBuilder();
-            builder.addFirst(output);
+            var list = new ArrayList<AudioFilter>();
+            list.add(output);
             for(var config : configuration.filters.values()) {
                 var filter = config.enabled() ?
-                    config.create(format, builder.makeFirstFloat(format.channelCount)) //may return null
+                    config.create(format, (FloatPcmAudioFilter) list.get(0)) //may return null
                     : null;
                 if(filter != null) {
-                    builder.addFirst(filter);
+                    list.add(0, filter);
                 }
             }
-            var list = builder.build(null, format.channelCount).filters;
-            //remove output
-            return list.subList(1, list.size());
+            return list.subList(0, list.size() - 1);
         }
     }
 }
