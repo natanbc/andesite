@@ -38,6 +38,7 @@ See [CONFIGURATION.md](https://github.com/natanbc/andesite/blob/master/CONFIGURA
 - [andesite.py](https://github.com/gieseladev/andesite.py) - Python
 - [Granitepy](https://github.com/twitch0001/granitepy) - Python
 - [discord.js-andesite](https://github.com/lolwastedjs/discord.js-andesite) - JavaScript
+- [Slate](https://github.com/Axelancerr/Slate) - Python 3.8+
 - [Create your own](https://github.com/natanbc/andesite/blob/master/API.md)
 - Most lavalink 3.x clients should be compatible
 
