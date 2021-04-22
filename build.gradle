@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'application'
     id 'com.github.johnrengelman.shadow' version '5.2.0'
-	id 'com.palantir.docker' version '0.25.0'
 }
 
 def versionObj = new Version(major: 0, minor: 20, revision: 2)
@@ -109,32 +108,6 @@ dependencies {
     implementation "com.google.code.findbugs:jsr305:$jsr305Version"
 }
 
-docker {
-    if(System.getenv("DOCKERFILE") != null) {
-        def f = file(System.getenv("DOCKERFILE"))
-        if(f.exists()) {
-            dockerfile f
-        } else {
-            println("Dockerfile '" + System.getenv("DOCKERFILE") + "' doesn't exist")
-        }
-    }
-    name "natanbc/andesite:${getCommitHash()}"
-    //only set latest tag for releases, so `docker pull natanbc/andesite`
-    //pulls the latest stable version
-    if(System.getenv("TAG") != null && !System.getenv("TAG").trim().isEmpty()) {
-        tag 'versioned', "natanbc/andesite:${versionObj}"
-        tag 'latest', 'natanbc/andesite:latest'
-    }
-    files "build/libs/andesite-${versionObj}-linux-x86-64.jar",
-            "build/libs/andesite-${versionObj}-linux-musl-x86-64.jar",
-            project(':jattach-debug-plugin').getTasksByName('jar', false).outputs,
-            "jlink.sh"
-    buildArgs([
-        version: versionObj.toString(),
-        jattachVersion: jattachVersion
-    ])
-}
-
 def natives = [
         'all',
         'darwin',
@@ -151,15 +124,15 @@ def natives = [
 
 task buildAll {}
 
-tasks.docker.dependsOn buildAll
+task buildImages {}
+
 buildAll.dependsOn ':jattach-debug-plugin:jar'
 buildAll.dependsOn ':api:jar'
 buildAll.dependsOn ':api:javadoc'
 
 task ci {
     dependsOn buildAll
-    dependsOn tasks.docker
-    dependsOn dockerTag
+    dependsOn buildImages
 }
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
@@ -204,6 +177,27 @@ natives.each { arch ->
     }
     buildAll.dependsOn shadowTask
 }
+
+def baseTags = ["natanbc/andesite:${getCommitHash()}"]
+//only set latest tag for releases, so `docker pull natanbc/andesite`
+//pulls the latest stable version
+if(System.getenv("TAG") != null && !System.getenv("TAG").trim().isEmpty()) {
+    baseTags << "natanbc/andesite:${version}"
+    baseTags << "natanbc/andesite:latest"
+}
+
+buildImages.dependsOn createDockerBuild(
+        "normal",
+        file("Dockerfile"),
+        baseTags,
+        (ShadowJar)rootProject.tasks.findByName("shadow-linux-x86-64")
+)
+buildImages.dependsOn createDockerBuild(
+        "alpine",
+        file("musl/Dockerfile"),
+        baseTags.collect {"$it-alpine" },
+        (ShadowJar)rootProject.tasks.findByName("shadow-linux-musl-x86-64")
+)
 
 def lint = [
         "auxiliaryclass",
@@ -284,6 +278,46 @@ static def getCommitHash() {
     def p = Runtime.getRuntime().exec("git rev-parse HEAD")
     p.waitFor()
     p.getIn().text.trim()
+}
+
+def createDockerBuild(String name, File dockerfile, List<String> tags, ShadowJar shadowTask) {
+    if(!dockerfile.exists()) {
+        throw new Exception("Dockerfile '$dockerfile' doesn't exist")
+    }
+    def dir = new File(project.buildDir, "docker/$name")
+    dir.mkdirs()
+    def jarTask = (org.gradle.jvm.tasks.Jar)tasks.getByPath(":jattach-debug-plugin:jar")
+    def copyResults = tasks.create("dockerCopy-$name", Copy) {
+        from(shadowTask.outputs) {
+            include "*.jar"
+        }
+        from(jarTask.outputs) {
+            include "*.jar"
+        }
+        from('.') {
+            include "jlink.sh"
+        }
+        into dir
+    }
+
+    def dockerBuild = tasks.create("dockerBuild-$name", Exec) {
+        dependsOn copyResults
+        workingDir dir
+        executable = 'docker'
+        def argList = [
+                "build",
+                "-f",
+                dockerfile.getAbsolutePath(),
+                "--build-arg",
+                "version=${rootProject.version}",
+                "--build-arg",
+                "jattachVersion=${jattachVersion}",
+        ]
+        tags.each { argList << "-t" << it }
+        argList << "."
+        args = argList
+    }
+    return dockerBuild
 }
 
 def getBuildNumber() {
