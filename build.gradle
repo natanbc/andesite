@@ -176,7 +176,7 @@ natives.each { arch ->
         archiveClassifier.set(arch)
 
         from project.sourceSets.main.output
-        //configurations = [ project.configurations.runtime ]
+        configurations = [ project.configurations.runtimeClasspath ]
         manifest.inheritFrom project.tasks.jar.manifest
 
         exclude 'natives/linux-aarch32/**'
