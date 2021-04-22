@@ -29,7 +29,7 @@ jobs:
       - name: Docker push
         if: github.event_name == 'push' || startsWith(github.ref, 'refs/tags/')
         run: |
-          docker push natanbc/andesite
+          docker push -a natanbc/andesite
       - name: API javadoc
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: JamesIves/github-pages-deploy-action@3.6.2
