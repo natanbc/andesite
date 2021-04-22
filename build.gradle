@@ -5,7 +5,7 @@ plugins {
 	id 'com.palantir.docker' version '0.25.0'
 }
 
-def versionObj = new Version(major: 0, minor: 20, revision: 1)
+def versionObj = new Version(major: 0, minor: 20, revision: 2)
 
 sourceCompatibility = 15
 targetCompatibility = 15
@@ -13,6 +13,14 @@ targetCompatibility = 15
 allprojects {
     group 'com.github.natanbc'
     version versionObj.toString()
+
+    repositories {
+        jcenter()
+        maven { url 'https://dl.bintray.com/natanbc/maven' }
+        maven { url 'https://dl.bintray.com/sedmelluq/com.sedmelluq' }
+        maven { url 'https://m2.dv8tion.net/releases' }
+        maven { url 'https://jitpack.io' }
+    }
 }
 
 ext {
@@ -23,7 +31,7 @@ ext {
     koeVersion =          '1864a8b803'
     nettyEpollVersion =   '4.1.52.Final'
     nettyKQueueVersion =  '4.1.52.Final'
-    lavaplayerVersion =   '1.3.71'
+    lavaplayerVersion =   '1.3.76'
     lpcrossVersion =      '0.1.1'
     ytRotatorVersion =    '0.1.7'
     lavadspVersion =      '0.7.6'
@@ -40,72 +48,65 @@ ext {
 
 mainClassName = 'andesite.Andesite'
 
-repositories {
-    jcenter()
-    maven { url 'https://dl.bintray.com/natanbc/maven' }
-    maven { url 'https://dl.bintray.com/sedmelluq/com.sedmelluq' }
-    maven { url 'https://jitpack.io' }
-}
-
 dependencies {
-    compile project(':api')
+    implementation project(':api')
 
     //Config
-    compile "com.typesafe:config:$configVersion"
+    implementation "com.typesafe:config:$configVersion"
     
     //REST, WebSocket, etc
-    compile "io.vertx:vertx-web:$vertxWebVersion"
+    implementation "io.vertx:vertx-web:$vertxWebVersion"
 
     //Audio sending
-    compile "space.npstr.Magma:magma:$magmaVersion"
+    implementation "space.npstr.Magma:magma:$magmaVersion"
 
     //Audio sending
-    compile("moe.kyokobot.koe:core:$koeVersion") {
+    implementation("moe.kyokobot.koe:core:$koeVersion") {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
-    compile("moe.kyokobot.koe:ext-udpqueue:$koeVersion") {
+    implementation("moe.kyokobot.koe:ext-udpqueue:$koeVersion") {
         exclude group: 'com.sedmelluq', module: 'udp-queue'
     }
 
     //Native transports
-    compile "io.netty:netty-transport-native-epoll:$nettyEpollVersion:linux-x86_64"
-    compile "io.netty:netty-transport-native-kqueue:$nettyKQueueVersion:osx-x86_64"
+    implementation "io.netty:netty-transport-native-epoll:$nettyEpollVersion:linux-x86_64"
+    implementation "io.netty:netty-transport-native-kqueue:$nettyKQueueVersion:osx-x86_64"
 
     //Audio player
-    compile("com.sedmelluq:lavaplayer:$lavaplayerVersion") {
+    implementation("com.sedmelluq:lavaplayer:$lavaplayerVersion") {
         exclude group: 'com.sedmelluq', module: 'lavaplayer-natives'
     }
-    compile "com.github.natanbc:lp-cross:$lpcrossVersion"
+    implementation "com.github.natanbc:lp-cross:$lpcrossVersion"
 
     //IPv6 rotation
-    compile("com.sedmelluq:lavaplayer-ext-youtube-rotator:$ytRotatorVersion") {
+    implementation("com.sedmelluq:lavaplayer-ext-youtube-rotator:$ytRotatorVersion") {
         exclude group: 'com.sedmelluq', module: 'lavaplayer'
     }
 
     //Audio filters
-    compile "com.github.natanbc:lavadsp:$lavadspVersion"
+    implementation "com.github.natanbc:lavadsp:$lavadspVersion"
     //Native library loading
-    compile "com.github.natanbc:native-loader:$nativeLoaderVersion"
+    implementation "com.github.natanbc:native-loader:$nativeLoaderVersion"
 
     //Native send system
-    compile("com.sedmelluq:jda-nas:$jdaNasVersion") {
+    implementation("com.sedmelluq:jda-nas:$jdaNasVersion") {
         exclude group: 'com.sedmelluq', module: 'udp-queue'
     }
 
     //Logger implementation
-    compile "ch.qos.logback:logback-classic:$logbackVersion"
+    implementation "ch.qos.logback:logback-classic:$logbackVersion"
 
     //Error tracking
-    compile "io.sentry:sentry:$sentryVersion"
-    compile "io.sentry:sentry-logback:$sentryVersion"
+    implementation "io.sentry:sentry:$sentryVersion"
+    implementation "io.sentry:sentry-logback:$sentryVersion"
 
     //Metrics
-    compile "io.prometheus:simpleclient:$prometheusVersion"
-    compile "io.prometheus:simpleclient_hotspot:$prometheusVersion"
-    compile "io.prometheus:simpleclient_logback:$prometheusVersion"
+    implementation "io.prometheus:simpleclient:$prometheusVersion"
+    implementation "io.prometheus:simpleclient_hotspot:$prometheusVersion"
+    implementation "io.prometheus:simpleclient_logback:$prometheusVersion"
 
     //Code safety
-    compile "com.google.code.findbugs:jsr305:$jsr305Version"
+    implementation "com.google.code.findbugs:jsr305:$jsr305Version"
 }
 
 docker {
@@ -175,7 +176,7 @@ natives.each { arch ->
         archiveClassifier.set(arch)
 
         from project.sourceSets.main.output
-        configurations = [ project.configurations.runtime ]
+        //configurations = [ project.configurations.runtime ]
         manifest.inheritFrom project.tasks.jar.manifest
 
         exclude 'natives/linux-aarch32/**'

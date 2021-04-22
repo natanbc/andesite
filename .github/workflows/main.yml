@@ -39,15 +39,16 @@ jobs:
           FOLDER: api/build/docs/javadoc
           CLEAN: true
           SINGLE_COMMIT: true
-      - name: API bintray upload
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          chmod +x gradlew
-          export TAG="$(echo $GITHUB_REF | grep -q refs/tags && echo ${GITHUB_REF/refs\/tags\/} || echo '')"
-          ./gradlew api:bintrayUpload
-        env:
-          BINTRAY_USERNAME: ${{ secrets.BINTRAY_USERNAME }}
-          BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
+# jcenter is now read only
+#      - name: API bintray upload
+#        if: startsWith(github.ref, 'refs/tags/')
+#        run: |
+#          chmod +x gradlew
+#          export TAG="$(echo $GITHUB_REF | grep -q refs/tags && echo ${GITHUB_REF/refs\/tags\/} || echo '')"
+#          ./gradlew api:bintrayUpload
+#        env:
+#          BINTRAY_USERNAME: ${{ secrets.BINTRAY_USERNAME }}
+#          BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')

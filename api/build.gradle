@@ -1,6 +1,5 @@
 plugins {
     id 'java-library'
-    id 'maven'
     id 'maven-publish'
     id 'com.jfrog.bintray' version '1.8.5'
 }
@@ -9,12 +8,6 @@ sourceCompatibility = 15
 targetCompatibility = 15
 
 archivesBaseName = 'andesite-api'
-
-repositories {
-    jcenter()
-    maven { url 'https://dl.bintray.com/natanbc/maven' }
-    maven { url 'https://jitpack.io' }
-}
 
 import org.gradle.external.javadoc.StandardJavadocDocletOptions
 
